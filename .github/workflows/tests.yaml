@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  pull_request:
+    branches: ["main*"]
+  workflow_call:
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install system libraries for WeasyPrint & CairoSVG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
+            libffi8 shared-mime-info fonts-dejavu-core fonts-noto-core
+      - name: Install uv and sync dependencies
+        run: |
+          pip install uv
+          uv sync --frozen
+      - name: Run tests
+        run: uv run pytest

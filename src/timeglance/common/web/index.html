@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>timeglance</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/icon.png">
+<style>
+  :root { --bd: #d9dce1; --mut: #6b7280; --accent: #3D6FB4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Noto Sans", system-ui, sans-serif; color: #1b1b1b; background: #fafafa; }
+  header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+           padding: 8px 16px; border-bottom: 1px solid var(--bd); background: #fff; }
+  header .brand { font-weight: 700; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; }
+  header .brand img { width: 22px; height: 22px; border-radius: 5px; display: block; }
+  .seg { display: inline-flex; border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; }
+  .seg button { border: none; border-radius: 0; background: #fff; padding: 5px 12px; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .grp { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  label { color: var(--mut); }
+  select, input { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--bd); border-radius: 6px; }
+  input.range { width: 88px; }
+  button { font: inherit; font-size: 13px; padding: 5px 12px; border: 1px solid var(--bd);
+           border-radius: 6px; background: #fff; cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.danger { color: #C4553B; border-color: #e3b6ac; }
+  button.danger:hover { background: #fbeeeb; }
+  button:active { transform: translateY(1px); }
+  #status { font-size: 12px; color: var(--mut); margin-left: auto; }
+  main { display: flex; height: calc(100vh - 49px); }
+  aside { width: 224px; flex: none; padding: 12px 14px; border-right: 1px solid var(--bd);
+          background: #fff; overflow: auto; }
+  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin: 4px 0 8px; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .row label, .modal .scr label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; }
+  .row .sw { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+  [data-toggle] { cursor: pointer; }
+  [data-toggle] * { pointer-events: none; }
+  .src .kind { font-size: 10px; color: var(--mut); border: 1px solid var(--bd); border-radius: 4px;
+               padding: 0 4px; text-transform: uppercase; }
+  .src .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src .cnt { color: var(--mut); font-variant-numeric: tabular-nums; }
+  .view { flex: 1; overflow: auto; padding: 16px; }
+  .preview-pane { position: relative; display: flex; align-items: flex-start; justify-content: center; height: 100%; }
+  .preview-pane svg, .preview-pane iframe { width: 100%; max-width: 1100px; background: #fff;
+       box-shadow: 0 1px 8px rgba(0,0,0,.12); border-radius: 4px; border: none; }
+  .preview-pane iframe { height: 100%; min-height: 640px; }
+  .preview-pane .pv-msg { margin: auto; max-width: 520px; padding: 16px 18px; border: 1px solid #e3b6ac;
+       background: #fbeeeb; color: #C4553B; border-radius: 8px; font-size: 13px; text-align: center; }
+  .preview-pane .load-ov { display: none; position: absolute; inset: 0; z-index: 2;
+       align-items: center; justify-content: center; background: rgba(250,250,250,.6); }
+  .preview-pane.loading .load-ov { display: flex; }
+  .load-ov .spinner { width: 34px; height: 34px; border: 3px solid var(--bd);
+       border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cfg { display: flex; flex-direction: column; gap: 10px; height: 100%; max-width: 900px; margin: 0 auto; }
+  .cfg textarea { flex: 1; font-family: ui-monospace, "DejaVu Sans Mono", monospace; font-size: 13px;
+       line-height: 1.5; padding: 12px; border: 1px solid var(--bd); border-radius: 8px; resize: none;
+       tab-size: 2; background: #fff; }
+  .cfg .bar { display: flex; gap: 8px; align-items: center; }
+  .hidden { display: none !important; }
+  .sched { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
+  .sched-head h1 { font-size: 18px; margin: 0 0 2px; }
+  .sched-head p { font-size: 13px; color: var(--mut); margin: 0; }
+  .sched .card { border: 1px solid var(--bd); border-radius: 8px; background: #fff; padding: 14px 16px; }
+  .sched pre { background: #0f1116; color: #d7dbe0; padding: 12px; border-radius: 8px; overflow: auto;
+       font-size: 12px; line-height: 1.5; max-height: 46vh; margin: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: #c0c4cc; }
+  .dot.on { background: #4E9A51; }
+  .cfg-err { color: #C4553B; font-size: 12px; white-space: pre-wrap; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex;
+              align-items: center; justify-content: center; z-index: 10; }
+  .modal { background: #fff; border-radius: 10px; padding: 18px 20px; width: 380px;
+           box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+  .modal h3 { margin: 0 0 12px; font-size: 15px; }
+  .modal .scr { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; }
+  .modal .scr .res { color: var(--mut); }
+  .modal .foot { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+  .modal .foot .sp { flex: 1; }
+  .modal .warn { color: #C4553B; font-size: 12px; margin: 8px 0 0; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="brand"><img src="/favicon.svg" alt="">timeglance</span>
+    <span class="seg" id="tool">
+      <button data-tool="weekly">Weekly</button>
+      <button data-tool="year">Year</button>
+    </span>
+    <span class="seg" id="view">
+      <button data-view="preview">Preview</button>
+      <button data-view="config">Config</button>
+    </span>
+    <span id="controls" class="grp" style="gap:14px; flex-wrap:wrap"></span>
+    <span class="grp" id="actions">
+      <button id="exportBtn">Export</button>
+      <button id="wpBtn" class="primary">Set as wallpaper</button>
+    </span>
+    <span id="status"></span>
+    <button id="schedBtn">Schedule</button>
+    <button id="logBtn">Log</button>
+  </header>
+  <main>
+    <aside id="side"></aside>
+    <div class="view" id="viewbody"></div>
+  </main>
+<script src="/app.js"></script>
+</body>
+</html>

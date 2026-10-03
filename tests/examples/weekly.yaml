@@ -1,0 +1,18 @@
+# A simple Mon-Fri routine; `gym` is hidden by default (visible: false).
+title: "My Week"
+subtitle: "Routine"
+paper: A4
+days: [Mon, Tue, Wed, Thu, Fri]
+day_start: "06:00"
+day_end: "22:00"
+hour_marks: 2
+
+activities:
+  sleep: { label: Sleep,   color: "#9B6B9E", visible: true }
+  work:  { label: Work,    color: "#3D6FB4", visible: true }
+  gym:   { label: Gym,     color: "#4E9A51", visible: false }
+
+blocks:
+  - { activity: sleep, days: [Mon, Tue, Wed, Thu, Fri], start: "06:00", end: "07:00" }
+  - { activity: gym,   days: [Mon, Wed, Fri],           start: "07:00", end: "08:00", label: Workout }
+  - { activity: work,  days: [Mon, Tue, Wed, Thu, Fri], start: "09:00", end: "17:00" }

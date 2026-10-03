@@ -1,0 +1,22 @@
+name: bandit
+
+on:
+  pull_request:
+    branches: ["main*"]
+  push:
+    branches: ["main"]
+
+jobs:
+  bandit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install uv and sync dependencies
+        run: |
+          pip install uv
+          uv sync --frozen
+      - name: Run bandit
+        run: uv run bandit -r src/timeglance -c pyproject.toml

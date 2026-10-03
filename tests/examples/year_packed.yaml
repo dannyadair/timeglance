@@ -1,0 +1,16 @@
+# Packed horizontal layout (days 1..31 flush), a hidden layer, and a weekly recurrence.
+title: "Mid-year plan"
+range:
+  start: 2026-06
+  end: 2026-09
+layout: horizontal
+week_align: false
+theme: dark
+
+layers:
+  - { id: alpha, label: Alpha, color: "#3FA7A0", visible: true }
+  - { id: beta,  label: Beta,  color: "#9B6B9E", visible: false }
+
+events:
+  - { layer: alpha, start: 2026-06-10, end: 2026-07-05, label: Sprint }
+  - { layer: beta,  label: Standup, rrule: "FREQ=WEEKLY;BYDAY=MO" }

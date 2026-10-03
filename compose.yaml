@@ -1,0 +1,29 @@
+# The whole app is one service: the timeglance control panel.
+#
+#   docker compose run --rm timeglance timeglance-init   # first time: scaffold the configs
+#   docker compose up                                    # open http://localhost:8753
+#
+# Config and output are bind-mounted, so the UI (and the scheduler) edit files on your
+# host and results appear in ./*/out. One-shot CLI renders still work, e.g.
+#   docker compose run --rm timeglance timeglance-year
+#   docker compose run --rm timeglance timeglance-weekly --format both
+#
+# Wallpaper-setting is host-only (needs a Plasma session); it is auto-hidden in the UI here.
+
+# Output and state are written as your host user (defaults to 1000:1000); override with
+#   UID=$(id -u) GID=$(id -g) docker compose up
+x-user: &user "${UID:-1000}:${GID:-1000}"
+
+services:
+  timeglance:
+    build: .
+    command: timeglance --host 0.0.0.0
+    user: *user
+    environment:
+      XDG_CACHE_HOME: /tmp # writable fontconfig cache when running as a non-root uid
+    ports:
+      - "8753:8753"
+    volumes:
+      - ./year:/app/year
+      - ./weekly:/app/weekly
+      - ./state:/app/state

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: {{ paper }} landscape; margin: 9mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+    color: #1b1b1b;
+    -weasy-hyphens: none;
+  }
+  .sheet { display: flex; flex-direction: column; }
+
+  header { flex: none; display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  header h1 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  header .meta { text-align: right; font-size: 11px; color: #666; }
+  header .meta .sub { font-size: 13px; color: #333; }
+
+  .legend { font-size: 10px; max-width: 640px; line-height: 1.6; }
+  .legend .item { display: inline-block; margin: 0 16px 0 0; white-space: nowrap; }
+  .legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .legend .hrs { color: #999; font-weight: 400; margin-left: 4px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 42px repeat({{ days | length }}, 1fr);
+    border: 1px solid #cfcfcf;
+    border-left: none;
+  }
+  .col { display: flex; flex-direction: column; border-left: 1px solid #e6e6e6; }
+  .col.time { border-left: none; }
+
+  .head {
+    height: 24px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    border-bottom: 1px solid #cfcfcf;
+    background: #f4f4f4;
+  }
+  .col.time .head { background: transparent; }
+  .col.today .head { background: #3D6FB4; color: #fff; }
+  .col.today .track { background: rgba(61,111,180,0.06); }
+
+  .track { position: relative; height: {{ track_h }}mm; }
+
+  .hline { position: absolute; left: 0; right: 0; border-top: 1px solid #ededed; }
+  .hline.major { border-top: 1px solid #dcdcdc; }
+
+  .hlabel {
+    position: absolute; right: 4px; transform: translateY(-50%);
+    font-size: 9px; color: #999;
+  }
+
+  .block {
+    position: absolute; left: 2px; right: 2px;
+    border-radius: 4px;
+    padding: 2px 5px;
+    overflow: hidden;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+  }
+  .block .t { font-size: 8px; opacity: 0.9; line-height: 1.1; }
+  .block .l { font-size: 10px; font-weight: 600; line-height: 1.15; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <header>
+      <div>
+        <h1>{{ title }}</h1>
+        <div class="legend">
+          {% for a in legend %}
+            <span class="item"><span class="swatch" style="background: {{ a.color }}"></span>{{ a.label }}<span class="hrs">{{ a.hours }}</span></span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="meta">
+        {% if subtitle %}<div class="sub">{{ subtitle }}</div>{% endif %}
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="col time">
+        <div class="head"></div>
+        <div class="track">
+          {% for hl in hour_lines %}
+            <div class="hlabel" style="top: {{ hl.top }}%">{{ hl.label }}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% for day in days %}
+      <div class="col {{ 'today' if day == today }}">
+        <div class="head">{{ day }}</div>
+        <div class="track">
+          {% for hl in hour_lines %}
+            <div class="hline {{ 'major' if hl.major }}" style="top: {{ hl.top }}%"></div>
+          {% endfor %}
+          {% for b in blocks[day] %}
+            <div class="block" style="top: {{ b.top }}%; height: {{ b.height }}%; background: {{ b.color }}">
+              <div class="t">{{ b.time }}</div>
+              <div class="l">{{ b.label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

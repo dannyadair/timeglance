@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# semantic-release pushes its `RELEASE: {version}` commit with a PAT, which re-triggers this
+# workflow. That commit has nothing to test or release, so skip every job on it (the alternative,
+# `[skip ci]` in the commit message, works too but is less explicit). On the RELEASE commit all
+# jobs skip; `release` needs the skipped jobs, so it skips with them.
+jobs:
+  pre-commit:
+    if: ${{ !startsWith(github.event.head_commit.message, 'RELEASE:') }}
+    uses: ./.github/workflows/pre-commit.yaml
+  tests:
+    if: ${{ !startsWith(github.event.head_commit.message, 'RELEASE:') }}
+    uses: ./.github/workflows/tests.yaml
+  release:
+    name: Release
+    needs: [pre-commit, tests] # a broken build never reaches the release step
+    if: ${{ !startsWith(github.event.head_commit.message, 'RELEASE:') }}
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.ref_name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+      - name: Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10
+        with:
+          github_token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+  # Publish to PyPI only when a release was actually cut (gated on the action's structured
+  # `released` output, never log-grepping). It runs in the `pypi` environment, so the OIDC
+  # token - and thus publishing rights - is scoped to this job rather than the whole workflow.
+  # Trusted publishing means no API token, and gh-action-pypi-publish attaches sigstore
+  # attestations by default. Dormant until the first release (1.0.0) is cut.
+  publish:
+    name: Publish to PyPI
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/timeglance
+    permissions:
+      id-token: write
+      contents: read # checkout needs read access while the repo is private
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.version }} # the tag semantic-release just pushed
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Build distributions
+        run: pip install uv && uv build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

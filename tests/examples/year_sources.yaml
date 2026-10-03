@@ -1,0 +1,13 @@
+# Exercises the external-source pipeline with a bundled local .ics file.
+title: "With calendar"
+range:
+  start: 2026-01
+  end: 2026-12
+
+layers:
+  - { id: work, label: Work, color: "#3D6FB4", visible: true }
+
+sources:
+  - { path: "sample.ics", label: Sample }
+
+events: []

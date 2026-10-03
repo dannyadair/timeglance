@@ -1,0 +1,108 @@
+[project]
+name = "timeglance"
+version = "0.0.0"
+description = "Printable weekly routine sheets and a year-at-a-glance planner / desktop wallpaper."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Danny W. Adair", email = "danny.adair@unfold.nz" }]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["calendar", "planner", "schedule", "wallpaper", "svg", "pdf", "yaml", "kde", "plasma", "ical"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Scheduling",
+    "Topic :: Multimedia :: Graphics",
+]
+dependencies = [
+    "pyyaml>=6.0.2",
+    "jinja2>=3.1.6",
+    "weasyprint>=62.3",
+    "cairosvg>=2.7.1",
+    "holidays>=0.105",
+    "python-dateutil>=2.9.0.post0",
+    "icalendar>=7.3.0",
+    "recurring-ical-events>=3.8.2",
+    "pypdfium2>=4.30.0",
+    "pillow>=10.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dannyadair/timeglance"
+Repository = "https://github.com/dannyadair/timeglance"
+Issues = "https://github.com/dannyadair/timeglance/issues"
+
+[project.scripts]
+timeglance = "timeglance.common.serve:main"
+timeglance-year = "timeglance.year.build:main"
+timeglance-weekly = "timeglance.weekly.build:main"
+timeglance-init = "timeglance.init:main"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "pytest>=9.1.1",
+    "python-semantic-release>=10",
+    "pip-audit>=2.7",
+    "bandit>=1.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/timeglance"]
+
+[tool.bandit]
+# B310: ICS feed URLs come from the user's own config. B404/B603/B607: fixed-argument
+# subprocess calls to kscreen-doctor/dbus-send for Plasma wallpaper - no shell, no user input.
+skips = ["B310", "B404", "B603", "B607"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+# Automated versioning via Conventional Commits: feat -> minor, fix -> patch, breaking -> major.
+# allow_zero_version is off, so the first release lands at 1.0.0 (no 0.x line). build_command
+# stays empty here - the semantic-release step only tags, writes the changelog and cuts a GitHub
+# Release; the separate `publish` job in release.yaml builds (`uv build`) and uploads to PyPI.
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["src/timeglance/__init__.py:__version__"]
+branch = "main"
+build_command = ""
+commit_message = "RELEASE: {version}"
+tag_format = "{version}"
+major_on_zero = false
+allow_zero_version = false
+
+[tool.semantic_release.changelog_sections]
+feat = "Features"
+fix = "Bug Fixes"
+docs = "Documentation"
+refactor = "Refactor"
+perf = "Performance"
+revert = "Reverts"
+
+[tool.semantic_release.changelog_exclude]
+types = ["style", "test", "build", "ci", "chore"]
+
+[tool.semantic_release.changelog_section_headers]
+feat = "### Features"
+fix = "### Bug Fixes"
+docs = "### Documentation"
+refactor = "### Refactor"
+perf = "### Performance"
+revert = "### Reverts"

@@ -1,0 +1,24 @@
+# Default layout: week-aligned vertical, a full fixed year with NZ public holidays.
+title: "2026"
+range:
+  start: 2026-01
+  end: 2026-12
+week_start: Mon
+layout: vertical
+week_align: true
+
+holidays:
+  country: NZ
+  subdiv: WGN
+  layer: public_holidays
+
+layers:
+  - { id: work,            label: Work,             color: "#3D6FB4", visible: true }
+  - { id: leave,           label: Annual leave,     color: "#4E9A51", visible: true }
+  - { id: public_holidays, label: Public holidays,  color: "#C4553B", visible: true }
+
+events:
+  - { layer: work,  start: 2026-02-02, end: 2026-03-13, label: Project Apollo }
+  - { layer: leave, start: 2026-04-20, end: 2026-05-01, label: Autumn break }
+  - { layer: leave, date: 2026-07-24, label: Day off }
+  - { layer: work,  date: 1990-05-15, label: Review, repeat: yearly }

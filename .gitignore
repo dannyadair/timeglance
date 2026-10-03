@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+.pytest_cache/
+dist/
+weekly/out/
+year/out/
+state/
+
+# Private working configs; scaffold them with `timeglance-init`. The year config can hold
+# calendar share links / secrets; the weekly config is your personal schedule.
+weekly/config.yaml
+year/config.yaml
+
+# Backups written before a "reset to template" (config.yaml.<stamp>.bak etc.)
+*.yaml.*.bak
