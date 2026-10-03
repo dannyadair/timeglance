@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""timeglance control panel: one server driving both tools.
+"""timeglance control panel: one web UI driving both tools.
 
-A single-page UI (common/web) switches between the weekly sheet and the year planner,
-and between a live preview and a raw-YAML config editor. It renders previews, exports
-(PNG/PDF), sets the desktop wallpaper, and runs a daily re-render scheduler.
-
-Run:  python -m common.serve   then open http://localhost:8753
-The YAML is read on every request, so external edits show up on reload.
+Switch between the weekly routine sheet and the year-at-a-glance planner, edit each
+tool's YAML, preview live, export to PNG/PDF, set the desktop wallpaper, and schedule a
+daily re-render. Open http://localhost:8753 once it's running.
 """
 
 import argparse
