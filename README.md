@@ -8,14 +8,10 @@
 [![bandit](https://img.shields.io/github/actions/workflow/status/dannyadair/timeglance/bandit.yaml?label=bandit&logo=python)](https://github.com/dannyadair/timeglance/actions/workflows/bandit.yaml)
 [![Last commit](https://img.shields.io/github/last-commit/dannyadair/timeglance?color=lightgrey)](https://github.com/dannyadair/timeglance/commits/main)
 [![License](https://img.shields.io/github/license/dannyadair/timeglance?color=lightgrey)](https://github.com/dannyadair/timeglance/blob/main/LICENSE)
-
-<!-- Add once published to PyPI (and if you wire up these services), matching pdfbaker:
 [![PyPI version](https://img.shields.io/pypi/v/timeglance?color=blue)](https://pypi.org/project/timeglance/)
 [![Downloads](https://img.shields.io/pypi/dw/timeglance?color=blue)](https://pypistats.org/packages/timeglance)
 [![sigstore](https://img.shields.io/badge/sigstore-signed-blue)](https://github.com/dannyadair/timeglance/releases)
-[![codecov](https://img.shields.io/codecov/c/github/dannyadair/timeglance)](https://codecov.io/gh/dannyadair/timeglance)
 [![OSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/dannyadair/timeglance?label=OSSF%20Scorecard)](https://scorecard.dev/viewer/?uri=github.com/dannyadair/timeglance)
--->
 
 Config-driven time planning at a glance - one web UI controls two tools:
 
@@ -23,9 +19,9 @@ Config-driven time planning at a glance - one web UI controls two tools:
 - **Year** - a wide year-at-a-glance planner, with layers fed by your own calendars, public holidays, and manually
   added events. Print it or set it as a desktop wallpaper.
 
-![Weekly routine sheet](docs/images/weekly.png)
+![Weekly routine sheet](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/weekly.png)
 
-![Year-at-a-glance planner](docs/images/year.png)
+![Year-at-a-glance planner](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/year.png)
 
 ## Quick start (Docker)
 
