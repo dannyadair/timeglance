@@ -75,14 +75,19 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 
 # Automated versioning via Conventional Commits: feat -> minor, fix -> patch, breaking -> major.
-# allow_zero_version is off, so the first release lands at 1.0.0 (no 0.x line). build_command
-# stays empty here - the semantic-release step only tags, writes the changelog and cuts a GitHub
-# Release; the separate `publish` job in release.yaml builds (`uv build`) and uploads to PyPI.
+# allow_zero_version is off, so the first release lands at 1.0.0 (no 0.x line). build_command runs
+# after the version bump: it re-locks uv.lock so its root version stays in sync (the PSR action
+# image has no uv, hence the install) and stages it for the RELEASE commit. The separate `publish`
+# job in release.yaml does the actual build (`uv build`) and PyPI upload.
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 version_variables = ["src/timeglance/__init__.py:__version__"]
 branch = "main"
-build_command = ""
+build_command = """
+pip install uv
+uv lock
+git add uv.lock
+"""
 commit_message = "RELEASE: {version}"
 tag_format = "{version}"
 major_on_zero = false
