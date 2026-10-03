@@ -35,6 +35,8 @@ Versioning is automated with [python-semantic-release](https://python-semantic-r
 - `feat: …` → minor bump, `fix: …` → patch bump, breaking change (`feat!: …` or a `BREAKING CHANGE:` footer) →
   major bump; `docs:` / `refactor:` / `perf:` show up in the changelog.
 - An optional scope narrows the area, e.g. `feat(weekly): …` or `fix(year): …`.
+- PyPI only re-renders the README on a new release, so a README/badge change that needs to show on the PyPI page
+  should be `fix:` (not `docs:`) to cut a version and republish.
 
 On every push to `main`, CI runs semantic-release. When the new commits warrant a bump (per the rules above) it
 raises the version in `pyproject.toml` (and `src/timeglance/__init__.py:__version__`), updates the changelog, tags,
