@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.3 (2026-10-03)
+
+### Bug Fixes
+
+- Scale year planner preview to fit the pane ([#3](https://github.com/dannyadair/timeglance/pull/3),
+  [`5f18bf8`](https://github.com/dannyadair/timeglance/commit/5f18bf8aca19855c4f6609aaf727841af5ddb002))
+
+
 ## v1.0.2 (2026-10-03)
 
 ### Bug Fixes

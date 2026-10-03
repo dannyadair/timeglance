@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 5
 requires-python = ">=3.13"
 
 [[package]]
@@ -1286,7 +1286,7 @@ wheels = [
 
 [[package]]
 name = "timeglance"
-version = "0.0.0"
+version = "1.0.3"
 source = { editable = "." }
 dependencies = [
     { name = "cairosvg" },

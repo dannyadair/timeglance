@@ -1,6 +1,6 @@
 [project]
 name = "timeglance"
-version = "1.0.2"
+version = "1.0.3"
 description = "Printable weekly routine sheets and a year-at-a-glance planner / desktop wallpaper."
 readme = "README.md"
 requires-python = ">=3.13"
