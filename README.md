@@ -19,9 +19,17 @@ Config-driven time planning at a glance - one web UI controls two tools:
 - **Year** - a wide year-at-a-glance planner, with layers fed by your own calendars, public holidays, and manually
   added events. Print it or set it as a desktop wallpaper.
 
-![Weekly routine sheet](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/weekly.png)
+One web control panel drives both - preview live, toggle layers, edit the YAML, export, or set the wallpaper:
 
-![Year-at-a-glance planner](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/year.png)
+![The weekly routine in the control panel](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/weekly.png)
+
+![The year planner in the control panel](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/year.png)
+
+...and the rendered output you print or set as a wallpaper:
+
+![Weekly routine sheet](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/weekly_output.png)
+
+![Year-at-a-glance planner](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/year_output.png)
 
 ## Quick start (Docker)
 
