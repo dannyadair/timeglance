@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.1.0 (2026-10-06)
+
+### Features
+
+- Highlight today's weekday and use 3-letter labels in the year planner rail
+  ([#10](https://github.com/dannyadair/timeglance/pull/10),
+  [`b887519`](https://github.com/dannyadair/timeglance/commit/b88751940f1757af6de281c80d94173169d1dbf0))
+
+
 ## v1.0.3 (2026-10-03)
 
 ### Bug Fixes
