@@ -6,7 +6,7 @@
 # your own range, calendars and events:   cp config.yaml.in config.yaml
 # ============================================================================
 
-title: "2026"              # header title; comment out to auto-generate from the range
+# title: My Year           # header title; uncomment to override the auto-generated one (the range's year)
 
 # Month range to render. Rows = months in range, so FEWER months => TALLER rows
 # (in the `vertical` layout months are columns, so fewer months => WIDER columns => more
@@ -16,8 +16,9 @@ title: "2026"              # header title; comment out to auto-generate from the
 #   range: { span: upcoming_year }               # rolling 12 months from this month
 #   range: { span: custom, before: 1, after: 11 }  # months of lookbehind/lookahead around today
 range:
-  start: 2026-01           # e.g. today-1  (include last month)
-  end: 2026-12             # e.g. year-end   or   today+12  (rolling window)
+  span: this_year          # Jan-Dec of the current year - stays current with no yearly edit
+  # start: 2026-01         # or set an explicit range instead of a span: today-1, year-start, YYYY-MM ...
+  # end: 2026-12           # ... today+12, year-end, YYYY-MM  (rolling window)
 week_start: Mon            # Mon | Sun
 # layout: vertical         # vertical (default; months as columns) | horizontal (months as rows); omit -> render both
 # week_align: true         # true (default): weekday-aligned slots, weekends in bands; false: pack days 1..31 flush
