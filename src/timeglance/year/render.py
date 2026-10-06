@@ -22,7 +22,7 @@ from html import escape
 from dateutil.rrule import MONTHLY, WEEKLY, rrule, rrulestr
 
 MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-WD2 = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]  # index = date.weekday()
+WD3 = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]  # index = date.weekday()
 
 THEMES = {
     "light": {
@@ -466,7 +466,7 @@ def render_svg(cfg: Config) -> str:
             if cfg.show_today and d == today:
                 today_box = (x, row_top)
             out.append(_text(x + 3, row_top + 12, day, 10.5, t["text"], weight="600"))
-            out.append(_text(x + 3, row_top + 12 + 8, WD2[d.weekday()], 6.5, t["muted"]))
+            out.append(_text(x + 3, row_top + 12 + 8, WD3[d.weekday()], 6.5, t["muted"]))
 
         out.append(_line(grid_left, row_top, grid_left + grid_w, row_top, t["grid"], 1))
 
@@ -576,11 +576,24 @@ def _render_vertical(cfg: Config) -> str:
     out = [_svg_open(W, H), _rect(0, 0, W, H, t["bg"])]
     _draw_header(out, cfg, t, pad, visible)
 
-    # left rail + row grid: weekday letters (aligned) or day numbers (packed)
+    # left rail + row grid: weekday letters (aligned) or day numbers (packed);
+    # today's row label is picked out in the accent colour so the far-left rail ties to its cell
+    today_row = col_of(cfg, today) if cfg.show_today and (today.year, today.month) in months else None
     for r in range(nrows):
         ry = grid_top + r * row_h
-        rail = WD2[(r + cfg.start_idx) % 7] if aligned else str(r + 1)
-        out.append(_text(grid_left - 6, ry + row_h / 2 + 3.5, rail, 8.5, t["muted"], anchor="end"))
+        rail = WD3[(r + cfg.start_idx) % 7] if aligned else str(r + 1)
+        hot = r == today_row
+        out.append(
+            _text(
+                grid_left - 6,
+                ry + row_h / 2 + 3.5,
+                rail,
+                8.5,
+                t["today"] if hot else t["muted"],
+                weight="700" if hot else "normal",
+                anchor="end",
+            )
+        )
         out.append(_line(grid_left, ry, grid_left + grid_w, ry, t["grid"], 1))
     out.append(_line(grid_left, grid_top + grid_h, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
 
