@@ -1,0 +1,94 @@
+# ============================================================================
+# Demo data behind the README / docs screenshots (docs/images/year*.png).
+# Committed sample data - NOT a personal config - so the screenshots are
+# reproducible. Load it with TIMEGLANCE_HOME=docs/demo. A render change means
+# refreshing four shots together: the two *_output.png renders and the two
+# control-panel captures (year.png / weekly.png).
+# ============================================================================
+
+title: "2026"              # header title; comment out to auto-generate from the range
+
+# Month range to render. Rows = months in range, so FEWER months => TALLER rows
+# (in the `vertical` layout months are columns, so fewer months => WIDER columns => more
+# label room). Tokens for start/end: today, today-N, today+N (months), year-start,
+# year-end, or YYYY-MM. Or use a span preset instead of start/end:
+#   range: { span: this_year }                   # Jan-Dec of the current year
+#   range: { span: upcoming_year }               # rolling 12 months from this month
+#   range: { span: custom, before: 1, after: 11 }  # months of lookbehind/lookahead around today
+range:
+  start: 2026-01           # e.g. today-1  (include last month)
+  end: 2026-12             # e.g. year-end   or   today+12  (rolling window)
+week_start: Mon            # Mon | Sun
+# layout: vertical         # vertical (default; months as columns) | horizontal (months as rows); omit -> render both
+# week_align: true         # true (default): weekday-aligned slots, weekends in bands; false: pack days 1..31 flush
+show_today: true           # draw a box around today
+dim_past: true             # fade the days before today
+
+# Named sizes (optional). `size` (or --size) may reference one by name, or be a raw WxH.
+sizes:
+  laptop: 1920x1080
+  ultrawide: 3440x1440
+  print-a3: 3508x2480
+size: laptop
+
+# Auto-populate public holidays via the `holidays` package (country + locality here).
+holidays:
+  country: NZ
+  subdiv: WGN              # region for anniversary days (WGN, AUK, CAN, OTA, ...)
+  layer: holidays
+  observed: true           # include "(observed)" entries
+
+# External iCalendar sources (optional). Each is merged into the event stream and
+# mapped to a layer. Reference an existing layer id below, or give label/color to
+# create one. `url:` fetches over HTTP (e.g. a Proton Calendar share link ending
+# in .ics); `path:` reads a local file. `refresh:` (seconds) tunes the URL cache.
+# NOTE: a Proton share link embeds a secret key -- keep it in your private
+# config.yaml, not in this tracked template.
+# sources:
+#   - { url: "https://calendar.proton.me/api/calendar/v1/url/XXXX/calendar.ics", layer: birthdays }
+#   - { path: "~/calendars/my-year.ics", label: My Year, color: "#7A7F87" }
+
+# Wallpaper (KDE Plasma only, auto-detected). `--wallpaper` or the UI's "Set as wallpaper"
+# button render each chosen screen at its native resolution and set it as that screen's
+# background; other screens are left untouched.
+wallpaper:
+  screens: all              # all | primary | [eDP-1, HDMI-A-1]   (or --screen)
+  fill: preserveAspectCrop  # preserveAspectCrop | preserveAspectFit | stretch | tile | pad
+  # theme: light            # which variant to use as wallpaper; default = first / light
+  # layout: vertical        # default = first / vertical
+  # week_align: true        # default = config week_align (true)
+
+# Layers group events; toggle with `visible`, or override with --only / --hide.
+layers:
+  - { id: work,      label: Work & projects,       color: "#3D6FB4", visible: true }
+  - { id: leave,     label: Annual leave,          color: "#4E9A51", visible: true }
+  - { id: holidays,  label: Public holidays,       color: "#C4553B", visible: true }
+  - { id: birthdays, label: Birthdays,             color: "#E4884A", visible: true }
+  - { id: family,    label: Family & travel,       color: "#9B6B9E", visible: true }
+  - { id: meetups,   label: Meetups,               color: "#3FA7A0", visible: true }
+
+# Events. A single day uses `date:`; a span uses `start:` + `end:` (inclusive).
+# Recurrence: `repeat: yearly|weekly|monthly`, or a full `rrule:` (RFC 5545 / dateutil).
+events:
+  # Work & projects
+  - { layer: work, start: 2026-01-12, end: 2026-03-20, label: Project Apollo }
+  - { layer: work, start: 2026-04-07, end: 2026-06-30, label: Platform migration }
+  - { layer: work, start: 2026-09-01, end: 2026-11-13, label: Q4 launch }
+  - { layer: work, date: 2026-05-15, label: Board review }
+
+  # Annual leave
+  - { layer: leave, start: 2026-04-20, end: 2026-05-01, label: Autumn break }
+  - { layer: leave, start: 2026-12-21, end: 2027-01-02, label: Christmas leave }
+
+  # Public holidays are auto-populated from the `holidays:` block above.
+
+  # Birthdays (repeat: yearly -> month/day projected onto each year in range; set once)
+  # ...or pull them from a calendar via `sources:` above.
+  - { layer: birthdays, date: 1990-02-14, label: Sample birthday, repeat: yearly }
+
+  # Family & travel
+  - { layer: family, start: 2026-07-10, end: 2026-07-24, label: Visit }
+  - { layer: family, start: 2026-08-14, end: 2026-08-17, label: Weekend away }
+
+  # Meetups -- full rrule: e.g. every third Thursday of the month
+  - { layer: meetups, label: Python meetup, rrule: "FREQ=MONTHLY;BYDAY=+3TH" }

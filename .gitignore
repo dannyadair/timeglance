@@ -8,6 +8,11 @@ weekly/out/
 year/out/
 state/
 
+# Render artifacts from the committed demo project (docs/demo); only its config.yaml is tracked
+docs/demo/*/out/
+docs/demo/state/
+docs/demo/*/server.log
+
 # Private working configs; scaffold them with `timeglance-init`. The year config can hold
 # calendar share links / secrets; the weekly config is your personal schedule.
 weekly/config.yaml
