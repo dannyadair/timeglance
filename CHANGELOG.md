@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.1.1 (2026-10-06)
+
+### Bug Fixes
+
+- Default the year template to the current year (span: this_year, auto title)
+  ([#13](https://github.com/dannyadair/timeglance/pull/13),
+  [`5e2d9d1`](https://github.com/dannyadair/timeglance/commit/5e2d9d10ba219b3132ba1ebee93e968946bcfcde))
+
+### Documentation
+
+- Add committed demo config + gitignore guards for reproducible screenshots
+  ([#13](https://github.com/dannyadair/timeglance/pull/13),
+  [`5e2d9d1`](https://github.com/dannyadair/timeglance/commit/5e2d9d10ba219b3132ba1ebee93e968946bcfcde))
+
+- Add committed demo config + gitignore guards for reproducible screenshots
+  ([#12](https://github.com/dannyadair/timeglance/pull/12),
+  [`7816740`](https://github.com/dannyadair/timeglance/commit/7816740cecf286521e83c12646a7449d15755805))
+
+- Refresh year planner screenshot for today-weekday highlight and 3-letter labels
+  ([#11](https://github.com/dannyadair/timeglance/pull/11),
+  [`2ca5c63`](https://github.com/dannyadair/timeglance/commit/2ca5c63a746676eef53c74a39476b4257966a47d))
+
+
 ## v1.1.0 (2026-10-06)
 
 ### Features
