@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.2.0 (2026-10-09)
+
+### Features
+
+- In-app help popover for the year range-date notations
+  ([#15](https://github.com/dannyadair/timeglance/pull/15),
+  [`7d3844c`](https://github.com/dannyadair/timeglance/commit/7d3844ce4095d895c531c350398772f6ec74d0ea))
+
+
 ## v1.1.2 (2026-10-09)
 
 ### Bug Fixes
