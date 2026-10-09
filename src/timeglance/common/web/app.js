@@ -320,6 +320,14 @@ function wireActions() {
 
 const FILLS = ["preserveAspectCrop", "preserveAspectFit", "stretch", "tile", "pad"];
 
+// Which screens the YAML `wallpaper.screens` selects: "all" | "primary" | list of output names.
+function wpSelected(sel, s) {
+  if (!sel || sel === "all") return true;
+  if (sel === "primary") return !!s.primary;
+  const list = Array.isArray(sel) ? sel : String(sel).split(",").map((x) => x.trim());
+  return list.includes(s.name);
+}
+
 function openWallpaperDialog(wp) {
   const bg = el("div", { className: "modal-bg" });
   const modal = el("div", { className: "modal" });
@@ -329,7 +337,8 @@ function openWallpaperDialog(wp) {
     const id = "wpscr_" + s.name;
     const row = el("div", { className: "scr" });
     row.dataset.toggle = id;
-    row.innerHTML = `<input type="checkbox" id="${id}" value="${s.name}" checked>
+    const on = wpSelected(wp.selected, s);
+    row.innerHTML = `<input type="checkbox" id="${id}" value="${s.name}" ${on ? "checked" : ""}>
       <label><span>${model}</span>
       <span class="res">${s.name} · ${s.w}×${s.h}${s.primary ? " · primary" : ""}</span></label>`;
     list.append(row);
