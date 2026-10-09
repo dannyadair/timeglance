@@ -17,7 +17,7 @@
   .seg { display: inline-flex; border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; }
   .seg button { border: none; border-radius: 0; background: #fff; padding: 5px 12px; }
   .seg button.on { background: var(--accent); color: #fff; }
-  .grp { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .grp { position: relative; display: flex; align-items: center; gap: 6px; font-size: 13px; }
   label { color: var(--mut); }
   select, input { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--bd); border-radius: 6px; }
   input.range { width: 88px; }
@@ -80,6 +80,13 @@
   .modal .foot { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
   .modal .foot .sp { flex: 1; }
   .modal .warn { color: #C4553B; font-size: 12px; margin: 8px 0 0; }
+  .help-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 320px; background: #fff;
+       border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.18); padding: 10px 28px 10px 12px; }
+  .help-pop h4 { margin: 0 0 6px; font-size: 12px; }
+  .help-pop dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; font-size: 12px; }
+  .help-pop dt { font-family: ui-monospace, "DejaVu Sans Mono", monospace; color: var(--accent); white-space: nowrap; }
+  .help-pop dd { margin: 0; color: var(--mut); }
+  .help-pop .x { position: absolute; top: 4px; right: 8px; cursor: pointer; color: var(--mut); font-size: 15px; }
 </style>
 </head>
 <body>

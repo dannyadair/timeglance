@@ -46,10 +46,60 @@ function buildControls() {
   controls
     .querySelectorAll("select, input")
     .forEach((c) => c.addEventListener(c.type === "checkbox" ? "change" : "input", preview));
+  if (state.tool === "year") wireRangeHelp();
 }
 
 function grp(label, inner) {
   return el("span", { className: "grp" }, `<label>${label}</label>${inner}`);
+}
+
+let rangeHelpOff;
+
+// Legend for the range date-notations. Pops up on its own while you work in the range fields;
+// the × tucks it away so you can read what's underneath while still typing. It reappears when
+// you re-enter a field and clears once you move on elsewhere.
+function wireRangeHelp() {
+  if (rangeHelpOff) rangeHelpOff();
+  const start = $("#c_start");
+  const end = $("#c_end");
+  const pop = el("div", { className: "help-pop hidden" },
+    `<span class="x">×</span><h4>Range notations (start / end month)</h4>
+     <dl>
+       <dt>2026</dt><dd>a whole year (Jan–Dec)</dd>
+       <dt>2026-07</dt><dd>a specific month</dd>
+       <dt>today</dt><dd>the current month</dd>
+       <dt>today±N</dt><dd>N months from now, e.g. today-1, today+12</dd>
+       <dt>year-start</dt><dd>January of the current year</dd>
+       <dt>year-end</dt><dd>December of the current year</dd>
+     </dl>`);
+  start.parentElement.append(pop);
+  const zone = [start, end, pop];
+  const inZone = (t) => zone.some((z) => z === t || z.contains(t));
+  let dismissed = false;
+  const onFocus = (e) => {
+    if (e.target === start || e.target === end) {
+      if (!dismissed) pop.classList.remove("hidden");
+    } else if (!inZone(e.target)) {
+      dismissed = false;
+      pop.classList.add("hidden");
+    }
+  };
+  const onDown = (e) => {
+    if (!inZone(e.target)) {
+      dismissed = false;
+      pop.classList.add("hidden");
+    }
+  };
+  $(".x", pop).addEventListener("click", () => {
+    dismissed = true;
+    pop.classList.add("hidden");
+  });
+  document.addEventListener("focusin", onFocus);
+  document.addEventListener("pointerdown", onDown);
+  rangeHelpOff = () => {
+    document.removeEventListener("focusin", onFocus);
+    document.removeEventListener("pointerdown", onDown);
+  };
 }
 
 // ---- sidebar (per tool) ----
