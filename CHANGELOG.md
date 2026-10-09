@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.1.2 (2026-10-09)
+
+### Bug Fixes
+
+- Wallpaper dialog pre-selects screens from the YAML wallpaper.screens config
+  ([#14](https://github.com/dannyadair/timeglance/pull/14),
+  [`e175a74`](https://github.com/dannyadair/timeglance/commit/e175a746e791e1033e3acf0d8b436e97f87b3bff))
+
+
 ## v1.1.1 (2026-10-06)
 
 ### Bug Fixes
