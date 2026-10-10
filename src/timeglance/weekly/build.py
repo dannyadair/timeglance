@@ -155,7 +155,7 @@ def resolve_shadow(wp):
 
 def make_wallpaper_renderer(pdf_bytes, background, margin, shadow):
     """render_png(screen, path): the page-shaped sheet centred on a `background` canvas at
-    the screen's native resolution, with `margin` (fraction of the short edge) kept clear
+    the screen's current resolution, with `margin` (fraction of the short edge) kept clear
     and an optional soft drop shadow so it reads as a page sitting on the desk."""
     page = pdfium.PdfDocument(pdf_bytes)[0]
     pt_w, pt_h = page.get_size()

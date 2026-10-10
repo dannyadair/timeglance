@@ -423,7 +423,7 @@ function openWallpaperDialog(wp) {
   };
   modal.append(
     el("h3", {}, "Set as wallpaper"),
-    el("label", { style: "font-size:12px;color:var(--mut)" }, "Screens (rendered at native resolution)"),
+    el("label", { style: "font-size:12px;color:var(--mut)" }, "Screens (rendered at current resolution)"),
     list,
     el("div", { className: "grp", style: "margin-top:10px" }, "<label>Fit</label>"),
     warn,

@@ -56,7 +56,7 @@ blocks:
   - { days: [Mon, Tue, Wed, Thu, Sun], start: "21:15", end: "22:00", activity: downtime, label: Reading }
 
 # Desktop wallpaper (KDE Plasma; --wallpaper). The page-shaped sheet is centred on a
-# solid canvas at each screen's native resolution.
+# solid canvas at each screen's current resolution.
 wallpaper:
   background: "#2b2f36" # canvas colour behind the sheet
   margin: 0.05          # fraction of the screen's short edge kept clear around the sheet

@@ -6,7 +6,7 @@ apply) is the seam for adding GNOME, wlroots (swww), etc. later.
 
 Plasma sets each screen independently via a Plasma scripting snippet (evaluateScript
 over the session bus), matching containments to outputs by logical geometry, so we can
-render one screen at its native resolution and leave the others untouched.
+render one screen at its current resolution and leave the others untouched.
 
 apply() is the generic driver: it walks the chosen screens, hands each to a caller-
 supplied render_png(screen, path) callback, and sets the results. The callback is the
@@ -35,7 +35,7 @@ class Screen:
     y: int
     lw: int  # logical size (for matching Plasma's screenGeometry)
     lh: int
-    pw: int  # physical size (for rendering at native resolution)
+    pw: int  # physical size of the current mode (the render target)
     ph: int
     primary: bool = False
     model: str = ""  # friendly name from EDID, e.g. "DELL U3821DW"
