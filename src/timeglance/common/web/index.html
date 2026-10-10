@@ -67,6 +67,8 @@
   .sched .card { border: 1px solid var(--bd); border-radius: 8px; background: #fff; padding: 14px 16px; }
   .sched pre { background: #0f1116; color: #d7dbe0; padding: 12px; border-radius: 8px; overflow: auto;
        font-size: 12px; line-height: 1.5; max-height: 46vh; margin: 0; }
+  .sched .hint { font-size: 12px; color: var(--mut); margin-left: 8px; }
+  .sched .dst { font-size: 12px; color: var(--mut); }
   .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: #c0c4cc; }
   .dot.on { background: #4E9A51; }
   .cfg-err { color: #C4553B; font-size: 12px; white-space: pre-wrap; }
@@ -95,9 +97,9 @@
 <body>
   <header>
     <span class="brand"><img src="/favicon.svg" alt="">timeglance</span>
-    <span class="seg" id="tool">
-      <button data-tool="weekly">Weekly</button>
-      <button data-tool="year">Year</button>
+    <span class="seg" id="planner">
+      <button data-planner="weekly">Weekly</button>
+      <button data-planner="year">Year</button>
     </span>
     <span class="seg" id="view">
       <button data-view="preview">Preview</button>

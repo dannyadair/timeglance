@@ -4,7 +4,7 @@ const el = (tag, attrs = {}, html) => {
   if (html != null) n.innerHTML = html;
   return n;
 };
-const state = { tool: "weekly", view: "preview", prevView: "preview", cfg: {} };
+const state = { planner: "weekly", view: "preview", prevView: "preview", cfg: {} };
 
 const side = $("#side");
 const body = $("#viewbody");
@@ -17,11 +17,11 @@ function setStatus(msg) {
   status.textContent = msg || "";
 }
 
-async function loadConfig(tool) {
-  state.cfg[tool] = await fetch("/api/config?tool=" + tool).then((r) => r.json());
+async function loadConfig(planner) {
+  state.cfg[planner] = await fetch("/api/config?planner=" + planner).then((r) => r.json());
 }
 
-// ---- header controls (per tool) ----
+// ---- header controls (per planner) ----
 function opt(values, current) {
   return values
     .map((v) => `<option value="${v}" ${v === current ? "selected" : ""}>${v || "(none)"}</option>`)
@@ -29,9 +29,9 @@ function opt(values, current) {
 }
 
 function buildControls() {
-  const m = state.cfg[state.tool].meta;
+  const m = state.cfg[state.planner].meta;
   controls.innerHTML = "";
-  if (state.tool === "year") {
+  if (state.planner === "year") {
     controls.append(
       grp("Theme", `<select id="c_theme">${opt(m.themes, m.theme)}</select>`),
       grp("Layout", `<select id="c_layout">${opt(m.layouts, m.layout)}</select>`),
@@ -46,7 +46,7 @@ function buildControls() {
   controls
     .querySelectorAll("select, input")
     .forEach((c) => c.addEventListener(c.type === "checkbox" ? "change" : "input", preview));
-  if (state.tool === "year") wireRangeHelp();
+  if (state.planner === "year") wireRangeHelp();
 }
 
 function grp(label, inner) {
@@ -102,11 +102,11 @@ function wireRangeHelp() {
   };
 }
 
-// ---- sidebar (per tool) ----
+// ---- sidebar (per planner) ----
 function buildSide() {
-  const m = state.cfg[state.tool].meta;
+  const m = state.cfg[state.planner].meta;
   side.innerHTML = "";
-  side.append(el("h2", {}, state.tool === "year" ? "Layers" : "Activities"));
+  side.append(el("h2", {}, state.planner === "year" ? "Layers" : "Activities"));
   for (const l of m.layers) {
     const id = "ly_" + l.id;
     const row = el("div", { className: "row" });
@@ -116,7 +116,7 @@ function buildSide() {
     row.querySelector("input").addEventListener("change", preview);
     side.append(row);
   }
-  if (state.tool !== "year") return;
+  if (state.planner !== "year") return;
   const byId = Object.fromEntries(m.layers.map((l) => [l.id, l.color]));
   side.append(el("h2", { style: "margin-top:16px" }, "Sources"));
   for (const s of m.sources) {
@@ -133,10 +133,10 @@ function buildSide() {
 
 // ---- params ----
 function params() {
-  const p = new URLSearchParams({ tool: state.tool });
+  const p = new URLSearchParams({ planner: state.planner });
   const hide = [...side.querySelectorAll("input[data-layer]:not(:checked)")].map((c) => c.value);
   p.set("hide", hide.join(","));
-  if (state.tool === "year") {
+  if (state.planner === "year") {
     p.set("theme", $("#c_theme").value);
     p.set("layout", $("#c_layout").value);
     p.set("week_align", $("#c_align").checked);
@@ -157,7 +157,7 @@ async function preview() {
   body.innerHTML = LOADING_PANE;
   const pane = $(".preview-pane", body);
   const q = params();
-  if (state.tool === "year") {
+  if (state.planner === "year") {
     const res = await fetch("/api/preview?" + q);
     pane.classList.remove("loading");
     if (res.ok) {
@@ -180,7 +180,7 @@ async function preview() {
 }
 
 function showConfig() {
-  const c = state.cfg[state.tool];
+  const c = state.cfg[state.planner];
   body.innerHTML = "";
   const ta = el("textarea", { spellcheck: false });
   ta.value = c.yaml;
@@ -192,13 +192,13 @@ function showConfig() {
   const reset = el("button", { className: "danger", style: "margin-left:auto" }, "Reset to template…");
   ta.addEventListener("input", () => (flash.textContent = ""));
   save.onclick = async () => {
-    const r = await fetch("/api/config?tool=" + state.tool, { method: "POST", body: JSON.stringify({ yaml: ta.value }) }).then((r) => r.json());
+    const r = await fetch("/api/config?planner=" + state.planner, { method: "POST", body: JSON.stringify({ yaml: ta.value }) }).then((r) => r.json());
     if (r.ok) {
       err.textContent = "";
       flash.textContent = "saved ✓";
       note.textContent = c.path;
       setStatus("saved ✓");
-      await loadConfig(state.tool);
+      await loadConfig(state.planner);
       buildControls();
       buildSide();
     } else err.textContent = r.error || "save failed";
@@ -209,12 +209,12 @@ function showConfig() {
     const no = el("button", {}, "Cancel");
     no.onclick = () => (err.textContent = "");
     yes.onclick = async () => {
-      const r = await fetch("/api/config/reset?tool=" + state.tool, { method: "POST" }).then((r) => r.json());
+      const r = await fetch("/api/config/reset?planner=" + state.planner, { method: "POST" }).then((r) => r.json());
       if (r.error) {
         err.textContent = r.error;
         return;
       }
-      state.cfg[state.tool] = r;
+      state.cfg[state.planner] = r;
       showConfig();
       buildControls();
       buildSide();
@@ -223,7 +223,7 @@ function showConfig() {
     const row = el("div", { style: "display:flex; align-items:center; gap:8px" });
     row.append(
       el("span", { style: "flex:1" },
-        `Discard your ${state.tool} config and replace it with the template? A timestamped .bak is written first.`),
+        `Discard your ${state.planner} config and replace it with the template? A timestamped .bak is written first.`),
       yes, no,
     );
     err.append(row);
@@ -239,36 +239,45 @@ async function showSchedule() {
   body.innerHTML = "";
   const wrap = el("div", { className: "sched" });
   wrap.append(el("div", { className: "sched-head" },
-    "<h1>Schedule</h1><p>One daily re-render for the whole app. Tick which tools it rebuilds below; see the Log for outcomes.</p>"));
+    "<h1>Schedule</h1><p>Daily re-rendering of planners - write their files to disk, set them as desktop wallpaper.</p>"));
 
   const card = el("div", { className: "card" });
   card.append(
     el("div", { className: "grp", style: "margin-bottom:10px" },
       `<span class="dot ${s.running ? "on" : ""}"></span><strong>${s.running ? "Running" : "Stopped"}</strong>`),
-    el("div", { className: "grp" }, `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px">`),
-    el("div", { className: "grp", style: "margin-top:8px" },
-      `<label>Tools</label>
-       <span data-toggle="s_year"><input type="checkbox" id="s_year" ${s.tools.includes("year") ? "checked" : ""}><label>Year</label></span>
-       <span data-toggle="s_weekly"><input type="checkbox" id="s_weekly" ${s.tools.includes("weekly") ? "checked" : ""}><label>Weekly</label></span>
-       <span data-toggle="s_wp"><input type="checkbox" id="s_wp" ${s.wallpaper ? "checked" : ""}><label>set wallpaper</label></span>`),
+    el("div", { className: "grp" },
+      `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px"><span class="hint">${s.tz}</span>`),
   );
-  // Per-tool screen assignment: with >1 screen, each tool can target specific outputs
-  // (e.g. weekly on the laptop, year on the ultrawide) instead of every tool claiming all.
+
+  // What a run writes: each ticked planner re-renders to its file on disk.
+  card.append(el("div", { className: "grp", style: "margin-top:10px" }, "<label>Writes</label>"));
+  for (const [name, label] of [["year", "Year"], ["weekly", "Weekly"]]) {
+    card.append(el("div", { className: "grp schd-pl", style: "margin-top:4px; padding-left:4px" },
+      `<span data-toggle="s_${name}"><input type="checkbox" class="s-pl" id="s_${name}" value="${name}" ${s.planners.includes(name) ? "checked" : ""}><label>${label}</label></span>
+       <code class="dst">→ ${s.outputs[name]}</code>`));
+  }
+
+  // The optional extra: also push each written file to the desktop as wallpaper.
+  card.append(el("div", { className: "grp", style: "margin-top:12px" },
+    `<label>Also</label><span data-toggle="s_wp"><input type="checkbox" id="s_wp" ${s.wallpaper ? "checked" : ""}><label>set as wallpaper</label></span>`));
+
+  // Per-planner screen assignment: with >1 screen, each planner can target specific outputs
+  // (e.g. weekly on the laptop, year on the ultrawide) instead of every planner claiming all.
   // All boxes ticked == "all" (sent as []), so a newly attached screen is still covered.
-  const scrRow = (tool, label) => {
-    const assigned = (s.screens && s.screens[tool]) || [];
+  const scrRow = (planner, label) => {
+    const assigned = (s.screens && s.screens[planner]) || [];
     const row = el("div", { className: "grp", style: "margin-top:6px" }, `<label>${label}</label>`);
     for (const sc of s.wp_screens) {
-      const id = `sc_${tool}_${sc.name}`;
+      const id = `sc_${planner}_${sc.name}`;
       const on = assigned.length === 0 || assigned.includes(sc.name);
-      const span = el("span", {}, `<input type="checkbox" class="schd-scr" data-tool="${tool}" id="${id}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}</label>`);
+      const span = el("span", {}, `<input type="checkbox" class="schd-scr" data-planner="${planner}" id="${id}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}</label>`);
       span.dataset.toggle = id;
       row.append(span);
     }
     return row;
   };
   if (s.wp_screens.length > 1) {
-    card.append(el("div", { className: "grp", style: "margin-top:10px" }, "<label>Screens per tool</label>"), scrRow("year", "Year"), scrRow("weekly", "Weekly"));
+    card.append(el("div", { className: "grp", style: "margin-top:10px" }, "<label>Screens per planner</label>"), scrRow("year", "Year"), scrRow("weekly", "Weekly"));
   }
 
   const bar = el("div", { className: "grp", style: "margin-top:12px" });
@@ -283,14 +292,14 @@ async function showSchedule() {
   const collect = (action) => {
     const cfg = {
       time: $("#s_time").value,
-      tools: [...["year", "weekly"].filter((t) => $("#s_" + t).checked)],
+      planners: [...card.querySelectorAll("input.s-pl:checked")].map((c) => c.value),
       wallpaper: $("#s_wp").checked,
       action,
     };
     if (s.wp_screens.length > 1) {
       cfg.screens = {};
       for (const t of ["year", "weekly"]) {
-        const chosen = [...body.querySelectorAll(`input.schd-scr[data-tool="${t}"]:checked`)].map((c) => c.value);
+        const chosen = [...body.querySelectorAll(`input.schd-scr[data-planner="${t}"]:checked`)].map((c) => c.value);
         cfg.screens[t] = chosen.length === s.wp_screens.length ? [] : chosen;
       }
     }
@@ -340,13 +349,13 @@ async function showLog() {
 
 function refreshView() {
   const preview_ = state.view === "preview";
-  // Preview/Config are per-tool; Schedule and Log are shared app-wide overlays, so their
-  // per-tool chrome is hidden and whichever button opened the overlay becomes Back.
+  // Preview/Config are per-planner; Schedule and Log are shared app-wide overlays, so their
+  // per-planner chrome is hidden and whichever button opened the overlay becomes Back.
   const overlay = state.view === "schedule" || state.view === "log";
   side.classList.toggle("hidden", !preview_);
   controls.classList.toggle("hidden", !preview_);
   actions.classList.toggle("hidden", !preview_);
-  $("#tool").classList.toggle("hidden", overlay);
+  $("#planner").classList.toggle("hidden", overlay);
   $("#view").classList.toggle("hidden", overlay);
   $("#schedBtn").textContent = state.view === "schedule" ? "← Back" : "Schedule";
   $("#logBtn").textContent = state.view === "log" ? "← Back" : "Log";
@@ -360,8 +369,8 @@ function refreshView() {
 
 // ---- actions ----
 function wireActions() {
-  const m = state.cfg[state.tool].meta;
-  $("#exportBtn").textContent = state.tool === "year" ? "Export PNG" : "Export PDF";
+  const m = state.cfg[state.planner].meta;
+  $("#exportBtn").textContent = state.planner === "year" ? "Export PNG" : "Export PDF";
   $("#exportBtn").onclick = () => window.open("/api/export?" + params(), "_blank");
   const wp = m.wallpaper;
   $("#wpBtn").classList.toggle("hidden", !wp.available);
@@ -408,7 +417,7 @@ function openWallpaperDialog(wp) {
     foot.replaceChildren(el("span", { className: "sp" }), busy);
     setStatus("setting wallpaper…");
     const b = { ...Object.fromEntries(params()), screens: chosen.join(","), fill: fill.value };
-    const r = await fetch("/api/wallpaper?tool=" + state.tool, { method: "POST", body: JSON.stringify(b) }).then((x) => x.json());
+    const r = await fetch("/api/wallpaper?planner=" + state.planner, { method: "POST", body: JSON.stringify(b) }).then((x) => x.json());
     if (!r.ok) {
       warn.textContent = "Failed: " + (r.error || "");
       foot.replaceChildren(el("span", { className: "sp" }), cancel, apply);
@@ -436,13 +445,13 @@ function openWallpaperDialog(wp) {
   document.body.append(bg);
 }
 
-async function selectTool(tool) {
-  state.tool = tool;
-  $("#tool").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tool === tool));
-  if (!state.cfg[tool]) {
+async function selectPlanner(planner) {
+  state.planner = planner;
+  $("#planner").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.planner === planner));
+  if (!state.cfg[planner]) {
     setStatus("loading…");
     body.innerHTML = LOADING_PANE;
-    await loadConfig(tool);
+    await loadConfig(planner);
   }
   buildControls();
   buildSide();
@@ -456,7 +465,7 @@ function selectView(view) {
   refreshView();
 }
 
-$("#tool").querySelectorAll("button").forEach((b) => (b.onclick = () => selectTool(b.dataset.tool)));
+$("#planner").querySelectorAll("button").forEach((b) => (b.onclick = () => selectPlanner(b.dataset.planner)));
 $("#view").querySelectorAll("button").forEach((b) => (b.onclick = () => selectView(b.dataset.view)));
 const overlayToggle = (view) => () => {
   if (state.view === view) selectView(state.prevView);
@@ -480,6 +489,6 @@ document.addEventListener("click", (e) => {
 });
 
 (async () => {
-  await selectTool("weekly");
+  await selectPlanner("weekly");
   selectView("preview");
 })();
