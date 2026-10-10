@@ -249,7 +249,7 @@ async function showSchedule() {
       `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px"><span class="hint">${s.tz}</span>`),
   );
 
-  const multi = s.screens.length > 1;
+  const hasScreens = s.screens.length > 0;
   const forget = async (name) => {
     await fetch("/api/screens/forget", { method: "POST", body: JSON.stringify({ name }) });
     showSchedule();
@@ -265,7 +265,7 @@ async function showSchedule() {
        <code class="dst">→ ${s.outputs[name]}</code>`));
     sec.append(el("div", { className: "grp", style: "padding-left:16px" },
       `<span data-toggle="s_wp_${name}"><input type="checkbox" class="s-wp" id="s_wp_${name}" value="${name}" ${cfg.wallpaper ? "checked" : ""}><label>set as wallpaper</label></span>`));
-    if (multi) {
+    if (hasScreens) {
       const chosen = cfg.screens; // [] means all connected
       const row = el("div", { className: "grp schd-scr-row", style: "padding-left:32px" });
       for (const sc of s.screens) {
@@ -317,7 +317,7 @@ async function showSchedule() {
     };
     for (const name of ["year", "weekly"]) {
       const block = { wallpaper: $(`#s_wp_${name}`).checked };
-      if (multi) {
+      if (hasScreens) {
         const chosen = [...card.querySelectorAll(`input.schd-scr[data-planner="${name}"]:checked`)].map((c) => c.value);
         // All connected ticked (and nothing offline) == "all" ([]), so a new screen is still covered.
         const allConnected = chosen.length === connectedNames.length && connectedNames.every((n) => chosen.includes(n));
@@ -399,11 +399,19 @@ function wireActions() {
   $("#wpBtn").onclick = () => openWallpaperDialog(wp);
 }
 
-const FILLS = ["preserveAspectCrop", "preserveAspectFit", "stretch", "tile", "pad"];
+// Plasma org.kde.image FillMode -> the label Plasma's own wallpaper dialog uses (ordered to match).
+const FILLS = {
+  preserveAspectCrop: "Scaled and cropped",
+  stretch: "Scaled",
+  preserveAspectFit: "Scaled, keep proportions",
+  pad: "Centered",
+  tile: "Tiled",
+};
 
 // Which screens the YAML `wallpaper.screens` selects: "all" | "primary" | list of output names.
+// "all"/"primary" only pre-tick connected screens; a disconnected one is targeted only when named.
 function wpSelected(sel, s) {
-  if (!sel || sel === "all") return true;
+  if (!sel || sel === "all") return s.connected;
   if (sel === "primary") return !!s.primary;
   const list = Array.isArray(sel) ? sel : String(sel).split(",").map((x) => x.trim());
   return list.includes(s.name);
@@ -417,14 +425,31 @@ function openWallpaperDialog(wp) {
     const model = s.model || (/^(eDP|LVDS)/i.test(s.name) ? "Built-in display" : s.name);
     const id = "wpscr_" + s.name;
     const row = el("div", { className: "scr" });
-    row.dataset.toggle = id;
+    const toggle = el("div", { className: "scr-toggle" });
+    toggle.dataset.toggle = id;
     const on = wpSelected(wp.selected, s);
-    row.innerHTML = `<input type="checkbox" id="${id}" value="${s.name}" ${on ? "checked" : ""}>
+    const where = s.primary ? " · primary" : s.connected ? "" : ` · offline, seen ${s.last_seen}`;
+    toggle.innerHTML = `<input type="checkbox" id="${id}" value="${s.name}" ${on ? "checked" : ""}>
       <label><span>${model}</span>
-      <span class="res">${s.name} · ${s.w}×${s.h}${s.primary ? " · primary" : ""}</span></label>`;
+      <span class="res">${s.name} · ${s.w}×${s.h}${where}</span></label>`;
+    row.append(toggle);
+    // A disconnected screen is still offered (its file is written now, applied on reconnect);
+    // Forget drops a retired monitor from the registry so it stops cluttering the list.
+    if (!s.connected) {
+      const f = el("button", { className: "forget", title: `Forget ${s.name}` }, "Forget");
+      f.onclick = async () => {
+        await fetch("/api/screens/forget", { method: "POST", body: JSON.stringify({ name: s.name }) });
+        row.remove();
+      };
+      row.append(f);
+    }
     list.append(row);
   }
-  const fill = el("select", {}, FILLS.map((f) => `<option ${f === wp.fill ? "selected" : ""}>${f}</option>`).join(""));
+  const fill = el(
+    "select",
+    {},
+    Object.entries(FILLS).map(([v, label]) => `<option value="${v}" ${v === wp.fill ? "selected" : ""}>${label}</option>`).join(""),
+  );
   const warn = el("div", { className: "warn" });
   const cancel = el("button", {}, "Cancel");
   const apply = el("button", { className: "primary" }, "Apply");
@@ -446,9 +471,12 @@ function openWallpaperDialog(wp) {
       return;
     }
     close();
+    const parts = [];
+    if (r.applied.length) parts.push(`set ✓ on ${r.applied.join(", ")}`);
+    if (r.pending && r.pending.length) parts.push(`written for ${r.pending.join(", ")} (applies on reconnect)`);
     setStatus(
-      r.applied.length
-        ? `wallpaper set ✓ on ${r.applied.join(", ")}`
+      parts.length
+        ? "wallpaper " + parts.join("; ")
         : `nothing applied - no Plasma desktop matched (detected: ${r.desktops.join(" ")})`,
     );
   };
