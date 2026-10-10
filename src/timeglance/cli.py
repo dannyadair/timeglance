@@ -40,7 +40,10 @@ def main(argv=None):
     sp_install.add_argument("--time", help="HH:MM to render at (default: schedule.yaml's time)")
     sub.add_parser("uninstall", help="remove the systemd user timer")
     sub.add_parser("run", help="run the scheduled render once (used by the timer)")
-    sub.add_parser("tray", help="run the system tray controller (needs the [tray] extra)")
+    tray_help = "run the system tray controller"
+    if importlib.util.find_spec("pystray") is None:
+        tray_help += " (not installed)"
+    sub.add_parser("tray", help=tray_help)
 
     args = ap.parse_args(argv)
     if args.command == "init":
