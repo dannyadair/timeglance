@@ -18,5 +18,8 @@ docs/demo/*/server.log
 weekly/config.yaml
 year/config.yaml
 
+# Per-project scheduler config, written by the control panel's Schedule panel.
+schedule.yaml
+
 # Backups written before a "reset to template" (config.yaml.<stamp>.bak etc.)
 *.yaml.*.bak

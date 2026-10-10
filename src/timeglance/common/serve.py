@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""timeglance control panel: one web UI driving both tools.
+"""timeglance control panel: one web UI driving both planners.
 
 Switch between the weekly routine sheet and the year-at-a-glance planner, edit each
-tool's YAML, preview live, export to PNG/PDF, set the desktop wallpaper, and schedule a
+planner's YAML, preview live, export to PNG/PDF, set the desktop wallpaper, and schedule a
 daily re-render. Open http://localhost:8753 once it's running.
 """
 
@@ -19,7 +19,7 @@ import cairosvg
 import yaml
 
 from timeglance import paths
-from timeglance.common import wallpaper
+from timeglance.common import schedule, wallpaper
 from timeglance.weekly import build as wbuild
 from timeglance.year import build as ybuild
 from timeglance.year import render as yrender
@@ -29,21 +29,22 @@ STATE = paths.state_dir()
 NO_CACHE = {"Cache-Control": "no-store"}
 
 
-class YearTool:
+class YearPlanner:
     """Control-panel adapter for the year planner: config, preview, export and wallpaper."""
 
     name = "year"
+    out_name = "year.png"
     template = ybuild.TEMPLATE
 
     @property
     def data(self):
         """Path to the working ``year/config.yaml``."""
-        return paths.tool_config("year")
+        return paths.planner_config("year")
 
     @property
     def out(self):
         """Output directory for rendered year planners."""
-        return paths.tool_out("year")
+        return paths.planner_out("year")
 
     def _raw(self):
         """Load the raw year config dict."""
@@ -105,7 +106,7 @@ class YearTool:
         png = cairosvg.svg2png(
             bytestring=yrender.render_svg(cfg).encode(), output_width=cfg.width, output_height=cfg.height
         )
-        return "image/png", "year.png", png
+        return "image/png", self.out_name, png
 
     def set_wallpaper(self, p):
         """Render per-screen and set the planner as the desktop wallpaper."""
@@ -126,22 +127,23 @@ class YearTool:
         return raw.get("_warnings", [])
 
 
-class WeeklyTool:
+class WeeklyPlanner:
     """Control-panel adapter for the weekly sheet: config, preview, export and wallpaper."""
 
     name = "weekly"
+    out_name = "weekly.pdf"
     template = wbuild.TEMPLATE
     papers = ["A4", "A3"]
 
     @property
     def data(self):
         """Path to the working ``weekly/config.yaml``."""
-        return paths.tool_config("weekly")
+        return paths.planner_config("weekly")
 
     @property
     def out(self):
         """Output directory for rendered weekly sheets."""
-        return paths.tool_out("weekly")
+        return paths.planner_out("weekly")
 
     def _raw(self):
         """Load the raw weekly config dict."""
@@ -174,7 +176,7 @@ class WeeklyTool:
     def export(self, p):
         """Render the sheet to a PDF for download."""
         pdf = wbuild.render_pdf(self._raw(), self._hide(p), p.get("paper", "A4"))
-        return "application/pdf", "weekly.pdf", pdf
+        return "application/pdf", self.out_name, pdf
 
     def set_wallpaper(self, p):
         """Composite the sheet onto a themed canvas and set it as the desktop wallpaper."""
@@ -205,10 +207,9 @@ def _screen_list(backend):
     ]
 
 
-def _human_size(n):
-    """Format a byte count as a human-readable KB/MB string."""
-    kb = n / 1024
-    return f"{kb:.0f} KB" if kb < 1024 else f"{kb / 1024:.1f} MB"
+def _planner_output(planner):
+    """Path of the file this planner writes, relative to the project root (for the UI)."""
+    return str((planner.out / planner.out_name).relative_to(paths.project_dir()))
 
 
 def _wp_meta(backend, wp):
@@ -222,30 +223,30 @@ def _wp_meta(backend, wp):
     }
 
 
-TOOLS = {"year": YearTool(), "weekly": WeeklyTool()}
+PLANNERS = {"year": YearPlanner(), "weekly": WeeklyPlanner()}
 
 
-def read_config(tool):
-    """Read the tool's working config, falling back to its packaged template when absent."""
-    path = tool.data if tool.data.exists() else tool.template
-    return {"yaml": path.read_text(), "from_template": not tool.data.exists(), "path": tool.data.name}
+def read_config(planner):
+    """Read the planner's working config, falling back to its packaged template when absent."""
+    path = planner.data if planner.data.exists() else planner.template
+    return {"yaml": path.read_text(), "from_template": not planner.data.exists(), "path": planner.data.name}
 
 
-def write_config(tool, text):
-    """Validate ``text`` as YAML and write it to the tool's working config."""
+def write_config(planner, text):
+    """Validate ``text`` as YAML and write it to the planner's working config."""
     yaml.safe_load(text)  # validate; raises on bad YAML
-    tool.data.write_text(text)
+    planner.data.write_text(text)
 
 
-def reset_config(tool):
+def reset_config(planner):
     """Overwrite the working config with the template, backing up the current file first.
     Returns the backup filename (or None if there was nothing to back up)."""
     backup = None
-    if tool.data.exists():
+    if planner.data.exists():
         stamp = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-        backup = tool.data.with_name(f"{tool.data.name}.{stamp}.bak")
-        backup.write_text(tool.data.read_text())
-    tool.data.write_text(tool.template.read_text())
+        backup = planner.data.with_name(f"{planner.data.name}.{stamp}.bak")
+        backup.write_text(planner.data.read_text())
+    planner.data.write_text(planner.template.read_text())
     return backup.name if backup else None
 
 
@@ -281,55 +282,28 @@ LOG = EventLog()
 
 
 class Scheduler:
-    """Daily re-render loop. Sleeps until the configured HH:MM, runs the selected tools
-    (writing outputs and, where a backend exists, setting the wallpaper). Runs feed the
-    shared activity log; config persists under state/ so a container restart keeps it."""
+    """Daily re-render loop. Sleeps until the configured HH:MM and renders the selected
+    planners to disk (optionally setting the wallpaper), delegating the actual run to
+    ``schedule.run_once``. Runs feed the shared activity log; config lives in
+    ``schedule.yaml`` so a container restart keeps it."""
 
     def __init__(self):
-        """Load persisted schedule config from ``state/`` and set up the (stopped) loop."""
-        STATE.mkdir(parents=True, exist_ok=True)
-        self.cfg_path = STATE / "schedule.json"
-        self.cfg = self._load_cfg()
+        """Load the schedule config from ``schedule.yaml`` and set up the (stopped) loop."""
+        self.cfg = schedule.load()
         self._thread = None
         self._stop = threading.Event()
         self.last_run = None
         self.next_run = None
 
-    def _load_cfg(self):
-        """Load the persisted schedule config, or defaults on first run."""
-        if self.cfg_path.exists():
-            return json.loads(self.cfg_path.read_text())
-        return {"time": "06:00", "tools": ["year"], "wallpaper": True}
-
     def save_cfg(self, cfg):
-        """Merge updates into the schedule config and persist it."""
+        """Merge updates into the schedule config and persist it to ``schedule.yaml``."""
         self.cfg = {**self.cfg, **cfg}
-        self.cfg_path.write_text(json.dumps(self.cfg, indent=2))
+        schedule.save(self.cfg)
 
     def run_once(self):
-        """Render every selected tool, isolating failures so one bad tool/feed can't
-        sink the rest; each outcome (including tracebacks) lands in the log."""
+        """Render the selected planners now (see ``schedule.run_once``)."""
         self.last_run = dt.datetime.now().isoformat(timespec="seconds")
-        for name in self.cfg.get("tools", []):
-            tool = TOOLS[name]
-            try:
-                ctype, fname, data = tool.export({})
-                (tool.out).mkdir(parents=True, exist_ok=True)
-                (tool.out / fname).write_bytes(data)
-                LOG.log(name, f"wrote {fname} ({_human_size(len(data))})")
-                for w in tool.warnings():
-                    LOG.log(name, f"WARNING {w}")
-                if not self.cfg.get("wallpaper"):
-                    continue
-                if not wallpaper.detect():
-                    LOG.log(name, "wallpaper skipped (no backend)")
-                    continue
-                scr = (self.cfg.get("screens") or {}).get(name)
-                r = tool.set_wallpaper({"screens": scr} if scr else {})
-                detail = "set " + ",".join(r["applied"]) if r["ok"] else "FAILED " + r["error"]
-                LOG.log(name, f"wallpaper {detail}")
-            except Exception:
-                LOG.log(name, f"ERROR\n{traceback.format_exc().strip()}")
+        schedule.run_once(self.cfg, PLANNERS, LOG)
 
     def _loop(self):
         """Background loop: sleep until the configured time, run once, repeat until stopped."""
@@ -369,7 +343,9 @@ class Scheduler:
         return {
             "running": self.running,
             "time": self.cfg["time"],
-            "tools": self.cfg["tools"],
+            "tz": schedule.local_tz(),
+            "planners": self.cfg["planners"],
+            "outputs": {name: _planner_output(p) for name, p in PLANNERS.items()},
             "wallpaper": self.cfg.get("wallpaper", True),
             "screens": self.cfg.get("screens", {}),
             "wp_screens": _screen_list(wallpaper.detect()),
@@ -404,9 +380,9 @@ class Handler(BaseHTTPRequestHandler):
         """Send ``obj`` as a JSON response."""
         self._send(code, "application/json", json.dumps(obj).encode())
 
-    def _tool(self, params):
-        """Resolve the target tool from request params (defaults to the year planner)."""
-        return TOOLS[params.get("tool", "year")]
+    def _planner(self, params):
+        """Resolve the target planner from request params (defaults to the year planner)."""
+        return PLANNERS[params.get("planner", "year")]
 
     def _body(self):
         """Parse and return the JSON request body (empty dict if none)."""
@@ -429,15 +405,15 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/icon.png":
                 self._send(200, "image/png", (WEB / "icon.png").read_bytes())
             elif u.path == "/api/config":
-                self._json({"meta": self._tool(p).meta(), **read_config(self._tool(p))})
+                self._json({"meta": self._planner(p).meta(), **read_config(self._planner(p))})
             elif u.path == "/api/preview":
-                ctype, body = self._tool(p).preview(p)
+                ctype, body = self._planner(p).preview(p)
                 self._send(200, ctype, body)
             elif u.path == "/api/export":
-                tool = self._tool(p)
-                ctype, fname, body = tool.export(p)
+                planner = self._planner(p)
+                ctype, fname, body = planner.export(p)
                 fmt = fname.rsplit(".", 1)[-1].upper()
-                LOG.log(tool.name, f"exported {fname} ({fmt}, {_human_size(len(body))})")
+                LOG.log(planner.name, f"exported {fname} ({fmt}, {schedule.human_size(len(body))})")
                 self._send(200, ctype, body, {"Content-Disposition": f'inline; filename="{fname}"'})
             elif u.path == "/api/schedule":
                 self._json(SCHED.status())
@@ -456,25 +432,25 @@ class Handler(BaseHTTPRequestHandler):
         p = {k: v[0] for k, v in parse_qs(u.query).items()}
         try:
             if u.path == "/api/config":
-                write_config(self._tool(p), self._body()["yaml"])
+                write_config(self._planner(p), self._body()["yaml"])
                 self._json({"ok": True})
             elif u.path == "/api/config/reset":
-                backup = reset_config(self._tool(p))
-                self._json({"meta": self._tool(p).meta(), "backup": backup, **read_config(self._tool(p))})
+                backup = reset_config(self._planner(p))
+                self._json({"meta": self._planner(p).meta(), "backup": backup, **read_config(self._planner(p))})
             elif u.path == "/api/wallpaper":
-                tool = self._tool(p)
-                r = tool.set_wallpaper(self._body())
+                planner = self._planner(p)
+                r = planner.set_wallpaper(self._body())
                 if r["ok"]:
-                    LOG.log(tool.name, f"wallpaper set {','.join(r['applied']) or 'nothing matched'} (manual)")
+                    LOG.log(planner.name, f"wallpaper set {','.join(r['applied']) or 'nothing matched'} (manual)")
                 else:
-                    LOG.log(tool.name, f"wallpaper FAILED {r['error']} (manual)")
+                    LOG.log(planner.name, f"wallpaper FAILED {r['error']} (manual)")
                 self._json(r)
             elif u.path == "/api/log/clear":
                 LOG.clear()
                 self._json({"ok": True})
             elif u.path == "/api/schedule":
                 body = self._body()
-                SCHED.save_cfg({k: body[k] for k in ("time", "tools", "wallpaper", "screens") if k in body})
+                SCHED.save_cfg({k: body[k] for k in ("time", "planners", "wallpaper", "screens") if k in body})
                 if body.get("action") == "start":
                     SCHED.start()
                 elif body.get("action") == "stop":
