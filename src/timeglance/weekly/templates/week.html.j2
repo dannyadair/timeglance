@@ -63,6 +63,15 @@
   }
   .block .t { font-size: 8px; opacity: 0.9; line-height: 1.1; }
   .block .l { font-size: 10px; font-weight: 600; line-height: 1.15; }
+
+  /* On screen (web preview) fill the viewport so the sheet scales to the pane instead of
+     keeping its print height; the mm track above still governs the printed PDF. */
+  @media screen {
+    html, body { height: 100%; }
+    .sheet { height: 100%; padding: 9mm; }
+    .grid { flex: 1 1 auto; grid-template-rows: 1fr; min-height: 0; }
+    .track { height: auto; flex: 1 1 auto; min-height: 0; }
+  }
 </style>
 </head>
 <body>
