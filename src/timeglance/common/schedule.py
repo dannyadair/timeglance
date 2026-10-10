@@ -64,6 +64,17 @@ def local_tz():
     return f"{now.tzname()} (UTC{sign}{hh}" + (f":{mm:02d})" if mm else ")")
 
 
+def parse_render(text):
+    """Parse the panel's render-override box (top-level YAML, same shape as a planner's
+    config.yaml) into a dict; empty text means no overrides."""
+    return yaml.safe_load(text) or {}
+
+
+def dump_render(block):
+    """Serialise a render-override block back to the YAML shown in the panel's box ('' if empty)."""
+    return yaml.safe_dump(block, sort_keys=False).strip() if block else ""
+
+
 def _params(block):
     """Translate a YAML render-override block into the control panel's string params."""
     out = {}

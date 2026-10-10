@@ -337,12 +337,17 @@ class Scheduler:
 
     def status(self):
         """Return the scheduler's current state and config for the UI."""
+        config = {}
+        for name in PLANNERS:
+            pc = schedule.planner_cfg(self.cfg, name)
+            pc["render_yaml"] = schedule.dump_render(pc["render"])
+            config[name] = pc
         return {
             "running": self.running,
             "time": self.cfg["time"],
             "tz": schedule.local_tz(),
             "planners": self.cfg.get("planners", []),
-            "config": {name: schedule.planner_cfg(self.cfg, name) for name in PLANNERS},
+            "config": config,
             "outputs": {name: _planner_output(p) for name, p in PLANNERS.items()},
             "screens": wallpaper.known(wallpaper.detect()),
             "last_run": self.last_run,
@@ -455,7 +460,14 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/schedule":
                 body = self._body()
                 keys = ("time", "planners", "autostart", *PLANNERS)
-                SCHED.save_cfg({k: body[k] for k in keys if k in body})
+                cfg = {k: body[k] for k in keys if k in body}
+                for name in PLANNERS:
+                    if name in cfg and "render" in cfg[name]:
+                        try:
+                            cfg[name]["render"] = schedule.parse_render(cfg[name]["render"])
+                        except yaml.YAMLError as e:
+                            return self._json({"error": f"{name}: invalid override YAML - {e}"}, 400)
+                SCHED.save_cfg(cfg)
                 if body.get("action") == "start":
                     SCHED.start()
                 elif body.get("action") == "stop":

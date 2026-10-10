@@ -296,12 +296,23 @@ async function showSchedule() {
       }
       sec.append(row);
     }
-    // Setting a wallpaper only makes sense if the file gets rendered, so the wallpaper toggle
-    // and its screen targets dim out (and stop responding) until the planner is ticked to run.
+    // Optional per-planner overrides for the nightly render: top-level YAML, same shape as the
+    // planner's config.yaml, so you can paste keys straight across. Folded into schedule.yaml's
+    // `render:` block on save. Open by default when something's set so it isn't hidden.
+    const det = el("details", { className: "schd-ovr", style: "padding-left:16px" });
+    det.open = !!cfg.render_yaml;
+    det.append(el("summary", {}, "Render overrides (YAML)"));
+    const ta = el("textarea", { id: `s_render_${name}`, className: "ovr-yaml", spellcheck: false });
+    ta.value = cfg.render_yaml || "";
+    ta.placeholder = name === "year" ? "theme: dark\nlayout: compact" : "paper: A3";
+    det.append(ta);
+    sec.append(det);
+    // Setting a wallpaper only makes sense if the file gets rendered, so the wallpaper toggle,
+    // screen targets and overrides dim out (and stop responding) until the planner is ticked to run.
     const render = sec.querySelector(`#s_${name}`);
-    const dim = sec.querySelectorAll(`#s_wp_${name}, .schd-scr-row`);
+    const dim = sec.querySelectorAll(`#s_wp_${name}, .schd-scr-row, .schd-ovr`);
     const sync = () => {
-      sec.querySelectorAll(`#s_wp_${name}, input.schd-scr[data-planner="${name}"]`).forEach((i) => (i.disabled = !render.checked));
+      sec.querySelectorAll(`#s_wp_${name}, input.schd-scr[data-planner="${name}"], #s_render_${name}`).forEach((i) => (i.disabled = !render.checked));
       dim.forEach((d) => (d.closest(".grp") || d).classList.toggle("off-dim", !render.checked));
     };
     render.addEventListener("change", sync);
@@ -335,12 +346,18 @@ async function showSchedule() {
         const allConnected = chosen.length === connectedNames.length && connectedNames.every((n) => chosen.includes(n));
         block.screens = allConnected ? [] : chosen;
       }
+      block.render = $(`#s_render_${name}`).value;
       cfg[name] = block;
     }
     return cfg;
   };
   const post = async (action) => {
-    await fetch("/api/schedule", { method: "POST", body: JSON.stringify(collect(action)) });
+    const r = await fetch("/api/schedule", { method: "POST", body: JSON.stringify(collect(action)) });
+    if (!r.ok) {
+      // Keep the panel (and the user's typed YAML) as-is; just report what's wrong.
+      setStatus((await r.json().catch(() => ({}))).error || `schedule not saved (${r.status})`);
+      return;
+    }
     showSchedule();
   };
   start.onclick = () => post("start");
