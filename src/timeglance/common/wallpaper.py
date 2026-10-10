@@ -13,6 +13,7 @@ supplied render_png(screen, path) callback, and sets the results. The callback i
 only planner-specific part (year rasterises its SVG; weekly composites its PDF).
 """
 
+import datetime as dt
 import json
 import os
 import re
@@ -22,13 +23,19 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from timeglance import paths
+
 # org.kde.image FillMode enum
 FILL_MODES = {"stretch": 0, "preserveAspectFit": 1, "preserveAspectCrop": 2, "tile": 3, "pad": 6}
 
 
 @dataclass
 class Screen:
-    """One connected output: logical geometry (for matching Plasma) and physical pixels."""
+    """One output: logical geometry (for matching Plasma) and physical pixels.
+
+    A remembered-but-disconnected screen has ``connected=False`` and no live geometry (zeros):
+    we can still render its file at the remembered ``pw``x``ph``, but can't assign it in Plasma
+    until it's back."""
 
     name: str
     x: int  # logical position
@@ -39,6 +46,7 @@ class Screen:
     ph: int
     primary: bool = False
     model: str = ""  # friendly name from EDID, e.g. "DELL U3821DW"
+    connected: bool = True
 
 
 def _edid_model(name):
@@ -148,8 +156,85 @@ def detect():
     return None
 
 
+def _registry_path():
+    """Path to the remembered-screens registry under ``state/``."""
+    return paths.state_dir() / "screens.json"
+
+
+def _load_registry():
+    """Load the remembered-screens registry (name -> model/pw/ph/last_seen), or empty."""
+    p = _registry_path()
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def remember(screens):
+    """Record each connected screen's model, pixel size and today's date, so a later run or
+    the UI can still target it once it's unplugged. No-op write when nothing changed."""
+    reg = _load_registry()
+    today = dt.date.today().isoformat()
+    for s in screens:
+        reg[s.name] = {"model": s.model, "pw": s.pw, "ph": s.ph, "last_seen": today}
+    text = json.dumps(reg, indent=2)
+    p = _registry_path()
+    if not p.exists() or p.read_text() != text:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+
+
+def forget(name):
+    """Drop a screen from the registry (e.g. a retired monitor)."""
+    reg = _load_registry()
+    if reg.pop(name, None) is not None:
+        _registry_path().write_text(json.dumps(reg, indent=2))
+
+
+def known(backend, prune_days=30):
+    """Screens the UI should offer: every connected output plus remembered ones seen within
+    ``prune_days`` (each tagged ``connected``). Refreshes the registry and prunes staler ones."""
+    live = {s.name: s for s in (backend.list_screens() if backend else [])}
+    remember(live.values())
+    reg = _load_registry()
+    cutoff = (dt.date.today() - dt.timedelta(days=prune_days)).isoformat()
+    out, stale = [], []
+    for name, info in reg.items():
+        if name in live:
+            s = live[name]
+            out.append(
+                {
+                    "name": name,
+                    "model": s.model,
+                    "w": s.pw,
+                    "h": s.ph,
+                    "primary": s.primary,
+                    "connected": True,
+                    "last_seen": info["last_seen"],
+                }
+            )
+        elif info["last_seen"] >= cutoff:
+            out.append(
+                {
+                    "name": name,
+                    "model": info["model"],
+                    "w": info["pw"],
+                    "h": info["ph"],
+                    "primary": False,
+                    "connected": False,
+                    "last_seen": info["last_seen"],
+                }
+            )
+        else:
+            stale.append(name)
+    if stale:
+        for name in stale:
+            reg.pop(name)
+        _registry_path().write_text(json.dumps(reg, indent=2))
+    return out
+
+
 def resolve_screens(backend, spec):
-    """spec: 'all' | 'primary' | comma-string | list of output names."""
+    """spec: 'all' | 'primary' | comma-string | list of names. 'all'/'primary' cover connected
+    outputs only; an explicit name may be a remembered-but-disconnected screen, resolved from the
+    registry so its file can still be rendered (and applied once it reconnects)."""
     screens = backend.list_screens()
     if not spec or spec == "all":
         return screens
@@ -157,10 +242,19 @@ def resolve_screens(backend, spec):
         return [s for s in screens if s.primary] or screens[:1]
     want = spec if isinstance(spec, list) else [s.strip() for s in str(spec).split(",")]
     by_name = {s.name: s for s in screens}
-    bad = [w for w in want if w not in by_name]
+    reg = _load_registry()
+    resolved, bad = [], []
+    for w in want:
+        if w in by_name:
+            resolved.append(by_name[w])
+        elif w in reg:
+            info = reg[w]
+            resolved.append(Screen(w, 0, 0, 0, 0, info["pw"], info["ph"], model=info["model"], connected=False))
+        else:
+            bad.append(w)
     if bad:
-        raise SystemExit(f"unknown screen(s): {', '.join(bad)}  (have: {', '.join(by_name)})")
-    return [by_name[w] for w in want]
+        raise SystemExit(f"unknown screen(s): {', '.join(bad)}  (have: {', '.join(by_name) or 'none connected'})")
+    return resolved
 
 
 def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="wallpaper"):
@@ -173,14 +267,17 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
     restores its remembered path and reloads from disk. A connected output is nudged to
     reload via the `#stamp` cache-bust (see PlasmaBackend._script). `prefix` is planner-scoped
     (e.g. `year-wallpaper`) so both planners' files can share one directory.
-    Returns (assignments, info) where info has `requested`/`applied` screen names and the
-    detected `desktops` geometries (so a geometry mismatch is visible, not silent).
+
+    Disconnected screens (``connected=False``) are rendered and written but not assigned in
+    Plasma - their fresh file waits on disk for reconnection. Returns (assignments, info) where
+    info has `requested`, `written`, `applied` and `pending` (written-but-disconnected) names
+    plus the detected `desktops` geometries, so a geometry mismatch is visible, not silent.
     """
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     stamp = str(int(time.time() * 1000))
     rendered = {}  # (w, h) -> png path to copy from for same-resolution screens
-    assignments = []
+    assignments = []  # connected screens, to assign in Plasma
     for scr in screens:
         png = out / f"{prefix}-{scr.name}.png"
         res = (scr.pw, scr.ph)
@@ -189,12 +286,15 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
         else:
             render_png(scr, png)
             rendered[res] = png
-        assignments.append((scr, png))
-    report = backend.apply(assignments, fill, bust=stamp)
+        if scr.connected:
+            assignments.append((scr, png))
+    report = backend.apply(assignments, fill, bust=stamp) if assignments else {"desktops": [], "set": []}
     by_key = {f"{s.x},{s.y},{s.lw}x{s.lh}": s.name for s, _ in assignments}
     info = {
-        "requested": [s.name for s, _ in assignments],
+        "requested": [s.name for s in screens],
+        "written": [s.name for s in screens],
         "applied": [by_key[k] for k in report.get("set", []) if k in by_key],
+        "pending": [s.name for s in screens if not s.connected],
         "desktops": report.get("desktops", []),
     }
     return assignments, info

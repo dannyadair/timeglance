@@ -200,11 +200,11 @@ class WeeklyPlanner:
 
 
 def _screen_list(backend):
-    """Serialise the backend's screens for the UI (empty when there's no backend)."""
-    return [
-        {"name": s.name, "w": s.pw, "h": s.ph, "primary": s.primary, "model": s.model}
-        for s in (backend.list_screens() if backend else [])
-    ]
+    """Serialise the backend's connected screens for the UI, refreshing the remembered-screens
+    registry so disconnected outputs stay targetable later (empty when there's no backend)."""
+    screens = backend.list_screens() if backend else []
+    wallpaper.remember(screens)
+    return [{"name": s.name, "w": s.pw, "h": s.ph, "primary": s.primary, "model": s.model} for s in screens]
 
 
 def _planner_output(planner):
