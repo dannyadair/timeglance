@@ -199,14 +199,6 @@ class WeeklyPlanner:
         return []
 
 
-def _screen_list(backend):
-    """Serialise the backend's connected screens for the UI, refreshing the remembered-screens
-    registry so disconnected outputs stay targetable later (empty when there's no backend)."""
-    screens = backend.list_screens() if backend else []
-    wallpaper.remember(screens)
-    return [{"name": s.name, "w": s.pw, "h": s.ph, "primary": s.primary, "model": s.model} for s in screens]
-
-
 def _planner_output(planner):
     """Path of the file this planner writes, relative to the project root (for the UI)."""
     return str((planner.out / planner.out_name).relative_to(paths.project_dir()))
@@ -217,7 +209,7 @@ def _wp_meta(backend, wp):
     return {
         "available": backend is not None,
         "backend": backend.name if backend else None,
-        "screens": _screen_list(backend),
+        "screens": wallpaper.known(backend),
         "selected": wp.get("screens", "all"),
         "fill": wp.get("fill", "preserveAspectCrop"),
     }
@@ -445,7 +437,10 @@ class Handler(BaseHTTPRequestHandler):
                 planner = self._planner(p)
                 r = planner.set_wallpaper(self._body())
                 if r["ok"]:
-                    LOG.log(planner.name, f"wallpaper set {','.join(r['applied']) or 'nothing matched'} (manual)")
+                    detail = ",".join(r["applied"]) or "nothing matched"
+                    if r.get("pending"):
+                        detail += f"; pending {','.join(r['pending'])}"
+                    LOG.log(planner.name, f"wallpaper set {detail} (manual)")
                 else:
                     LOG.log(planner.name, f"wallpaper FAILED {r['error']} (manual)")
                 self._json(r)
