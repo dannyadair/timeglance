@@ -4,6 +4,10 @@ Auto-detected; the button only appears where it's supported. Each chosen screen 
 resolution** and set as that screen's background; the others are left untouched. The weekly sheet, being
 page-shaped, is centred on a themed canvas (with a soft drop shadow) and letterboxed on wide screens.
 
+The wallpaper is always a dedicated per-screen PNG rendered fresh for the screen - the weekly sheet is
+rasterised from its PDF onto the canvas - so it is never the `.pdf`/`.png`/`.svg` you export or print. Those
+export artifacts and the wallpaper images are written side by side in the planner's `out/`.
+
 Resolution is never configured - it comes from the screen: its current mode when connected, or the last-seen
 size for a screen that's remembered but disconnected. timeglance remembers every screen it has seen connected
 (in `state/screens.json`, pruned after 30 days), so you can target one that's currently unplugged: its file is
