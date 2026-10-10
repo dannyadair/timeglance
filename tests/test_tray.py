@@ -46,6 +46,21 @@ def test_set_port_persists(tmp_path, monkeypatch):
     assert settings.get_port() == 8888
 
 
+def test_autostart_toggle(tmp_path, monkeypatch):
+    """The tray's Start-at-login toggle writes then removes the autostart entry."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+
+    class Icon:
+        def update_menu(self):
+            pass
+
+    t = tray.Tray()
+    t._toggle_autostart(Icon())
+    assert (tmp_path / "autostart" / tray.autostart.DESKTOP).exists()
+    t._toggle_autostart(Icon())
+    assert not (tmp_path / "autostart" / tray.autostart.DESKTOP).exists()
+
+
 def test_menu_builds(tmp_path, monkeypatch):
     """The menu assembles without a display (callables aren't evaluated until shown)."""
     monkeypatch.setenv("TIMEGLANCE_HOME", str(tmp_path))

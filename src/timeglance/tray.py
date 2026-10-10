@@ -1,6 +1,6 @@
 """System tray controller for the on-demand control panel (KDE/Plasma, via pystray).
 
-A convenience launcher and quick schedule toggles - not the scheduler itself. The nightly
+A convenience launcher and quick schedule toggles - not the scheduler itself. The scheduled
 render is driven by the systemd timer from ``timeglance install``, so quitting the tray never
 stops a scheduled render; it only closes the panel it started.
 
@@ -18,7 +18,7 @@ from pathlib import Path
 import pystray
 from PIL import Image
 
-from timeglance import service
+from timeglance import autostart, service
 from timeglance.common import schedule, settings
 from timeglance.planners import PLANNERS
 
@@ -144,6 +144,11 @@ class Tray:
                 ),
             ),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(
+                "Start at login",
+                lambda icon, item: self._toggle_autostart(icon),
+                checked=lambda item: autostart.enabled(),
+            ),
             pystray.MenuItem("Quit", lambda icon, item: self.quit(icon)),
         )
 
@@ -169,6 +174,10 @@ class Tray:
 
     def _toggle_timer(self, icon):
         service.disable() if service.enabled() else service.enable()
+        icon.update_menu()
+
+    def _toggle_autostart(self, icon):
+        autostart.disable() if autostart.enabled() else autostart.enable()
         icon.update_menu()
 
     def _toggle_planner(self, name):

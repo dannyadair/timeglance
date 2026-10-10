@@ -108,8 +108,9 @@ pipx install --system-site-packages 'timeglance[tray]'
 ```
 
 The menu opens the control panel (starting the server first if needed), starts/stops it, picks the port, and toggles
-the schedule: enabled, time, which planners render, and which set the wallpaper. Quitting the tray only closes the
-panel it started - the systemd timer is untouched.
+the schedule: enabled, time, which planners render, and which set the wallpaper. **Start at login** adds an XDG
+autostart entry so the tray is there every session. Quitting the tray only closes the panel it started - the
+systemd timer keeps running regardless.
 
 ## Docs
 
