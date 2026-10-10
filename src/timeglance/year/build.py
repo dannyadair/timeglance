@@ -130,7 +130,7 @@ def apply_wallpaper(cfg, backend, screens, fill, out):
 def main():
     """CLI entry point: render the planner to SVG/PNG variants or set it as the wallpaper."""
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--data", default=paths.tool_config("year"), type=Path)
+    ap.add_argument("--data", default=paths.planner_config("year"), type=Path)
     ap.add_argument("--layout", help="vertical / horizontal / comma list; omit for all")
     ap.add_argument("--theme", help="light / dark / comma list; omit for all")
     ap.add_argument("--week-start", dest="week_start", choices=["Mon", "Sun"])
@@ -144,7 +144,7 @@ def main():
     ap.add_argument("--only", help="show only these layer ids (comma-separated)")
     ap.add_argument("--hide", action="append", default=[], metavar="LAYER", help="hide a layer id")
     ap.add_argument("--size", help="named size (from YAML `sizes:`) or raw WxH, e.g. laptop / 3440x1440")
-    ap.add_argument("--out", default=paths.tool_out("year"), type=Path)
+    ap.add_argument("--out", default=paths.planner_out("year"), type=Path)
     ap.add_argument(
         "--wallpaper",
         action="store_true",

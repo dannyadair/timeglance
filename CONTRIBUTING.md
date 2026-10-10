@@ -12,7 +12,7 @@ pre-commit install
 Hooks: **ruff** (lint + format) for Python, **prettier** for Markdown.
 
 The code lives under `src/timeglance/` (`common`, `year`, `weekly` subpackages); packaged assets (web UI, Jinja
-templates, the `config.yaml.in` files) ship inside it. Working data - each tool's `config.yaml` and `out/`, plus
+templates, the `config.yaml.in` files) ship inside it. Working data - each planner's `config.yaml` and `out/`, plus
 shared `state/` - resolves from the current working directory (override with `TIMEGLANCE_HOME`).
 
 ## Before you push

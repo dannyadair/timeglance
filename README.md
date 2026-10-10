@@ -13,7 +13,7 @@
 [![sigstore](https://img.shields.io/badge/sigstore-signed-blue)](https://github.com/dannyadair/timeglance/releases)
 [![OSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/dannyadair/timeglance?label=OSSF%20Scorecard)](https://scorecard.dev/viewer/?uri=github.com/dannyadair/timeglance)
 
-Config-driven time planning at a glance - one web UI controls two tools:
+Config-driven time planning at a glance - one web UI controls two planners:
 
 - **Weekly** - your routine sheet with activity layers. Print it or set it as a desktop wallpaper.
 - **Year** - a wide year-at-a-glance planner, with layers fed by your own calendars, public holidays, and manually

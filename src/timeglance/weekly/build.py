@@ -195,12 +195,12 @@ def resolve_hide(cfg, args):
 def main():
     """CLI entry point: render the weekly sheet to PDF/HTML or set it as the wallpaper."""
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--data", default=paths.tool_config("weekly"), type=Path)
+    ap.add_argument("--data", default=paths.planner_config("weekly"), type=Path)
     ap.add_argument("--only", help="show only these activity ids (comma-separated)")
     ap.add_argument("--hide", action="append", default=[], metavar="ACTIVITY", help="hide an activity id")
     ap.add_argument("--paper", choices=["A4", "A3"], help="page size (default: YAML `paper:` or A4)")
     ap.add_argument("--format", choices=["pdf", "html", "both"], help="output format (default: YAML `format:` or pdf)")
-    ap.add_argument("--out", default=paths.tool_out("weekly"), type=Path)
+    ap.add_argument("--out", default=paths.planner_out("weekly"), type=Path)
     ap.add_argument(
         "--wallpaper", action="store_true", help="set the sheet as the desktop wallpaper (centred on a themed canvas)"
     )

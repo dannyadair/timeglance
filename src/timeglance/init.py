@@ -14,9 +14,9 @@ from timeglance.year import build as ybuild
 
 
 def main():
-    """Copy each tool's bundled template into the project, skipping ones that exist."""
-    for tool, template in (("year", ybuild.TEMPLATE), ("weekly", wbuild.TEMPLATE)):
-        dest = paths.tool_config(tool)
+    """Copy each planner's bundled template into the project, skipping ones that exist."""
+    for planner, template in (("year", ybuild.TEMPLATE), ("weekly", wbuild.TEMPLATE)):
+        dest = paths.planner_config(planner)
         dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.exists():
             print(f"{dest} already exists - leaving it")
