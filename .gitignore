@@ -13,7 +13,7 @@ docs/demo/*/out/
 docs/demo/state/
 docs/demo/*/server.log
 
-# Private working configs; scaffold them with `timeglance-init`. The year config can hold
+# Private working configs; scaffold them with `timeglance init`. The year config can hold
 # calendar share links / secrets; the weekly config is your personal schedule.
 weekly/config.yaml
 year/config.yaml

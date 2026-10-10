@@ -37,10 +37,7 @@ Repository = "https://github.com/dannyadair/timeglance"
 Issues = "https://github.com/dannyadair/timeglance/issues"
 
 [project.scripts]
-timeglance = "timeglance.common.serve:main"
-timeglance-year = "timeglance.year.build:main"
-timeglance-weekly = "timeglance.weekly.build:main"
-timeglance-init = "timeglance.init:main"
+timeglance = "timeglance.cli:main"
 
 [dependency-groups]
 dev = [

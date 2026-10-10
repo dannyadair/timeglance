@@ -16,7 +16,7 @@ from timeglance import paths
 from timeglance.common import wallpaper
 
 HERE = Path(__file__).parent
-TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance-init`)
+TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance init`)
 
 # Short edge of each page in mm (landscape). Timeline height is derived from it.
 PAGE_SHORT_MM = {"A4": 210, "A3": 297}
@@ -192,9 +192,9 @@ def resolve_hide(cfg, args):
     return base | set(args.hide)
 
 
-def main():
+def main(argv=None):
     """CLI entry point: render the weekly sheet to PDF/HTML or set it as the wallpaper."""
-    ap = argparse.ArgumentParser(description=__doc__)
+    ap = argparse.ArgumentParser(prog="timeglance render weekly", description=__doc__)
     ap.add_argument("--data", default=paths.planner_config("weekly"), type=Path)
     ap.add_argument("--only", help="show only these topic ids (comma-separated)")
     ap.add_argument("--hide", action="append", default=[], metavar="TOPIC", help="hide a topic id")
@@ -206,7 +206,7 @@ def main():
     )
     ap.add_argument("--screen", help="which screen(s) to set: all / primary / comma list of names (overrides YAML)")
     ap.add_argument("--list-screens", action="store_true", help="list detected screens and exit")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     backend = wallpaper.detect()
     if args.list_screens:

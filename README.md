@@ -34,7 +34,7 @@ One web control panel drives both - preview live, toggle layers, edit the YAML, 
 ## Quick start (Docker)
 
 ```sh
-docker compose run --rm timeglance timeglance-init   # first run: scaffold year/ + weekly/ config.yaml
+docker compose run --rm timeglance timeglance init   # first run: scaffold year/ + weekly/ config.yaml
 docker compose up                                    # then open http://localhost:8753
 ```
 
@@ -54,8 +54,8 @@ GDK-PixBuf) at runtime; most Linux desktops already have these, but on a minimal
 ```sh
 sudo apt-get install libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0
 uv sync
-uv run timeglance-init     # scaffold year/ + weekly/ config.yaml from the templates
-uv run timeglance          # the control panel at http://localhost:8753
+uv run timeglance init      # scaffold year/ + weekly/ config.yaml from the templates
+uv run timeglance serve     # the control panel at http://localhost:8753
 ```
 
 Config, state and rendered output live under the XDG base directories by default
@@ -65,8 +65,8 @@ Config, state and rendered output live under the XDG base directories by default
 Headless renders (each flag has a YAML equivalent):
 
 ```sh
-uv run timeglance-year --theme light --layout vertical   # render the year planner
-uv run timeglance-weekly --format both                   # render the weekly sheet
+uv run timeglance render year --theme light --layout vertical   # render the year planner
+uv run timeglance render weekly --format both                   # render the weekly sheet
 ```
 
 ## Docs
