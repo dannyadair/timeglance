@@ -109,11 +109,15 @@ class Handler(BaseHTTPRequestHandler):
         p = {k: v[0] for k, v in parse_qs(u.query).items()}
         try:
             if u.path == "/api/config":
-                write_config(self._planner(p), self._body()["yaml"])
+                planner = self._planner(p)
+                write_config(planner, self._body()["yaml"])
+                LOG.log(planner.name, "config saved")
                 self._json({"ok": True})
             elif u.path == "/api/config/reset":
-                backup = reset_config(self._planner(p))
-                self._json({"meta": self._planner(p).meta(), "backup": backup, **read_config(self._planner(p))})
+                planner = self._planner(p)
+                backup = reset_config(planner)
+                LOG.log(planner.name, f"config reset to template{f'; backup {backup}' if backup else ''}")
+                self._json({"meta": planner.meta(), "backup": backup, **read_config(planner)})
             elif u.path == "/api/wallpaper":
                 planner = self._planner(p)
                 r = planner.set_wallpaper(self._body())
@@ -161,10 +165,12 @@ def run(host, port):
     """Scaffold any missing config, start the scheduler if configured, and serve the panel."""
     written = init.ensure()
     if written:
-        print(f"No config found, so I created {'a sample one' if len(written) == 1 else 'samples'}:")
-        for p in written:
-            print(f"  {p}")
+        noun = "a sample one" if len(written) == 1 else "samples"
+        LOG.log("init", f"no config found, created {noun}: {', '.join(str(p) for p in written)}")
     if SCHED.schedule.cfg.get("autostart"):
         SCHED.start()
-    print(f"timeglance -> http://{host}:{port}  (Ctrl-C to stop)")
-    ThreadingHTTPServer((host, port), Handler).serve_forever()
+    LOG.log("server", f"listening on http://{host}:{port}  (Ctrl-C to stop)")
+    try:
+        ThreadingHTTPServer((host, port), Handler).serve_forever()
+    except KeyboardInterrupt:
+        LOG.log("server", "stopped")

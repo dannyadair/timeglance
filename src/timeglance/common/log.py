@@ -1,8 +1,8 @@
-"""Append-only activity log shared by the scheduler and the manual export/wallpaper actions.
+"""Append-only activity log: what timeglance does, in one place.
 
-Every durable output (not live previews) leaves a trace under ``state/`` so the UI's Log view
-and a container's logs agree. A lock keeps concurrent writes from the threading HTTP server
-interleaved cleanly.
+Server startup, config scaffolding and edits, and every durable output (renders, exports,
+wallpaper changes - scheduled or manual, but not live previews) leave a trace under ``state/``.
+A lock keeps concurrent writes from the threading HTTP server interleaved cleanly.
 """
 
 import datetime as dt
@@ -23,10 +23,15 @@ class EventLog:
         self._lock = threading.Lock()
 
     def log(self, source, msg):
-        """Append a timestamped ``source: msg`` line (thread-safe)."""
+        """Append a timestamped ``source: msg`` line (thread-safe) and echo it to stdout.
+
+        The file backs the UI's Log view; the stdout echo lands in the terminal now and in
+        journald once the systemd service runs it, so every surface agrees."""
         line = f"{dt.datetime.now():%Y-%m-%d %H:%M:%S}  {source}: {msg}"
-        with self._lock, self.path.open("a") as f:
-            f.write(line + "\n")
+        with self._lock:
+            with self.path.open("a") as f:
+                f.write(line + "\n")
+            print(line, flush=True)
 
     def lines(self, n=200):
         """Return the last ``n`` log lines (empty if the log doesn't exist yet)."""

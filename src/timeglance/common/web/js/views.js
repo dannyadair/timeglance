@@ -89,7 +89,7 @@ export async function showLog() {
     el(
       "div",
       { className: "sched-head" },
-      "<h1>Log</h1><p>Every render, export and wallpaper change - scheduled or manual. Live previews aren't logged.</p>",
+      "<h1>Log</h1><p>What timeglance does - startup, config changes, renders, exports and wallpaper changes, scheduled or manual. Live previews aren't logged.</p>",
     ),
   );
 
