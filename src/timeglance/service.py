@@ -1,8 +1,9 @@
-"""``timeglance install``: a systemd user timer for the nightly render.
+"""``timeglance install``: a systemd user timer for the scheduled render.
 
-Writes a oneshot ``timeglance.service`` (runs ``timeglance run``, honouring ``schedule.yaml``)
-and a ``timeglance.timer`` (nightly, ``Persistent=true`` so a run missed while the machine was
-off catches up) into the user unit directory, then enables the timer. ``uninstall`` reverses it.
+Writes a oneshot ``timeglance-render.service`` (runs ``timeglance run``, honouring
+``schedule.yaml``) and a ``timeglance-render.timer`` (``Persistent=true`` so a run missed while
+the machine was off catches up) into the user unit directory, then enables the timer.
+``uninstall`` reverses it.
 
 Setting the Plasma wallpaper needs an active graphical session, so a run while you're fully
 logged out renders the files but can't paint; ``Persistent=true`` repaints on the next session.
@@ -16,8 +17,8 @@ from pathlib import Path
 
 from timeglance.common import schedule
 
-SERVICE = "timeglance.service"
-TIMER = "timeglance.timer"
+SERVICE = "timeglance-render.service"
+TIMER = "timeglance-render.timer"
 
 
 def _unit_dir():
@@ -36,7 +37,7 @@ def _service_unit():
     """The oneshot service that renders the scheduled planners."""
     return (
         "[Unit]\n"
-        "Description=timeglance nightly render\n"
+        "Description=timeglance scheduled render\n"
         "Documentation=https://github.com/dannyadair/timeglance\n\n"
         "[Service]\n"
         "Type=oneshot\n"
@@ -45,11 +46,11 @@ def _service_unit():
 
 
 def _timer_unit(time):
-    """The nightly timer firing at ``HH:MM``, catching up a missed run on next boot."""
+    """The timer firing daily at ``HH:MM``, catching up a missed run on next boot."""
     hh, mm = (int(x) for x in time.split(":"))
     return (
         "[Unit]\n"
-        "Description=timeglance nightly render timer\n\n"
+        "Description=timeglance scheduled render timer\n\n"
         "[Timer]\n"
         f"OnCalendar=*-*-* {hh:02d}:{mm:02d}:00\n"
         "Persistent=true\n\n"
@@ -74,7 +75,7 @@ def install(time=None):
     (unit_dir / TIMER).write_text(_timer_unit(time))
     _systemctl("daemon-reload")
     _systemctl("enable", "--now", TIMER)
-    print(f"installed {TIMER} (nightly at {time})")
+    print(f"installed {TIMER} (daily at {time})")
     print(f"  units written to {unit_dir}")
     print(f"  next run: systemctl --user list-timers {TIMER}")
 
