@@ -1,5 +1,7 @@
 """The systemd user units `timeglance install` writes, and the install/uninstall calls."""
 
+import types
+
 from timeglance import service
 
 
@@ -48,3 +50,47 @@ def test_uninstall_disables_and_removes(tmp_path, monkeypatch):
 
     assert not (unit_dir / service.SERVICE).exists()
     assert not (unit_dir / service.TIMER).exists()
+
+
+def test_enabled_reads_is_enabled(monkeypatch):
+    """enabled() is True only when `systemctl is-enabled` reports enabled."""
+    monkeypatch.setattr(service.shutil, "which", lambda _: "/usr/bin/systemctl")
+    monkeypatch.setattr(service.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="enabled\n"))
+    assert service.enabled() is True
+    monkeypatch.setattr(service.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="disabled\n"))
+    assert service.enabled() is False
+
+
+def test_enable_installs_when_units_missing(tmp_path, monkeypatch):
+    """enable() falls back to a full install when the timer unit isn't on disk yet."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setattr(service.shutil, "which", lambda _: "/usr/bin/systemctl")
+    monkeypatch.setattr(service.subprocess, "run", lambda *a, **k: None)
+    installed = []
+    monkeypatch.setattr(service, "install", lambda: installed.append(True))
+
+    service.enable()
+
+    assert installed == [True]
+
+
+def test_enable_uses_systemctl_when_installed(tmp_path, monkeypatch):
+    """enable() just re-enables when the units already exist."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setattr(service.shutil, "which", lambda _: "/usr/bin/systemctl")
+    (tmp_path / "systemd" / "user").mkdir(parents=True)
+    (tmp_path / "systemd" / "user" / service.TIMER).write_text("x")
+    calls = []
+    monkeypatch.setattr(service.subprocess, "run", lambda cmd, check=True: calls.append(cmd))
+
+    service.enable()
+
+    assert ["systemctl", "--user", "enable", "--now", service.TIMER] in calls
+
+
+def test_disable_stops_timer(monkeypatch):
+    """disable() stops and disables the timer without touching the unit files."""
+    calls = []
+    monkeypatch.setattr(service.subprocess, "run", lambda cmd, check=True: calls.append(cmd))
+    service.disable()
+    assert ["systemctl", "--user", "disable", "--now", service.TIMER] in calls

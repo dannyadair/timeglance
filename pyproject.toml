@@ -31,6 +31,11 @@ dependencies = [
     "pillow>=10.0.0",
 ]
 
+[project.optional-dependencies]
+# System tray controller. Needs the system AppIndicator/GObject libraries on KDE too
+# (e.g. `apt install python3-gi gir1.2-ayatanaappindicator3-0.1`); see the README.
+tray = ["pystray>=0.19.5"]
+
 [project.urls]
 Homepage = "https://github.com/dannyadair/timeglance"
 Repository = "https://github.com/dannyadair/timeglance"

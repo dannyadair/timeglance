@@ -89,6 +89,27 @@ Setting the Plasma wallpaper needs an active graphical session, so a render whil
 files but can't paint - it repaints on your next session. For renders while logged out (no wallpaper), enable
 lingering: `loginctl enable-linger $USER`.
 
+### Tray controller (optional)
+
+A system-tray menu to open the panel and flip the schedule - a launcher and quick toggles, _not_ the scheduler (the
+timer above keeps running whether or not the tray is open):
+
+```sh
+pipx install 'timeglance[tray]'   # or: uv sync --extra tray
+timeglance tray
+```
+
+On KDE the tray backend also needs the system AppIndicator/GObject libraries, which pipx must be allowed to see:
+
+```sh
+sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
+pipx install --system-site-packages 'timeglance[tray]'
+```
+
+The menu opens the control panel (starting the server first if needed), starts/stops it, picks the port, and toggles
+the schedule: enabled, time, which planners render, and which set the wallpaper. Quitting the tray only closes the
+panel it started - the systemd timer is untouched.
+
 ## Docs
 
 - [Motivation](docs/motivation.md) - why this exists, and how it fits a GTD/calendar setup

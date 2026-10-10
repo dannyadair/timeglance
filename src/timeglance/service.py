@@ -79,6 +79,27 @@ def install(time=None):
     print(f"  next run: systemctl --user list-timers {TIMER}")
 
 
+def enabled():
+    """True if the user timer is enabled."""
+    if not shutil.which("systemctl"):
+        return False
+    r = subprocess.run(["systemctl", "--user", "is-enabled", TIMER], capture_output=True, text=True, check=False)
+    return r.stdout.strip() == "enabled"
+
+
+def enable():
+    """Enable and start the timer, installing the units first if they're missing."""
+    if (_unit_dir() / TIMER).exists():
+        _systemctl("enable", "--now", TIMER)
+    else:
+        install()
+
+
+def disable():
+    """Stop and disable the timer, leaving the unit files in place."""
+    _systemctl("disable", "--now", TIMER, check=False)
+
+
 def uninstall():
     """Disable the timer and remove the unit files."""
     if not shutil.which("systemctl"):

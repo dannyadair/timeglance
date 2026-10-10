@@ -169,8 +169,12 @@ def run(host, port):
         LOG.log("init", f"no config found, created {noun}: {', '.join(str(p) for p in written)}")
     if SCHED.schedule.cfg.get("autostart"):
         SCHED.start()
+    try:
+        httpd = ThreadingHTTPServer((host, port), Handler)
+    except OSError as e:
+        raise SystemExit(f"cannot serve on {host}:{port} - {e.strerror or e}") from e
     LOG.log("server", f"listening on http://{host}:{port}  (Ctrl-C to stop)")
     try:
-        ThreadingHTTPServer((host, port), Handler).serve_forever()
+        httpd.serve_forever()
     except KeyboardInterrupt:
         LOG.log("server", "stopped")
