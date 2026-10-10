@@ -71,6 +71,24 @@ uv run timeglance render year --theme light --layout vertical   # render the yea
 uv run timeglance render weekly --format both                   # render the weekly sheet
 ```
 
+### Set and forget (systemd timer)
+
+To re-render (and optionally re-wallpaper) every night with nothing running and nothing to start after a reboot:
+
+```sh
+timeglance install              # write a user service + timer and enable it now
+timeglance install --time 06:30 # or pick the time (default: schedule.yaml's)
+timeglance uninstall            # remove it
+```
+
+This drops `timeglance.service` (a oneshot that runs `timeglance run`, honouring your `schedule.yaml`) and
+`timeglance.timer` into `~/.config/systemd/user/`, then enables the timer. `Persistent=true` means a run missed
+while the machine was off happens on the next boot. Change the time by re-running `timeglance install --time HH:MM`.
+
+Setting the Plasma wallpaper needs an active graphical session, so a render while you're fully logged out writes the
+files but can't paint - it repaints on your next session. For renders while logged out (no wallpaper), enable
+lingering: `loginctl enable-linger $USER`.
+
 ## Docs
 
 - [Motivation](docs/motivation.md) - why this exists, and how it fits a GTD/calendar setup
