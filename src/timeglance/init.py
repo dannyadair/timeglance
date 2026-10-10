@@ -31,7 +31,7 @@ def main():
     written = ensure()
     for planner in ("year", "weekly"):
         dest = paths.planner_config(planner)
-        print(f"wrote {dest}" if dest in written else f"{dest} already exists - leaving it")
+        print(f"wrote {dest}" if dest in written else f"{dest} already exists - not written")
 
 
 if __name__ == "__main__":

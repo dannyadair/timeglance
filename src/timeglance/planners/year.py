@@ -1,5 +1,7 @@
 """Control-panel adapter for the year planner: config, preview, export and wallpaper."""
 
+import datetime as dt
+
 import cairosvg
 
 from timeglance import paths
@@ -57,6 +59,7 @@ class YearPlanner:
         summary = ybuild.assemble(raw)
         backend = wallpaper.detect()
         wp = raw.get("wallpaper") or {}
+        (sy, sm), (ey, em) = yrender.resolve_range(raw, dt.date.today())
         return {
             "layers": [
                 {"id": lyr["id"], "label": lyr["label"], "color": lyr["color"], "visible": lyr.get("visible", True)}
@@ -65,7 +68,7 @@ class YearPlanner:
             "themes": list(yrender.THEMES),
             "layouts": ybuild.ALL_LAYOUTS,
             "sizes": list(raw.get("sizes") or {}),
-            "range": raw.get("range") or {"start": "year-start", "end": "year-end"},
+            "range": {"start": f"{sy}-{sm:02d}", "end": f"{ey}-{em:02d}"},
             "week_start": raw.get("week_start", "Mon"),
             "theme": raw.get("theme") or "light",
             "layout": raw.get("layout") or "vertical",
