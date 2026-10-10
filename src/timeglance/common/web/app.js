@@ -249,7 +249,11 @@ async function showSchedule() {
       `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px"><span class="hint">${s.tz}</span>`),
   );
 
-  const hasScreens = s.screens.length > 0;
+  // Screen names a planner's config targets that we've never seen (bad id, or state cleared):
+  // list them as FYI - we can't know their resolution, so they can't be rendered.
+  const unseenOf = (chosen) => chosen
+    .filter((n) => !s.screens.some((sc) => sc.name === n))
+    .map((n) => ({ name: n, model: "", connected: false, seen: false }));
   const forget = async (name) => {
     await fetch("/api/screens/forget", { method: "POST", body: JSON.stringify({ name }) });
     showSchedule();
@@ -265,18 +269,25 @@ async function showSchedule() {
        <code class="dst">→ ${s.outputs[name]}</code>`));
     sec.append(el("div", { className: "grp", style: "padding-left:16px" },
       `<span data-toggle="s_wp_${name}"><input type="checkbox" class="s-wp" id="s_wp_${name}" value="${name}" ${cfg.wallpaper ? "checked" : ""}><label>set as wallpaper</label></span>`));
-    if (hasScreens) {
-      const chosen = cfg.screens; // [] means all connected
+    const chosen = cfg.screens; // [] means all connected
+    const rows = [...s.screens, ...unseenOf(chosen)];
+    if (rows.length) {
       const row = el("div", { className: "grp schd-scr-row", style: "padding-left:32px" });
-      for (const sc of s.screens) {
-        const on = sc.connected ? chosen.length === 0 || chosen.includes(sc.name) : chosen.includes(sc.name);
+      for (const sc of rows) {
+        const seen = sc.seen !== false;
+        const on = !seen ? true : sc.connected ? chosen.length === 0 || chosen.includes(sc.name) : chosen.includes(sc.name);
+        const note = !seen
+          ? ' <span class="off">· in config, never seen</span>'
+          : sc.connected ? "" : ` <span class="off">· offline, seen ${sc.last_seen}</span>`;
         const opt = el("span", { className: "schd-scr-opt" });
         const toggle = el("span", {},
-          `<input type="checkbox" class="schd-scr" data-planner="${name}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}${sc.connected ? "" : ` <span class="off">· offline, seen ${sc.last_seen}</span>`}</label>`);
+          `<input type="checkbox" class="schd-scr" data-planner="${name}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}${note}</label>`);
         toggle.dataset.toggle = `scr_${name}_${sc.name}`;
         toggle.querySelector("input").id = `scr_${name}_${sc.name}`;
         opt.append(toggle);
-        if (!sc.connected) {
+        if (!sc.connected && seen) {
+          // Remembered-but-offline: Forget drops it from the registry. An unseen screen isn't
+          // in the registry; it's removed just by unticking it (dropped from the config on save).
           const f = el("button", { className: "forget", title: `Forget ${sc.name}` }, "Forget");
           f.onclick = () => forget(sc.name);
           opt.append(f);
@@ -317,9 +328,10 @@ async function showSchedule() {
     };
     for (const name of ["year", "weekly"]) {
       const block = { wallpaper: $(`#s_wp_${name}`).checked };
-      if (hasScreens) {
-        const chosen = [...card.querySelectorAll(`input.schd-scr[data-planner="${name}"]:checked`)].map((c) => c.value);
-        // All connected ticked (and nothing offline) == "all" ([]), so a new screen is still covered.
+      const boxes = [...card.querySelectorAll(`input.schd-scr[data-planner="${name}"]`)];
+      if (boxes.length) {
+        const chosen = boxes.filter((c) => c.checked).map((c) => c.value);
+        // All connected ticked (and nothing else) == "all" ([]), so a new screen is still covered.
         const allConnected = chosen.length === connectedNames.length && connectedNames.every((n) => chosen.includes(n));
         block.screens = allConnected ? [] : chosen;
       }
@@ -421,21 +433,29 @@ function openWallpaperDialog(wp) {
   const bg = el("div", { className: "modal-bg" });
   const modal = el("div", { className: "modal" });
   const list = el("div");
-  for (const s of wp.screens) {
+  const sel = wp.selected;
+  const selList = Array.isArray(sel) ? sel : sel && sel !== "all" && sel !== "primary" ? String(sel).split(",").map((x) => x.trim()) : [];
+  const names = new Set(wp.screens.map((s) => s.name));
+  // config names we've never seen (bad id, or state cleared): FYI only, no resolution to render.
+  const unseen = selList.filter((n) => !names.has(n)).map((n) => ({ name: n, connected: false, seen: false }));
+  for (const s of [...wp.screens, ...unseen]) {
+    const seen = s.seen !== false;
     const model = s.model || (/^(eDP|LVDS)/i.test(s.name) ? "Built-in display" : s.name);
     const id = "wpscr_" + s.name;
     const row = el("div", { className: "scr" });
     const toggle = el("div", { className: "scr-toggle" });
     toggle.dataset.toggle = id;
-    const on = wpSelected(wp.selected, s);
-    const where = s.primary ? " · primary" : s.connected ? "" : ` · offline, seen ${s.last_seen}`;
+    const on = seen ? wpSelected(sel, s) : true;
+    const detail = !seen
+      ? `${s.name} · in config, never seen`
+      : `${s.name} · ${s.w}×${s.h}${s.primary ? " · primary" : s.connected ? "" : ` · offline, seen ${s.last_seen}`}`;
     toggle.innerHTML = `<input type="checkbox" id="${id}" value="${s.name}" ${on ? "checked" : ""}>
       <label><span>${model}</span>
-      <span class="res">${s.name} · ${s.w}×${s.h}${where}</span></label>`;
+      <span class="res">${detail}</span></label>`;
     row.append(toggle);
     // A disconnected screen is still offered (its file is written now, applied on reconnect);
-    // Forget drops a retired monitor from the registry so it stops cluttering the list.
-    if (!s.connected) {
+    // Forget drops a retired monitor from the registry. An unseen name isn't in the registry.
+    if (!s.connected && seen) {
       const f = el("button", { className: "forget", title: `Forget ${s.name}` }, "Forget");
       f.onclick = async () => {
         await fetch("/api/screens/forget", { method: "POST", body: JSON.stringify({ name: s.name }) });

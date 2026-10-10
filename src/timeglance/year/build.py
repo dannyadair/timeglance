@@ -183,7 +183,8 @@ def main():
         screens = wallpaper.resolve_screens(backend, args.screen or wp.get("screens", "all"))
         _, info = apply_wallpaper(cfg, backend, screens, wp.get("fill", "preserveAspectCrop"), args.out)
         applied = ", ".join(info["applied"]) or "(none - no desktop matched)"
-        print(f"wallpaper ({raw['theme']}/{raw['layout']}) applied on: {applied}; desktops: {info['desktops']}")
+        extra = "".join(f"; {k} {', '.join(info[k])}" for k in ("pending", "unseen") if info.get(k))
+        print(f"wallpaper ({raw['theme']}/{raw['layout']}) applied on: {applied}; desktops: {info['desktops']}{extra}")
         return
 
     for layout in layouts:

@@ -35,7 +35,8 @@ class Screen:
 
     A remembered-but-disconnected screen has ``connected=False`` and no live geometry (zeros):
     we can still render its file at the remembered ``pw``x``ph``, but can't assign it in Plasma
-    until it's back."""
+    until it's back. A screen named in config that we've never seen has ``seen=False`` and no
+    resolution either, so it can only be shown as FYI - we can't render a file for it."""
 
     name: str
     x: int  # logical position
@@ -47,6 +48,7 @@ class Screen:
     primary: bool = False
     model: str = ""  # friendly name from EDID, e.g. "DELL U3821DW"
     connected: bool = True
+    seen: bool = True
 
 
 def _edid_model(name):
@@ -233,8 +235,10 @@ def known(backend, prune_days=30):
 
 def resolve_screens(backend, spec):
     """spec: 'all' | 'primary' | comma-string | list of names. 'all'/'primary' cover connected
-    outputs only; an explicit name may be a remembered-but-disconnected screen, resolved from the
-    registry so its file can still be rendered (and applied once it reconnects)."""
+    outputs only. An explicit name may be a remembered-but-disconnected screen (resolved from the
+    registry so its file is still rendered and applied once it reconnects) or one we've never seen
+    - a hand-edited config id, or state that was cleared - returned flagged ``seen=False`` with no
+    resolution, so callers can list it as FYI and skip rendering it."""
     screens = backend.list_screens()
     if not spec or spec == "all":
         return screens
@@ -243,7 +247,7 @@ def resolve_screens(backend, spec):
     want = spec if isinstance(spec, list) else [s.strip() for s in str(spec).split(",")]
     by_name = {s.name: s for s in screens}
     reg = _load_registry()
-    resolved, bad = [], []
+    resolved = []
     for w in want:
         if w in by_name:
             resolved.append(by_name[w])
@@ -251,9 +255,7 @@ def resolve_screens(backend, spec):
             info = reg[w]
             resolved.append(Screen(w, 0, 0, 0, 0, info["pw"], info["ph"], model=info["model"], connected=False))
         else:
-            bad.append(w)
-    if bad:
-        raise SystemExit(f"unknown screen(s): {', '.join(bad)}  (have: {', '.join(by_name) or 'none connected'})")
+            resolved.append(Screen(w, 0, 0, 0, 0, 0, 0, connected=False, seen=False))
     return resolved
 
 
@@ -269,9 +271,11 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
     (e.g. `year-wallpaper`) so both planners' files can share one directory.
 
     Disconnected screens (``connected=False``) are rendered and written but not assigned in
-    Plasma - their fresh file waits on disk for reconnection. Returns (assignments, info) where
-    info has `requested`, `written`, `applied` and `pending` (written-but-disconnected) names
-    plus the detected `desktops` geometries, so a geometry mismatch is visible, not silent.
+    Plasma - their fresh file waits on disk for reconnection. Never-seen screens (``seen=False``)
+    have no resolution, so they're neither rendered nor assigned, only reported. Returns
+    (assignments, info) where info has `requested`, `written`, `applied`, `pending`
+    (written-but-disconnected) and `unseen` (skipped) names plus the detected `desktops`
+    geometries, so a geometry mismatch is visible, not silent.
     """
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -279,6 +283,8 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
     rendered = {}  # (w, h) -> png path to copy from for same-resolution screens
     assignments = []  # connected screens, to assign in Plasma
     for scr in screens:
+        if not scr.seen:
+            continue
         png = out / f"{prefix}-{scr.name}.png"
         res = (scr.pw, scr.ph)
         if res in rendered:
@@ -292,9 +298,10 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
     by_key = {f"{s.x},{s.y},{s.lw}x{s.lh}": s.name for s, _ in assignments}
     info = {
         "requested": [s.name for s in screens],
-        "written": [s.name for s in screens],
+        "written": [s.name for s in screens if s.seen],
         "applied": [by_key[k] for k in report.get("set", []) if k in by_key],
-        "pending": [s.name for s in screens if not s.connected],
+        "pending": [s.name for s in screens if s.seen and not s.connected],
+        "unseen": [s.name for s in screens if not s.seen],
         "desktops": report.get("desktops", []),
     }
     return assignments, info

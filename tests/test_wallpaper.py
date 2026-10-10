@@ -18,6 +18,9 @@ class FakeBackend:
     def list_screens(self):
         return self._screens
 
+    def apply(self, assignments, fill="preserveAspectCrop", bust=""):
+        return {"desktops": [], "set": [f"{s.x},{s.y},{s.lw}x{s.lh}" for s, _ in assignments]}
+
 
 def _scr(name, pw=1920, ph=1080, primary=False, model=""):
     return Screen(name, 0, 0, pw, ph, pw, ph, primary=primary, model=model)
@@ -63,9 +66,10 @@ def test_resolve_disconnected_from_registry():
     assert dp.connected is False and (dp.pw, dp.ph) == (3840, 1600)
 
 
-def test_resolve_unknown_raises():
-    with pytest.raises(SystemExit):
-        wallpaper.resolve_screens(FakeBackend([_scr("eDP-1")]), ["NOPE"])
+def test_resolve_unknown_is_unseen():
+    got = wallpaper.resolve_screens(FakeBackend([_scr("eDP-1")]), ["NOPE"])
+    assert [s.name for s in got] == ["NOPE"]
+    assert got[0].seen is False and got[0].connected is False
 
 
 def test_apply_renders_disconnected_but_defers(tmp_path):
@@ -89,3 +93,15 @@ def test_apply_renders_disconnected_but_defers(tmp_path):
     assert be.applied == ["eDP-1"]  # only the connected screen is assigned in Plasma
     assert info["applied"] == ["eDP-1"] and info["pending"] == ["DP-8"]
     assert set(info["written"]) == {"eDP-1", "DP-8"}
+
+
+def test_apply_skips_unseen(tmp_path):
+    def render_png(scr, path):
+        path.write_bytes(b"PNG")
+
+    unseen = Screen("NOPE", 0, 0, 0, 0, 0, 0, connected=False, seen=False)
+    _, info = wallpaper.apply(FakeBackend([]), [_scr("eDP-1"), unseen], tmp_path, render_png, prefix="year-wallpaper")
+
+    assert (tmp_path / "year-wallpaper-eDP-1.png").exists()
+    assert not (tmp_path / "year-wallpaper-NOPE.png").exists()  # no resolution, so never rendered
+    assert info["written"] == ["eDP-1"] and info["unseen"] == ["NOPE"]
