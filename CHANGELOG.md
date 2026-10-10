@@ -2,6 +2,64 @@
 
 <!-- version list -->
 
+## v2.0.0 (2026-10-10)
+
+### Bug Fixes
+
+- Fit year and weekly previews to the pane for readability
+  ([`7093f6c`](https://github.com/dannyadair/timeglance/commit/7093f6c6268f123bd28dcebbcb4508e6c9f3bf16))
+
+### Documentation
+
+- Correct the wallpaper filename and resolution description
+  ([`7d8ea10`](https://github.com/dannyadair/timeglance/commit/7d8ea10ce051e9c4d22c812145ef3d7d7d2ec15c))
+
+- Registry, per-planner schedule, overrides, disconnected/unseen screens
+  ([`9b62230`](https://github.com/dannyadair/timeglance/commit/9b62230e482419524bfc32da16eecc80370319db))
+
+### Features
+
+- Consistent screen targeting in the wallpaper dialog and schedule panel
+  ([`029fe7b`](https://github.com/dannyadair/timeglance/commit/029fe7b1f3b3a17d8b48cf61b7e102fe9875d5ba))
+
+- Dedicated schedule.yaml with a trigger-agnostic runner
+  ([`aed633c`](https://github.com/dannyadair/timeglance/commit/aed633c05e79f2a50049abe86acdc580ef92b682))
+
+- Per-planner render overrides (YAML) in the schedule panel
+  ([`25c1f24`](https://github.com/dannyadair/timeglance/commit/25c1f247e87044675e31a767154cdac2bbe51ca9))
+
+- Per-planner schedule blocks with disconnected-screen targeting
+  ([`ca47511`](https://github.com/dannyadair/timeglance/commit/ca475119e049f6ec12ad27a05e8a80b69e507e3e))
+
+- Remember screens so disconnected ones stay targetable
+  ([`f1099a0`](https://github.com/dannyadair/timeglance/commit/f1099a0a1e107e469bec293f8aa118cc8230ab5f))
+
+- Rename weekly `activities`→`topics` and `blocks`→`activities`
+  ([`9bd3a4a`](https://github.com/dannyadair/timeglance/commit/9bd3a4a5bf62b9603321819c75c8fe930fc06691))
+
+- Surface configured-but-unseen screens as FYI instead of erroring
+  ([`cd01ee7`](https://github.com/dannyadair/timeglance/commit/cd01ee72857ea976f7eb04d8693f4816d1a043ed))
+
+### Refactoring
+
+- Rename "tool" → "planner" throughout
+  ([`a820515`](https://github.com/dannyadair/timeglance/commit/a8205158ca56b633f2df97e14c714fa0a0c5e043))
+
+- Schedule.py into a Schedule class; extract format helpers
+  ([`4d7fae0`](https://github.com/dannyadair/timeglance/commit/4d7fae0c2b1f23ad7a77e5cabc1a130d440f3f7b))
+
+- Split app.js into native ES modules
+  ([`321c2b0`](https://github.com/dannyadair/timeglance/commit/321c2b0d56dfd3581558ec07bc11a3b37fc4f665))
+
+- Split serve.py into planners, scheduler, log and config modules
+  ([`0c6db85`](https://github.com/dannyadair/timeglance/commit/0c6db859f857fa35303b91700436391336494502))
+
+### Breaking Changes
+
+- Weekly configs must rename `activities:`→`topics:`, `blocks:`→`activities:`, and each entry's
+  `activity:` field to `topic:`.
+
+
 ## v1.3.0 (2026-10-10)
 
 ### Documentation
