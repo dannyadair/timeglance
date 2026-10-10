@@ -1,4 +1,7 @@
-// The Schedule overlay: per-planner nightly render, wallpaper targets and render overrides.
+// The Schedule overlay: a daily re-render per planner, with wallpaper targets and render
+// overrides. What triggers it is the environment's call, not a toggle: a systemd user timer
+// when installed (runs even with the panel closed), otherwise this server's own loop (only
+// while it's running). The screen states which, and offers Install/Uninstall where systemd is.
 
 import { $, el } from "./dom.js";
 import { body, setStatus } from "./state.js";
@@ -12,20 +15,25 @@ export async function showSchedule() {
     el(
       "div",
       { className: "sched-head" },
-      "<h1>Schedule</h1><p>Daily re-rendering of planners - write their files to disk, set them as desktop wallpaper.</p>",
+      "<h1>Schedule</h1><p>Re-render each planner to disk daily - and, per planner, set it as the desktop wallpaper.</p>",
     ),
   );
 
   const card = el("div", { className: "card" });
+  const statusText = s.installed
+    ? "Installed as a systemd service - the schedule runs even when the control panel is closed."
+    : s.systemd
+      ? "The schedule only runs while the timeglance server is running. Install it as a service to run without it."
+      : "The schedule only runs while the timeglance server is running.";
   card.append(
     el(
       "div",
-      { className: "grp", style: "margin-bottom:10px" },
-      `<span class="dot ${s.running ? "on" : ""}"></span><strong>${s.running ? "Running" : "Stopped"}</strong>`,
+      { className: "sched-status" + (s.installed ? " on" : "") },
+      statusText,
     ),
     el(
       "div",
-      { className: "grp" },
+      { className: "grp", style: "margin:12px 0" },
       `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px"><span class="hint">${s.tz}</span>`,
     ),
   );
@@ -40,7 +48,7 @@ export async function showSchedule() {
     await forgetScreen(name);
     showSchedule();
   };
-  // One section per planner: render nightly -> write its file; optionally set that file as the
+  // One section per planner: render on schedule -> write its file; optionally set that file as the
   // wallpaper on chosen screens. A disconnected screen can still be targeted (its file is written
   // now and applied on reconnect), shown as offline with a Forget button to drop a retired monitor.
   const section = (name, label) => {
@@ -104,7 +112,7 @@ export async function showSchedule() {
       }
       sec.append(row);
     }
-    // Optional per-planner overrides for the nightly render: top-level YAML, same shape as the
+    // Optional per-planner overrides for the scheduled render: top-level YAML, same shape as the
     // planner's config.yaml, so you can paste keys straight across. Folded into schedule.yaml's
     // `render:` block on save. Open by default when something's set so it isn't hidden.
     const det = el("details", {
@@ -144,17 +152,23 @@ export async function showSchedule() {
   card.append(section("year", "Year"), section("weekly", "Weekly"));
 
   const bar = el("div", { className: "grp", style: "margin-top:14px" });
-  const start = el("button", { className: "primary" }, "Start");
-  const stop = el("button", {}, "Stop");
-  const runNow = el("button", {}, "Run now");
+  const save = el("button", { className: "primary" }, "Save");
+  const runNow = el("button", {}, "Render now");
+  bar.append(save, runNow);
+  if (s.systemd) {
+    const svc = el(
+      "button",
+      {},
+      s.installed ? "Uninstall service" : "Install as service",
+    );
+    svc.onclick = () => post(s.installed ? "uninstall" : "install");
+    bar.append(svc);
+  }
   bar.append(
-    start,
-    stop,
-    runNow,
     el(
       "span",
-      { style: "font-size:12px;color:var(--mut)" },
-      `${s.last_run ? "last " + s.last_run : ""}${s.next_run ? "  ·  next " + s.next_run : ""}`,
+      { className: "hint" },
+      s.last_run ? "last run " + s.last_run : "",
     ),
   );
   card.append(bar);
@@ -188,6 +202,12 @@ export async function showSchedule() {
     }
     return cfg;
   };
+  const done = {
+    save: "schedule saved",
+    run: "rendering now",
+    install: "installed as a service",
+    uninstall: "service removed",
+  };
   const post = async (action) => {
     const r = await saveSchedule(collect(action));
     if (!r.ok) {
@@ -198,10 +218,10 @@ export async function showSchedule() {
       );
       return;
     }
+    setStatus(done[action]);
     showSchedule();
   };
-  start.onclick = () => post("start");
-  stop.onclick = () => post("stop");
+  save.onclick = () => post("save");
   runNow.onclick = () => post("run");
 
   wrap.append(card);

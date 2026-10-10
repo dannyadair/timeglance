@@ -18,7 +18,7 @@ from urllib.parse import parse_qs, urlparse
 
 import yaml
 
-from timeglance import init
+from timeglance import init, service
 from timeglance.common import schedule, wallpaper
 from timeglance.common.config import read_config, reset_config, write_config
 from timeglance.common.format import human_size
@@ -57,6 +57,10 @@ class Handler(BaseHTTPRequestHandler):
         """Resolve the target planner from request params (defaults to the year planner)."""
         return PLANNERS[params.get("planner", "year")]
 
+    def _sched_status(self):
+        """Scheduler state plus whether the systemd render service is available/installed."""
+        return {**SCHED.status(), "systemd": service.available(), "installed": service.enabled()}
+
     def _body(self):
         """Parse and return the JSON request body (empty dict if none)."""
         length = int(self.headers.get("Content-Length", 0))
@@ -93,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
                 LOG.log(planner.name, f"exported {fname} ({fmt}, {human_size(len(body))})")
                 self._send(200, ctype, body, {"Content-Disposition": f'inline; filename="{fname}"'})
             elif u.path == "/api/schedule":
-                self._json(SCHED.status())
+                self._json(self._sched_status())
             elif u.path == "/api/log":
                 self._json({"log": LOG.lines()})
             else:
@@ -139,7 +143,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"ok": True})
             elif u.path == "/api/schedule":
                 body = self._body()
-                keys = ("time", "planners", "autostart", *PLANNERS)
+                keys = ("time", "planners", *PLANNERS)
                 cfg = {k: body[k] for k in keys if k in body}
                 for name in PLANNERS:
                     if name in cfg and "render" in cfg[name]:
@@ -148,13 +152,18 @@ class Handler(BaseHTTPRequestHandler):
                         except yaml.YAMLError as e:
                             return self._json({"error": f"{name}: invalid override YAML - {e}"}, 400)
                 SCHED.save_cfg(cfg)
-                if body.get("action") == "start":
-                    SCHED.start()
-                elif body.get("action") == "stop":
+                action = body.get("action")
+                if action == "install":
+                    service.install()
                     SCHED.stop()
-                elif body.get("action") == "run":
+                elif action == "uninstall":
+                    service.uninstall()
+                    SCHED.start()
+                elif action == "run":
                     threading.Thread(target=SCHED.run_once, daemon=True).start()
-                self._json(SCHED.status())
+                elif service.enabled():
+                    service.install()
+                self._json(self._sched_status())
             else:
                 self._send(404, "text/plain", "not found")
         except Exception:
@@ -167,7 +176,7 @@ def run(host, port):
     if written:
         noun = "a sample one" if len(written) == 1 else "samples"
         LOG.log("init", f"no config found, created {noun}: {', '.join(str(p) for p in written)}")
-    if SCHED.schedule.cfg.get("autostart"):
+    if not service.enabled():
         SCHED.start()
     try:
         httpd = ThreadingHTTPServer((host, port), Handler)
