@@ -234,7 +234,8 @@ def main():
         )
         _, info = wallpaper.apply(backend, screens, args.out, render_png, prefix="weekly-wallpaper")
         applied = ", ".join(info["applied"]) or "(none - no desktop matched)"
-        print(f"wallpaper applied on: {applied}; desktops: {info['desktops']}")
+        extra = "".join(f"; {k} {', '.join(info[k])}" for k in ("pending", "unseen") if info.get(k))
+        print(f"wallpaper applied on: {applied}; desktops: {info['desktops']}{extra}")
         return
 
     html = render(cfg, hide, paper)

@@ -107,6 +107,8 @@ def run_once(cfg, planners, log):
             detail = "set " + (",".join(r["applied"]) or "nothing matched")
             if r.get("pending"):
                 detail += f"; pending {','.join(r['pending'])}"
+            if r.get("unseen"):
+                detail += f"; unseen {','.join(r['unseen'])}"
             log.log(name, f"wallpaper {detail}")
         except (Exception, SystemExit):
             log.log(name, f"ERROR\n{traceback.format_exc().strip()}")

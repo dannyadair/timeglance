@@ -440,6 +440,8 @@ class Handler(BaseHTTPRequestHandler):
                     detail = ",".join(r["applied"]) or "nothing matched"
                     if r.get("pending"):
                         detail += f"; pending {','.join(r['pending'])}"
+                    if r.get("unseen"):
+                        detail += f"; unseen {','.join(r['unseen'])}"
                     LOG.log(planner.name, f"wallpaper set {detail} (manual)")
                 else:
                     LOG.log(planner.name, f"wallpaper FAILED {r['error']} (manual)")
