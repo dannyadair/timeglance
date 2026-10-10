@@ -1,6 +1,6 @@
-"""The tray's "Start at login": an XDG autostart entry that launches ``timeglance tray`` when
-you log in. Plasma and other XDG desktops read ``~/.config/autostart/`` at session start. This
-is the tray launcher only - the scheduled render is the systemd timer from ``timeglance install``.
+"""The tray's "Autostart": an XDG autostart entry that launches ``timeglance tray`` at login.
+Plasma and other XDG desktops read ``~/.config/autostart/`` at session start. This is the tray
+launcher only - the scheduled render is the systemd timer from ``timeglance install``.
 """
 
 import os
