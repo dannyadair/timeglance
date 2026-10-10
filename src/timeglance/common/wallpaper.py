@@ -86,10 +86,15 @@ class PlasmaBackend:
             )
         return screens
 
-    def _script(self, assignments, fill):
-        """Build the Plasma scripting snippet that matches desktops by geometry and sets images."""
+    def _script(self, assignments, fill, bust=""):
+        """Build the Plasma scripting snippet that matches desktops by geometry and sets images.
+
+        ``bust`` is appended as a URL fragment (``file://…#bust``); Qt drops it when resolving the
+        file, so the same stable path is loaded but the changed string forces org.kde.image to
+        reload instead of keeping its cached pixmap."""
         mode = FILL_MODES.get(fill, 2)
-        want = ",".join(f"{{x:{s.x},y:{s.y},w:{s.lw},h:{s.lh},path:'file://{path}'}}" for s, path in assignments)
+        frag = f"#{bust}" if bust else ""
+        want = ",".join(f"{{x:{s.x},y:{s.y},w:{s.lw},h:{s.lh},path:'file://{path}{frag}'}}" for s, path in assignments)
         # Match each Plasma desktop to a target by logical geometry, set the image, and report
         # back which geometries exist and which got set so callers can tell if a match happened.
         return (
@@ -111,7 +116,7 @@ class PlasmaBackend:
             "print(JSON.stringify({desktops:found, set:done}));"
         )
 
-    def apply(self, assignments, fill="preserveAspectCrop"):
+    def apply(self, assignments, fill="preserveAspectCrop", bust=""):
         """assignments: list of (Screen, png Path). Returns {"desktops": [...], "set": [...]}
         of logical-geometry keys (x,y,wxh) so callers can see which desktops actually matched."""
         r = subprocess.run(
@@ -123,7 +128,7 @@ class PlasmaBackend:
                 "--dest=org.kde.plasmashell",
                 "/PlasmaShell",
                 "org.kde.PlasmaShell.evaluateScript",
-                "string:" + self._script(assignments, fill),
+                "string:" + self._script(assignments, fill, bust),
             ],
             capture_output=True,
             text=True,
@@ -163,28 +168,29 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
 
     render_png must write a PNG for `screen` to `path` (sized however the tool wants;
     for a crisp result render at screen.pw x screen.ph). Screens that share a resolution
-    reuse one render. Each run writes a fresh `{prefix}-{w}x{h}-{stamp}.png` and prunes the
-    tool's older files of that resolution: Plasma's org.kde.image only reloads when the path
-    string changes, so a stable filename would leave the cached pixmap in place. `prefix` is
-    tool-scoped (e.g. `year-wallpaper`) so both tools' files can share one directory.
+    reuse one render. Each screen gets a stable `{prefix}-{name}.png`, overwritten in place:
+    a disconnected output then picks up the fresh image when it reconnects, since Plasma
+    restores its remembered path and reloads from disk. A connected output is nudged to
+    reload via the `#stamp` cache-bust (see PlasmaBackend._script). `prefix` is tool-scoped
+    (e.g. `year-wallpaper`) so both tools' files can share one directory.
     Returns (assignments, info) where info has `requested`/`applied` screen names and the
     detected `desktops` geometries (so a geometry mismatch is visible, not silent).
     """
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     stamp = str(int(time.time() * 1000))
-    rendered = {}  # (w, h) -> png path
+    rendered = {}  # (w, h) -> png path to copy from for same-resolution screens
     assignments = []
     for scr in screens:
+        png = out / f"{prefix}-{scr.name}.png"
         res = (scr.pw, scr.ph)
-        if res not in rendered:
-            for old in out.glob(f"{prefix}-{scr.pw}x{scr.ph}-*.png"):
-                old.unlink()
-            png = out / f"{prefix}-{scr.pw}x{scr.ph}-{stamp}.png"
+        if res in rendered:
+            shutil.copyfile(rendered[res], png)
+        else:
             render_png(scr, png)
             rendered[res] = png
-        assignments.append((scr, rendered[res]))
-    report = backend.apply(assignments, fill)
+        assignments.append((scr, png))
+    report = backend.apply(assignments, fill, bust=stamp)
     by_key = {f"{s.x},{s.y},{s.lw}x{s.lh}": s.name for s, _ in assignments}
     info = {
         "requested": [s.name for s, _ in assignments],
