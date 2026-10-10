@@ -12,8 +12,10 @@ pre-commit install
 Hooks: **ruff** (lint + format) for Python, **prettier** for Markdown.
 
 The code lives under `src/timeglance/` (`common`, `year`, `weekly` subpackages); packaged assets (web UI, Jinja
-templates, the `config.yaml.in` files) ship inside it. Working data - each planner's `config.yaml` and `out/`, plus
-shared `state/` - resolves from the current working directory (override with `TIMEGLANCE_HOME`).
+templates, the `config.yaml.in` files) ship inside it. Working data - each planner's `config.yaml`, rendered `out/`,
+plus shared state and cache - follows the XDG base directories by default (`~/.config/timeglance`,
+`~/.local/state/timeglance`, `~/.cache/timeglance`, `~/.local/share/timeglance`); set `TIMEGLANCE_HOME` to put it all
+under one root, which is how Docker and a `cd`-and-run dev loop work.
 
 ## Before you push
 

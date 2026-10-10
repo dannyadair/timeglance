@@ -20,6 +20,7 @@ services:
     command: timeglance --host 0.0.0.0
     user: *user
     environment:
+      TIMEGLANCE_HOME: /app # single-root layout: config/out at /app, state (incl. schedule.yaml) under /app/state
       XDG_CACHE_HOME: /tmp # writable fontconfig cache when running as a non-root uid
     ports:
       - "8753:8753"

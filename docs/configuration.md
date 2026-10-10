@@ -33,7 +33,7 @@ sources:
 ```
 
 Recurrences, `EXDATE`s and all-day/timed spans are expanded within the render window. URL feeds are TTL-cached
-(`refresh:` seconds) under `state/ics-cache`, and a failed refresh falls back to the last good copy. Nice trick:
+(`refresh:` seconds) in the cache directory (`~/.cache/timeglance/ics-cache`), and a failed refresh falls back to the last good copy. Nice trick:
 keep a private "year" calendar you never show online and only export here.
 
 > **A share link is a secret.** Proton links embed a passphrase key. Keep them in your git-ignored `config.yaml`,
