@@ -7,9 +7,12 @@ so ``serve`` runs in the foreground.
 """
 
 import argparse
+import importlib.util
+import subprocess
+import sys
 
 from timeglance import init, service
-from timeglance.common import schedule, serve
+from timeglance.common import schedule, serve, settings
 from timeglance.common.log import LOG
 from timeglance.planners import PLANNERS
 from timeglance.weekly import build as wbuild
@@ -27,7 +30,7 @@ def main(argv=None):
 
     sp_serve = sub.add_parser("serve", help="run the web control panel")
     sp_serve.add_argument("--host", default="127.0.0.1", help="bind address (use 0.0.0.0 in a container)")
-    sp_serve.add_argument("--port", type=int, default=8753)
+    sp_serve.add_argument("--port", type=int, default=settings.get_port())
 
     sp_render = sub.add_parser("render", help="render a planner to disk (see `render <planner> -h` for flags)")
     sp_render.add_argument("planner", choices=RENDERERS)
@@ -37,6 +40,7 @@ def main(argv=None):
     sp_install.add_argument("--time", help="HH:MM to render at (default: schedule.yaml's time)")
     sub.add_parser("uninstall", help="remove the systemd user timer")
     sub.add_parser("run", help="run the scheduled render once (used by the timer)")
+    sub.add_parser("tray", help="run the system tray controller (needs the [tray] extra)")
 
     args = ap.parse_args(argv)
     if args.command == "init":
@@ -49,7 +53,13 @@ def main(argv=None):
         service.install(args.time)
     elif args.command == "uninstall":
         service.uninstall()
-    else:
+    elif args.command == "tray":
+        if importlib.util.find_spec("pystray") is None:
+            raise SystemExit(
+                "the tray needs the extra: pipx install 'timeglance[tray]' (plus system AppIndicator libs)"
+            )
+        subprocess.run([sys.executable, "-m", "timeglance.tray"], check=True)
+    elif args.command == "run":
         schedule.Schedule.load().run_once(PLANNERS, LOG)
 
 

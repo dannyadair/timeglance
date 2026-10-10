@@ -2,7 +2,8 @@
 
 One command with subcommands: `timeglance serve` (control panel), `timeglance render year|weekly` (one-shot render,
 flags below), `timeglance init` (scaffold configs), `timeglance install` / `uninstall` (systemd user timer for the
-nightly render), and `timeglance run` (render the scheduled planners once - what the timer invokes).
+nightly render), `timeglance run` (render the scheduled planners once - what the timer invokes), and
+`timeglance tray` (system-tray launcher + schedule toggles, needs the `[tray]` extra).
 
 Precedence everywhere is **built-in defaults < YAML < CLI flags**. All planners share `--data PATH`, `--out DIR`,
 `--wallpaper`, `--screen NAMES`, and `--list-screens`. Working data follows the XDG base directories by default -
