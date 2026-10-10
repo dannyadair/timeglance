@@ -400,14 +400,20 @@ function openWallpaperDialog(wp) {
   const close = () => bg.remove();
   cancel.onclick = close;
   bg.onclick = (e) => e.target === bg && close();
+  const busy = el("div", { className: "busy" }, '<span class="spinner-sm"></span>Setting wallpaper…');
   apply.onclick = async () => {
     const chosen = [...list.querySelectorAll("input:checked")].map((c) => c.value);
     if (!chosen.length) return (warn.textContent = "Select at least one screen.");
-    apply.disabled = true;
+    warn.textContent = "";
+    foot.replaceChildren(el("span", { className: "sp" }), busy);
     setStatus("setting wallpaper…");
     const b = { ...Object.fromEntries(params()), screens: chosen.join(","), fill: fill.value };
     const r = await fetch("/api/wallpaper?tool=" + state.tool, { method: "POST", body: JSON.stringify(b) }).then((x) => x.json());
-    if (!r.ok) return ((warn.textContent = "Failed: " + (r.error || "")), (apply.disabled = false));
+    if (!r.ok) {
+      warn.textContent = "Failed: " + (r.error || "");
+      foot.replaceChildren(el("span", { className: "sp" }), cancel, apply);
+      return;
+    }
     close();
     setStatus(
       r.applied.length
