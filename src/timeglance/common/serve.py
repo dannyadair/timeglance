@@ -69,8 +69,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if u.path == "/":
                 self._send(200, "text/html; charset=utf-8", (WEB / "index.html").read_bytes(), NO_CACHE)
-            elif u.path == "/app.js":
-                self._send(200, "text/javascript", (WEB / "app.js").read_bytes(), NO_CACHE)
+            elif u.path.startswith("/js/") and u.path.count("/") == 2 and u.path.endswith(".js"):
+                mod = WEB / "js" / u.path.rsplit("/", 1)[-1]
+                if mod.is_file():
+                    self._send(200, "text/javascript", mod.read_bytes(), NO_CACHE)
+                else:
+                    self._send(404, "text/plain", "not found")
             elif u.path == "/favicon.svg":
                 self._send(200, "image/svg+xml", (WEB / "favicon.svg").read_bytes())
             elif u.path == "/favicon.ico":
