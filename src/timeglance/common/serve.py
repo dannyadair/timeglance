@@ -20,6 +20,7 @@ import yaml
 
 from timeglance import paths
 from timeglance.common import schedule, wallpaper
+from timeglance.common.format import human_size, local_tz
 from timeglance.weekly import build as wbuild
 from timeglance.year import build as ybuild
 from timeglance.year import render as yrender
@@ -276,12 +277,12 @@ LOG = EventLog()
 class Scheduler:
     """Daily re-render loop. Sleeps until the configured HH:MM and renders the selected
     planners to disk (optionally setting the wallpaper), delegating the actual run to
-    ``schedule.run_once``. Runs feed the shared activity log; config lives in
+    ``Schedule.run_once``. Runs feed the shared activity log; config lives in
     ``schedule.yaml`` so a container restart keeps it."""
 
     def __init__(self):
-        """Load the schedule config from ``schedule.yaml`` and set up the (stopped) loop."""
-        self.cfg = schedule.load()
+        """Load the schedule from ``schedule.yaml`` and set up the (stopped) loop."""
+        self.schedule = schedule.Schedule.load()
         self._thread = None
         self._stop = threading.Event()
         self.last_run = None
@@ -290,23 +291,24 @@ class Scheduler:
     def save_cfg(self, cfg):
         """Merge updates into the schedule config (deep-merging per-planner blocks so a partial
         update keeps the rest, e.g. render overrides) and persist it to ``schedule.yaml``."""
-        merged = {**self.cfg, **cfg}
+        current = self.schedule.cfg
+        merged = {**current, **cfg}
         for name in PLANNERS:
             if name in cfg:
-                merged[name] = {**(self.cfg.get(name) or {}), **cfg[name]}
-        self.cfg = merged
-        schedule.save(self.cfg)
+                merged[name] = {**(current.get(name) or {}), **cfg[name]}
+        self.schedule.cfg = merged
+        self.schedule.save()
 
     def run_once(self):
-        """Render the selected planners now (see ``schedule.run_once``)."""
+        """Render the selected planners now (see ``Schedule.run_once``)."""
         self.last_run = dt.datetime.now().isoformat(timespec="seconds")
-        schedule.run_once(self.cfg, PLANNERS, LOG)
+        self.schedule.run_once(PLANNERS, LOG)
 
     def _loop(self):
         """Background loop: sleep until the configured time, run once, repeat until stopped."""
         LOG.log("scheduler", "started")
         while not self._stop.is_set():
-            hh, mm = (int(x) for x in self.cfg["time"].split(":"))
+            hh, mm = (int(x) for x in self.schedule.cfg["time"].split(":"))
             now = dt.datetime.now()
             nxt = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
             if nxt <= now:
@@ -339,14 +341,14 @@ class Scheduler:
         """Return the scheduler's current state and config for the UI."""
         config = {}
         for name in PLANNERS:
-            pc = schedule.planner_cfg(self.cfg, name)
+            pc = self.schedule.planner_block(name)
             pc["render_yaml"] = schedule.dump_render(pc["render"])
             config[name] = pc
         return {
             "running": self.running,
-            "time": self.cfg["time"],
-            "tz": schedule.local_tz(),
-            "planners": self.cfg.get("planners", []),
+            "time": self.schedule.cfg["time"],
+            "tz": local_tz(),
+            "planners": self.schedule.cfg.get("planners", []),
             "config": config,
             "outputs": {name: _planner_output(p) for name, p in PLANNERS.items()},
             "screens": wallpaper.known(wallpaper.detect()),
@@ -414,7 +416,7 @@ class Handler(BaseHTTPRequestHandler):
                 planner = self._planner(p)
                 ctype, fname, body = planner.export(p)
                 fmt = fname.rsplit(".", 1)[-1].upper()
-                LOG.log(planner.name, f"exported {fname} ({fmt}, {schedule.human_size(len(body))})")
+                LOG.log(planner.name, f"exported {fname} ({fmt}, {human_size(len(body))})")
                 self._send(200, ctype, body, {"Content-Disposition": f'inline; filename="{fname}"'})
             elif u.path == "/api/schedule":
                 self._json(SCHED.status())
@@ -487,7 +489,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1", help="bind address (use 0.0.0.0 in a container)")
     ap.add_argument("--port", type=int, default=8753)
     args = ap.parse_args()
-    if SCHED.cfg.get("autostart"):
+    if SCHED.schedule.cfg.get("autostart"):
         SCHED.start()
     print(f"timeglance -> http://{args.host}:{args.port}  (Ctrl-C to stop)")
     ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
