@@ -18,7 +18,7 @@ from timeglance.common import wallpaper
 from timeglance.year import render, sources
 
 HERE = Path(__file__).parent
-TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance-init`)
+TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance init`)
 ALL_THEMES = list(render.THEMES)
 ALL_LAYOUTS = ["vertical", "horizontal"]
 
@@ -127,9 +127,9 @@ def apply_wallpaper(cfg, backend, screens, fill, out):
     return wallpaper.apply(backend, screens, out, render_png, fill, prefix="year-wallpaper")
 
 
-def main():
+def main(argv=None):
     """CLI entry point: render the planner to SVG/PNG variants or set it as the wallpaper."""
-    ap = argparse.ArgumentParser(description=__doc__)
+    ap = argparse.ArgumentParser(prog="timeglance render year", description=__doc__)
     ap.add_argument("--data", default=paths.planner_config("year"), type=Path)
     ap.add_argument("--layout", help="vertical / horizontal / comma list; omit for all")
     ap.add_argument("--theme", help="light / dark / comma list; omit for all")
@@ -152,7 +152,7 @@ def main():
     )
     ap.add_argument("--screen", help="which screen(s) to set: all / primary / comma list of names (overrides YAML)")
     ap.add_argument("--list-screens", action="store_true", help="list detected screens and exit")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     backend = wallpaper.detect()
     if args.list_screens:

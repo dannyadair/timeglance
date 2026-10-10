@@ -6,7 +6,7 @@ config in `~/.config/timeglance/`, state in `~/.local/state/timeglance/`, cache 
 output in `~/.local/share/timeglance/` - or set `TIMEGLANCE_HOME` to put it all under one root (config and output at
 the root, state and cache beneath it), the layout Docker and the dev loop use.
 
-## Weekly - `timeglance-weekly` (or `python -m timeglance.weekly.build`)
+## Weekly - `timeglance render weekly` (or `python -m timeglance.weekly.build`)
 
 | Flag           | YAML       | Values / default                  | Notes                                             |
 | -------------- | ---------- | --------------------------------- | ------------------------------------------------- |
@@ -30,7 +30,7 @@ the root, state and cache beneath it), the layout Docker and the dev loop use.
 | `activities`           | list `{days, start, end, topic, label?}`  | Scheduled activities; `label` defaults to the topic label.                                           |
 | `wallpaper`            | `{background, margin, screens, shadow}`   | `margin` is a fraction of the short edge; `shadow: false` off, or `{opacity, blur, offset, radius}`. |
 
-## Year - `timeglance-year` (or `python -m timeglance.year.build`)
+## Year - `timeglance render year` (or `python -m timeglance.year.build`)
 
 | Flag                               | YAML         | Values / default                                           | Notes                                                                       |
 | ---------------------------------- | ------------ | ---------------------------------------------------------- | --------------------------------------------------------------------------- |

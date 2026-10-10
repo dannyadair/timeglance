@@ -1,8 +1,8 @@
 # Configuration
 
 Working configs (`year/config.yaml`, `weekly/config.yaml`) are git-ignored (personal schedule / calendar
-secrets); the packaged `config.yaml.in` files are annotated templates. Run `timeglance-init` to scaffold the
-working configs from them. Precedence is **built-in defaults < YAML < CLI flags**, so you can comment defaults out
+secrets); the packaged `config.yaml.in` files are annotated templates. Run `timeglance init` to scaffold the
+working configs from them (or just start `timeglance serve`, which creates samples when none exist). Precedence is **built-in defaults < YAML < CLI flags**, so you can comment defaults out
 rather than delete them.
 
 See the [Reference](reference.md) for the full list of flags and YAML keys.

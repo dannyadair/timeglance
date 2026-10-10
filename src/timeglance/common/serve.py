@@ -9,7 +9,6 @@ This module is just the HTTP layer: it routes ``/api/*`` to the planners, the co
 plumbing, the activity log and the scheduler, and serves the single-page UI assets.
 """
 
-import argparse
 import json
 import threading
 import traceback
@@ -19,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 
 import yaml
 
+from timeglance import init
 from timeglance.common import schedule, wallpaper
 from timeglance.common.config import read_config, reset_config, write_config
 from timeglance.common.format import human_size
@@ -157,17 +157,14 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": traceback.format_exc().strip()}, 500)
 
 
-def main():
-    """CLI entry point: start the scheduler (if autostart) and serve the control panel."""
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--host", default="127.0.0.1", help="bind address (use 0.0.0.0 in a container)")
-    ap.add_argument("--port", type=int, default=8753)
-    args = ap.parse_args()
+def run(host, port):
+    """Scaffold any missing config, start the scheduler if configured, and serve the panel."""
+    written = init.ensure()
+    if written:
+        print(f"No config found, so I created {'a sample one' if len(written) == 1 else 'samples'}:")
+        for p in written:
+            print(f"  {p}")
     if SCHED.schedule.cfg.get("autostart"):
         SCHED.start()
-    print(f"timeglance -> http://{args.host}:{args.port}  (Ctrl-C to stop)")
-    ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
-
-
-if __name__ == "__main__":
-    main()
+    print(f"timeglance -> http://{host}:{port}  (Ctrl-C to stop)")
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
