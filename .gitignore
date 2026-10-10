@@ -4,8 +4,6 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 dist/
-weekly/out/
-year/out/
 state/
 
 # Render artifacts from the committed demo project (docs/demo); only its config.yaml is tracked
@@ -17,6 +15,10 @@ docs/demo/*/server.log
 # calendar share links / secrets; the weekly config is your personal schedule.
 weekly/config.yaml
 year/config.yaml
+
+# Rendered output for the working configs above (TIMEGLANCE_HOME=$PWD).
+weekly/out/
+year/out/
 
 # Per-project scheduler config, written by the control panel's Schedule panel.
 schedule.yaml
