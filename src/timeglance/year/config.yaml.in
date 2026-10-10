@@ -51,7 +51,7 @@ holidays:
 #   - { path: "~/calendars/my-year.ics", label: My Year, color: "#7A7F87" }
 
 # Wallpaper (KDE Plasma only, auto-detected). `--wallpaper` or the UI's "Set as wallpaper"
-# button render each chosen screen at its native resolution and set it as that screen's
+# button render each chosen screen at its current resolution and set it as that screen's
 # background; other screens are left untouched.
 wallpaper:
   screens: all              # all | primary | [eDP-1, HDMI-A-1]   (or --screen)

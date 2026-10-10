@@ -115,10 +115,10 @@ def _pick(cli, yaml_val, fallback, allowed, what):
 
 
 def apply_wallpaper(cfg, backend, screens, fill, out):
-    """Render each screen at its native resolution and set it as that screen's wallpaper."""
+    """Render each screen at its current resolution and set it as that screen's wallpaper."""
 
     def render_png(scr, path):
-        """Render the planner SVG at the screen's native resolution and save it as a PNG."""
+        """Render the planner SVG at the screen's current resolution and save it as a PNG."""
         cfg.width, cfg.height = scr.pw, scr.ph
         cairosvg.svg2png(
             bytestring=render.render_svg(cfg).encode(), write_to=str(path), output_width=scr.pw, output_height=scr.ph
