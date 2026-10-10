@@ -36,7 +36,7 @@ def main(argv=None):
     sp_render.add_argument("planner", choices=RENDERERS)
     sp_render.add_argument("flags", nargs=argparse.REMAINDER, help="flags forwarded to the planner renderer")
 
-    sp_install = sub.add_parser("install", help="install a systemd user timer for the nightly render")
+    sp_install = sub.add_parser("install", help="install a systemd user timer for the scheduled render")
     sp_install.add_argument("--time", help="HH:MM to render at (default: schedule.yaml's time)")
     sub.add_parser("uninstall", help="remove the systemd user timer")
     sub.add_parser("run", help="run the scheduled render once (used by the timer)")
