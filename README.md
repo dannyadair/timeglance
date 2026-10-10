@@ -31,7 +31,12 @@ One web control panel drives both - preview live, toggle layers, edit the YAML, 
 
 ![Year-at-a-glance planner](https://raw.githubusercontent.com/dannyadair/timeglance/main/docs/images/year_output.png)
 
-## Quick start (Docker)
+## Try it instantly (Docker)
+
+The zero-install way to see the control panel and renders - a **test drive, not a deployment target**. A container
+can't reach your desktop session, so **Docker can never set the wallpaper** (the UI auto-hides it, and a scheduled
+"set wallpaper" renders the file but skips the set). Bridging the host display/DBus into a container isn't something
+we intend to solve - to actually use timeglance on your desktop, install it locally (next section).
 
 ```sh
 docker compose run --rm timeglance timeglance init   # first run: scaffold year/ + weekly/ config.yaml
@@ -42,10 +47,7 @@ Config, outputs and scheduler state are bind-mounted under `./year`, `./weekly` 
 files on your host. Outputs are written as your host user — the compose file defaults to `1000:1000` (the usual
 first Linux user), so it just works for most; if your uid differs, run `UID=$(id -u) GID=$(id -g) docker compose up`.
 
-> Wallpaper-setting needs a live Plasma session, so it works only with the **local install** (next section), not in
-> Docker; the container UI auto-hides it.
-
-## Quick start (local)
+## Install (local)
 
 Needs Python 3.13 and [uv](https://docs.astral.sh/uv/). WeasyPrint and CairoSVG load native libraries (Cairo, Pango,
 GDK-PixBuf) at runtime; most Linux desktops already have these, but on a minimal or server install add them first
