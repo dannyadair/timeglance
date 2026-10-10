@@ -296,8 +296,13 @@ class Scheduler:
         self.next_run = None
 
     def save_cfg(self, cfg):
-        """Merge updates into the schedule config and persist it to ``schedule.yaml``."""
-        self.cfg = {**self.cfg, **cfg}
+        """Merge updates into the schedule config (deep-merging per-planner blocks so a partial
+        update keeps the rest, e.g. render overrides) and persist it to ``schedule.yaml``."""
+        merged = {**self.cfg, **cfg}
+        for name in PLANNERS:
+            if name in cfg:
+                merged[name] = {**(self.cfg.get(name) or {}), **cfg[name]}
+        self.cfg = merged
         schedule.save(self.cfg)
 
     def run_once(self):
@@ -344,11 +349,10 @@ class Scheduler:
             "running": self.running,
             "time": self.cfg["time"],
             "tz": schedule.local_tz(),
-            "planners": self.cfg["planners"],
+            "planners": self.cfg.get("planners", []),
+            "config": {name: schedule.planner_cfg(self.cfg, name) for name in PLANNERS},
             "outputs": {name: _planner_output(p) for name, p in PLANNERS.items()},
-            "wallpaper": self.cfg.get("wallpaper", True),
-            "screens": self.cfg.get("screens", {}),
-            "wp_screens": _screen_list(wallpaper.detect()),
+            "screens": wallpaper.known(wallpaper.detect()),
             "last_run": self.last_run,
             "next_run": self.next_run,
         }
@@ -448,9 +452,13 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/log/clear":
                 LOG.clear()
                 self._json({"ok": True})
+            elif u.path == "/api/screens/forget":
+                wallpaper.forget(self._body()["name"])
+                self._json({"ok": True})
             elif u.path == "/api/schedule":
                 body = self._body()
-                SCHED.save_cfg({k: body[k] for k in ("time", "planners", "wallpaper", "screens") if k in body})
+                keys = ("time", "planners", "autostart", *PLANNERS)
+                SCHED.save_cfg({k: body[k] for k in keys if k in body})
                 if body.get("action") == "start":
                     SCHED.start()
                 elif body.get("action") == "stop":
