@@ -233,6 +233,17 @@ def known(backend, prune_days=30):
     return out
 
 
+def ui_meta(backend, wp):
+    """Wallpaper metadata (availability, backend, known screens, current selection) for the UI."""
+    return {
+        "available": backend is not None,
+        "backend": backend.name if backend else None,
+        "screens": known(backend),
+        "selected": wp.get("screens", "all"),
+        "fill": wp.get("fill", "preserveAspectCrop"),
+    }
+
+
 def resolve_screens(backend, spec):
     """spec: 'all' | 'primary' | comma-string | list of names. 'all'/'primary' cover connected
     outputs only. An explicit name may be a remembered-but-disconnected screen (resolved from the
