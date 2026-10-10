@@ -249,38 +249,57 @@ async function showSchedule() {
       `<label>Daily at</label><input id="s_time" value="${s.time}" style="width:70px"><span class="hint">${s.tz}</span>`),
   );
 
-  // What a run writes: each ticked planner re-renders to its file on disk.
-  card.append(el("div", { className: "grp", style: "margin-top:10px" }, "<label>Writes</label>"));
-  for (const [name, label] of [["year", "Year"], ["weekly", "Weekly"]]) {
-    card.append(el("div", { className: "grp schd-pl", style: "margin-top:4px; padding-left:4px" },
-      `<span data-toggle="s_${name}"><input type="checkbox" class="s-pl" id="s_${name}" value="${name}" ${s.planners.includes(name) ? "checked" : ""}><label>${label}</label></span>
-       <code class="dst">→ ${s.outputs[name]}</code>`));
-  }
-
-  // The optional extra: also push each written file to the desktop as wallpaper.
-  card.append(el("div", { className: "grp", style: "margin-top:12px" },
-    `<label>Also</label><span data-toggle="s_wp"><input type="checkbox" id="s_wp" ${s.wallpaper ? "checked" : ""}><label>set as wallpaper</label></span>`));
-
-  // Per-planner screen assignment: with >1 screen, each planner can target specific outputs
-  // (e.g. weekly on the laptop, year on the ultrawide) instead of every planner claiming all.
-  // All boxes ticked == "all" (sent as []), so a newly attached screen is still covered.
-  const scrRow = (planner, label) => {
-    const assigned = (s.screens && s.screens[planner]) || [];
-    const row = el("div", { className: "grp", style: "margin-top:6px" }, `<label>${label}</label>`);
-    for (const sc of s.wp_screens) {
-      const id = `sc_${planner}_${sc.name}`;
-      const on = assigned.length === 0 || assigned.includes(sc.name);
-      const span = el("span", {}, `<input type="checkbox" class="schd-scr" data-planner="${planner}" id="${id}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}</label>`);
-      span.dataset.toggle = id;
-      row.append(span);
-    }
-    return row;
+  const multi = s.screens.length > 1;
+  const forget = async (name) => {
+    await fetch("/api/screens/forget", { method: "POST", body: JSON.stringify({ name }) });
+    showSchedule();
   };
-  if (s.wp_screens.length > 1) {
-    card.append(el("div", { className: "grp", style: "margin-top:10px" }, "<label>Screens per planner</label>"), scrRow("year", "Year"), scrRow("weekly", "Weekly"));
-  }
+  // One section per planner: render nightly -> write its file; optionally set that file as the
+  // wallpaper on chosen screens. A disconnected screen can still be targeted (its file is written
+  // now and applied on reconnect), shown as offline with a Forget button to drop a retired monitor.
+  const section = (name, label) => {
+    const cfg = s.config[name];
+    const sec = el("div", { className: "schd-sec" });
+    sec.append(el("div", { className: "grp" },
+      `<span data-toggle="s_${name}"><input type="checkbox" class="s-pl" id="s_${name}" value="${name}" ${s.planners.includes(name) ? "checked" : ""}><label><strong>${label}</strong></label></span>
+       <code class="dst">→ ${s.outputs[name]}</code>`));
+    sec.append(el("div", { className: "grp", style: "padding-left:16px" },
+      `<span data-toggle="s_wp_${name}"><input type="checkbox" class="s-wp" id="s_wp_${name}" value="${name}" ${cfg.wallpaper ? "checked" : ""}><label>set as wallpaper</label></span>`));
+    if (multi) {
+      const chosen = cfg.screens; // [] means all connected
+      const row = el("div", { className: "grp schd-scr-row", style: "padding-left:32px" });
+      for (const sc of s.screens) {
+        const on = sc.connected ? chosen.length === 0 || chosen.includes(sc.name) : chosen.includes(sc.name);
+        const opt = el("span", { className: "schd-scr-opt" });
+        const toggle = el("span", {},
+          `<input type="checkbox" class="schd-scr" data-planner="${name}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}${sc.connected ? "" : ` <span class="off">· offline, seen ${sc.last_seen}</span>`}</label>`);
+        toggle.dataset.toggle = `scr_${name}_${sc.name}`;
+        toggle.querySelector("input").id = `scr_${name}_${sc.name}`;
+        opt.append(toggle);
+        if (!sc.connected) {
+          const f = el("button", { className: "forget", title: `Forget ${sc.name}` }, "Forget");
+          f.onclick = () => forget(sc.name);
+          opt.append(f);
+        }
+        row.append(opt);
+      }
+      sec.append(row);
+    }
+    // Setting a wallpaper only makes sense if the file gets rendered, so the wallpaper toggle
+    // and its screen targets dim out (and stop responding) until the planner is ticked to run.
+    const render = sec.querySelector(`#s_${name}`);
+    const dim = sec.querySelectorAll(`#s_wp_${name}, .schd-scr-row`);
+    const sync = () => {
+      sec.querySelectorAll(`#s_wp_${name}, input.schd-scr[data-planner="${name}"]`).forEach((i) => (i.disabled = !render.checked));
+      dim.forEach((d) => (d.closest(".grp") || d).classList.toggle("off-dim", !render.checked));
+    };
+    render.addEventListener("change", sync);
+    sync();
+    return sec;
+  };
+  card.append(section("year", "Year"), section("weekly", "Weekly"));
 
-  const bar = el("div", { className: "grp", style: "margin-top:12px" });
+  const bar = el("div", { className: "grp", style: "margin-top:14px" });
   const start = el("button", { className: "primary" }, "Start");
   const stop = el("button", {}, "Stop");
   const runNow = el("button", {}, "Run now");
@@ -289,19 +308,22 @@ async function showSchedule() {
       `${s.last_run ? "last " + s.last_run : ""}${s.next_run ? "  ·  next " + s.next_run : ""}`));
   card.append(bar);
 
+  const connectedNames = s.screens.filter((sc) => sc.connected).map((sc) => sc.name);
   const collect = (action) => {
     const cfg = {
       time: $("#s_time").value,
       planners: [...card.querySelectorAll("input.s-pl:checked")].map((c) => c.value),
-      wallpaper: $("#s_wp").checked,
       action,
     };
-    if (s.wp_screens.length > 1) {
-      cfg.screens = {};
-      for (const t of ["year", "weekly"]) {
-        const chosen = [...body.querySelectorAll(`input.schd-scr[data-planner="${t}"]:checked`)].map((c) => c.value);
-        cfg.screens[t] = chosen.length === s.wp_screens.length ? [] : chosen;
+    for (const name of ["year", "weekly"]) {
+      const block = { wallpaper: $(`#s_wp_${name}`).checked };
+      if (multi) {
+        const chosen = [...card.querySelectorAll(`input.schd-scr[data-planner="${name}"]:checked`)].map((c) => c.value);
+        // All connected ticked (and nothing offline) == "all" ([]), so a new screen is still covered.
+        const allConnected = chosen.length === connectedNames.length && connectedNames.every((n) => chosen.includes(n));
+        block.screens = allConnected ? [] : chosen;
       }
+      cfg[name] = block;
     }
     return cfg;
   };
@@ -484,6 +506,7 @@ document.addEventListener("click", (e) => {
   const row = e.target.closest("[data-toggle]");
   if (!row || e.target.tagName === "INPUT") return;
   const input = document.getElementById(row.dataset.toggle);
+  if (input.disabled) return;
   input.checked = !input.checked;
   input.dispatchEvent(new Event("change", { bubbles: true }));
 });

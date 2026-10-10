@@ -19,11 +19,15 @@ from timeglance.common import wallpaper
 DEFAULTS = {
     "time": "06:00",
     "autostart": False,
-    "wallpaper": True,
     "planners": ["year"],
-    "screens": {},
-    "render": {},
 }
+
+PLANNER_DEFAULTS = {"wallpaper": True, "screens": [], "render": {}}
+
+
+def planner_cfg(cfg, name):
+    """A planner's schedule block (wallpaper / target screens / render overrides) with defaults."""
+    return {**PLANNER_DEFAULTS, **(cfg.get(name) or {})}
 
 
 def path():
@@ -74,17 +78,15 @@ def _params(block):
 
 
 def run_once(cfg, planners, log):
-    """Render each selected planner's file to disk and, if enabled, set it as the wallpaper.
+    """Render each selected planner's file to disk and, per its block, set it as the wallpaper.
 
     Failures - including the SystemExit a bad screen name raises - are isolated per planner so
     one can't sink the rest; every outcome (and traceback) lands in the log."""
-    render = cfg.get("render", {})
-    screens = cfg.get("screens", {})
-    set_wallpaper = cfg.get("wallpaper", True)
     backend = wallpaper.detect()
     for name in cfg.get("planners", []):
         planner = planners[name]
-        params = _params(render.get(name) or {})
+        pc = planner_cfg(cfg, name)
+        params = _params(pc["render"])
         try:
             _, fname, data = planner.export(params)
             planner.out.mkdir(parents=True, exist_ok=True)
@@ -92,13 +94,19 @@ def run_once(cfg, planners, log):
             log.log(name, f"wrote {fname} ({human_size(len(data))})")
             for w in planner.warnings():
                 log.log(name, f"WARNING {w}")
-            if not set_wallpaper:
+            if not pc["wallpaper"]:
                 continue
             if not backend:
                 log.log(name, "wallpaper skipped (no backend)")
                 continue
-            scr = screens.get(name)
+            scr = pc["screens"]
             r = planner.set_wallpaper({**params, "screens": ",".join(scr)} if scr else params)
-            log.log(name, "wallpaper " + ("set " + ",".join(r["applied"]) if r["ok"] else "FAILED " + r["error"]))
+            if not r["ok"]:
+                log.log(name, f"wallpaper FAILED {r['error']}")
+                continue
+            detail = "set " + (",".join(r["applied"]) or "nothing matched")
+            if r.get("pending"):
+                detail += f"; pending {','.join(r['pending'])}"
+            log.log(name, f"wallpaper {detail}")
         except (Exception, SystemExit):
             log.log(name, f"ERROR\n{traceback.format_exc().strip()}")
