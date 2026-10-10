@@ -145,7 +145,7 @@ class Tray:
             ),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(
-                "Start at login",
+                "Autostart",
                 lambda icon, item: self._toggle_autostart(icon),
                 checked=lambda item: autostart.enabled(),
             ),
