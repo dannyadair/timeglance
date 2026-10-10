@@ -150,11 +150,11 @@ class WeeklyPlanner:
         return wbuild.load(self.data)
 
     def _hide(self, p):
-        """Hidden-activity set from the request's ``hide`` param, or None to use YAML defaults."""
+        """Hidden-topic set from the request's ``hide`` param, or None to use YAML defaults."""
         return set(filter(None, p["hide"].split(","))) if "hide" in p else None
 
     def meta(self):
-        """UI metadata: paper sizes, activity layers and wallpaper info."""
+        """UI metadata: paper sizes, topic layers and wallpaper info."""
         raw = self._raw()
         backend = wallpaper.detect()
         wp = raw.get("wallpaper") or {}
@@ -162,8 +162,8 @@ class WeeklyPlanner:
             "papers": self.papers,
             "paper": "A4",
             "layers": [
-                {"id": k, "label": a["label"], "color": a["color"], "visible": a.get("visible", True)}
-                for k, a in raw.get("activities", {}).items()
+                {"id": k, "label": t["label"], "color": t["color"], "visible": t.get("visible", True)}
+                for k, t in raw.get("topics", {}).items()
             ],
             "wallpaper": _wp_meta(backend, wp),
         }

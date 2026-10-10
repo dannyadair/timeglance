@@ -1,6 +1,6 @@
 # ============================================================================
 # Weekly routine sheet. Every field is shown below; the layout is derived from
-# day_start/day_end and the blocks you list.
+# day_start/day_end and the activities you list.
 #
 # This is a tracked template. Copy it to `config.yaml` (gitignored) and edit in
 # your own schedule:   cp config.yaml.in config.yaml
@@ -17,10 +17,10 @@ day_start: "06:00"
 day_end: "22:00"
 hour_marks: 1
 
-# Activity catalogue: label + colour, referenced by blocks below. `visible: false` hides
-# an activity's blocks by default (toggle any of them on/off in the UI, or with --hide /
+# Topic catalogue: label + colour, referenced by activities below. `visible: false` hides
+# a topic's activities by default (toggle any of them on/off in the UI, or with --hide /
 # --only). Here the morning slot starts on Walk; tick Gym (and untick Walk) to swap it in.
-activities:
+topics:
   work:     { label: Work,             color: "#3D6FB4" }
   walk:     { label: Walk,             color: "#2E9E5B" }
   gym:      { label: Gym,              color: "#E8743B", visible: false }
@@ -30,30 +30,30 @@ activities:
   social:   { label: Friends & family, color: "#C9459E" }
   downtime: { label: Downtime,         color: "#E0A000" }
 
-# Weekly blocks. `label` is optional (defaults to the activity label). To drop a one-off,
-# comment it out; to swap a whole activity in/out, toggle its visibility (above / in the UI).
-blocks:
+# Weekly activities. `label` is optional (defaults to the topic label). To drop a one-off,
+# comment it out; to swap a whole topic in/out, toggle its visibility (above / in the UI).
+activities:
   # Morning movement - Walk shows by default; tick Gym (and untick Walk) to swap it in.
-  - { days: [Mon, Wed, Fri], start: "06:45", end: "07:30", activity: walk }
-  - { days: [Mon, Wed, Fri], start: "06:30", end: "07:30", activity: gym }
-  - { days: [Sat],           start: "08:30", end: "10:00", activity: walk, label: Long walk }
+  - { days: [Mon, Wed, Fri], start: "06:45", end: "07:30", topic: walk }
+  - { days: [Mon, Wed, Fri], start: "06:30", end: "07:30", topic: gym }
+  - { days: [Sat],           start: "08:30", end: "10:00", topic: walk, label: Long walk }
 
   # Meals
-  - { days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun], start: "07:45", end: "08:15", activity: meals, label: Breakfast }
-  - { days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun], start: "18:30", end: "19:15", activity: meals, label: Dinner }
+  - { days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun], start: "07:45", end: "08:15", topic: meals, label: Breakfast }
+  - { days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun], start: "18:30", end: "19:15", topic: meals, label: Dinner }
 
   # Work
-  - { days: [Mon, Tue, Wed, Thu, Fri], start: "09:00", end: "17:00", activity: work }
+  - { days: [Mon, Tue, Wed, Thu, Fri], start: "09:00", end: "17:00", topic: work }
 
   # Evenings
-  - { days: [Tue, Thu], start: "19:30", end: "20:30", activity: learning, label: Study }
-  - { days: [Mon, Wed], start: "20:00", end: "21:00", activity: hobby }
-  - { days: [Fri],      start: "19:30", end: "22:00", activity: social, label: Friends }
-  - { days: [Sat],      start: "20:00", end: "22:00", activity: hobby, label: Game night }
-  - { days: [Sun],      start: "12:00", end: "15:00", activity: social, label: Family lunch }
+  - { days: [Tue, Thu], start: "19:30", end: "20:30", topic: learning, label: Study }
+  - { days: [Mon, Wed], start: "20:00", end: "21:00", topic: hobby }
+  - { days: [Fri],      start: "19:30", end: "22:00", topic: social, label: Friends }
+  - { days: [Sat],      start: "20:00", end: "22:00", topic: hobby, label: Game night }
+  - { days: [Sun],      start: "12:00", end: "15:00", topic: social, label: Family lunch }
 
   # Wind down
-  - { days: [Mon, Tue, Wed, Thu, Sun], start: "21:15", end: "22:00", activity: downtime, label: Reading }
+  - { days: [Mon, Tue, Wed, Thu, Sun], start: "21:15", end: "22:00", topic: downtime, label: Reading }
 
 # Desktop wallpaper (KDE Plasma; --wallpaper). The page-shaped sheet is centred on a
 # solid canvas at each screen's current resolution.

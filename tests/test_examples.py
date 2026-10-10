@@ -54,11 +54,11 @@ def test_year_sources_example_pulls_calendar_events():
 
 
 def test_weekly_example_renders():
-    """The weekly example renders with today highlighted, hidden activities dropped, and totals shown."""
+    """The weekly example renders with today highlighted, hidden topics dropped, and totals shown."""
     cfg = yaml.safe_load((EXAMPLES / "weekly.yaml").read_text())
     html = wbuild.render(cfg, hide=None, paper="A4", today="Wed")
     assert "My Week" in html
     assert "Work" in html
     assert "Workout" not in html  # gym is visible: false
     assert 'class="col today"' in html  # Wed highlighted
-    assert "40h" in html and "5h" in html  # per-activity weekly totals (work 8h×5, sleep 1h×5)
+    assert "40h" in html and "5h" in html  # per-topic weekly totals (work 8h×5, sleep 1h×5)

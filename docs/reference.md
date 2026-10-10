@@ -6,27 +6,27 @@ the current directory; override the project root with the `TIMEGLANCE_HOME` envi
 
 ## Weekly - `timeglance-weekly` (or `python -m timeglance.weekly.build`)
 
-| Flag              | YAML       | Values / default                  | Notes                                             |
-| ----------------- | ---------- | --------------------------------- | ------------------------------------------------- |
-| `--paper`         | `paper`    | `A4` \| `A3` (default `A4`)       | Landscape page size; sets the timeline height.    |
-| `--format`        | `format`   | `pdf` \| `html` \| `both` (`pdf`) | `both` writes `weekly.pdf` **and** `weekly.html`. |
-| `--only IDS`      | -          | comma list of activity ids        | Show only these activities.                       |
-| `--hide ACTIVITY` | `visible:` | repeatable                        | Hide an activity id (adds to YAML defaults).      |
-| `--wallpaper`     | -          | flag                              | Set the sheet as the desktop wallpaper.           |
+| Flag           | YAML       | Values / default                  | Notes                                             |
+| -------------- | ---------- | --------------------------------- | ------------------------------------------------- |
+| `--paper`      | `paper`    | `A4` \| `A3` (default `A4`)       | Landscape page size; sets the timeline height.    |
+| `--format`     | `format`   | `pdf` \| `html` \| `both` (`pdf`) | `both` writes `weekly.pdf` **and** `weekly.html`. |
+| `--only IDS`   | -          | comma list of topic ids           | Show only these topics.                           |
+| `--hide TOPIC` | `visible:` | repeatable                        | Hide a topic id (adds to YAML defaults).          |
+| `--wallpaper`  | -          | flag                              | Set the sheet as the desktop wallpaper.           |
 
 **`weekly/config.yaml`**
 
-| Key                    | Type / values                               | Meaning                                                                                              |
-| ---------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `title`, `subtitle`    | string                                      | Header text.                                                                                         |
-| `paper`                | `A4` \| `A3` (default `A4`)                 | Page size (landscape).                                                                               |
-| `format`               | `pdf` \| `html` \| `both` (default `pdf`)   | Output(s) written to `out/`.                                                                         |
-| `days`                 | list, e.g. `[Mon, …, Sun]`                  | Columns, in order.                                                                                   |
-| `day_start`, `day_end` | `HH:MM`                                     | Vertical extent of the timeline.                                                                     |
-| `hour_marks`           | int (hours; default `1`)                    | Spacing of the hour gridlines.                                                                       |
-| `activities`           | map `id → {label, color, visible}`          | Catalogue; `visible: false` hides an activity by default.                                            |
-| `blocks`               | list `{days, start, end, activity, label?}` | Scheduled blocks; `label` defaults to the activity label.                                            |
-| `wallpaper`            | `{background, margin, screens, shadow}`     | `margin` is a fraction of the short edge; `shadow: false` off, or `{opacity, blur, offset, radius}`. |
+| Key                    | Type / values                             | Meaning                                                                                              |
+| ---------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `title`, `subtitle`    | string                                    | Header text.                                                                                         |
+| `paper`                | `A4` \| `A3` (default `A4`)               | Page size (landscape).                                                                               |
+| `format`               | `pdf` \| `html` \| `both` (default `pdf`) | Output(s) written to `out/`.                                                                         |
+| `days`                 | list, e.g. `[Mon, …, Sun]`                | Columns, in order.                                                                                   |
+| `day_start`, `day_end` | `HH:MM`                                   | Vertical extent of the timeline.                                                                     |
+| `hour_marks`           | int (hours; default `1`)                  | Spacing of the hour gridlines.                                                                       |
+| `topics`               | map `id → {label, color, visible}`        | Catalogue; `visible: false` hides a topic by default.                                                |
+| `activities`           | list `{days, start, end, topic, label?}`  | Scheduled activities; `label` defaults to the topic label.                                           |
+| `wallpaper`            | `{background, margin, screens, shadow}`   | `margin` is a fraction of the short edge; `shadow: false` off, or `{opacity, blur, offset, radius}`. |
 
 ## Year - `timeglance-year` (or `python -m timeglance.year.build`)
 

@@ -106,10 +106,10 @@
           {% for hl in hour_lines %}
             <div class="hline {{ 'major' if hl.major }}" style="top: {{ hl.top }}%"></div>
           {% endfor %}
-          {% for b in blocks[day] %}
-            <div class="block" style="top: {{ b.top }}%; height: {{ b.height }}%; background: {{ b.color }}">
-              <div class="t">{{ b.time }}</div>
-              <div class="l">{{ b.label }}</div>
+          {% for a in activities[day] %}
+            <div class="block" style="top: {{ a.top }}%; height: {{ a.height }}%; background: {{ a.color }}">
+              <div class="t">{{ a.time }}</div>
+              <div class="l">{{ a.label }}</div>
             </div>
           {% endfor %}
         </div>

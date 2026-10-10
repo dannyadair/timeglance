@@ -3,7 +3,7 @@
 Open <http://localhost:8753>. Switch **Weekly / Year**, and within each, switch the view:
 
 - **Preview** - live render with quick controls (year: theme, layout, week start, range, size, layer toggles;
-  weekly: paper, activity toggles). **Export** (PNG / PDF) saves to the planner's `out/`; **Set as wallpaper**
+  weekly: paper, topic toggles). **Export** (PNG / PDF) saves to the planner's `out/`; **Set as wallpaper**
   opens a dialog to pick target screens (including remembered-but-offline ones, with **Forget**) and a fit mode,
   then applies to the live desktop. Both act on the current controls.
 - **Config** - the planner's full YAML in an editor. **Save** validates and writes it; **Reset to template** restores

@@ -106,7 +106,7 @@ function wireRangeHelp() {
 function buildSide() {
   const m = state.cfg[state.planner].meta;
   side.innerHTML = "";
-  side.append(el("h2", {}, state.planner === "year" ? "Layers" : "Activities"));
+  side.append(el("h2", {}, state.planner === "year" ? "Layers" : "Topics"));
   for (const l of m.layers) {
     const id = "ly_" + l.id;
     const row = el("div", { className: "row" });
