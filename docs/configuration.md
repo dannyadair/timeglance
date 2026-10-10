@@ -41,6 +41,6 @@ keep a private "year" calendar you never show online and only export here.
 
 ## Weekly (`weekly/config.yaml`)
 
-`activities` (label + colour; `visible: false` hides one by default) and a flat list of `blocks`. Toggle any
-activity in the UI (or with `--hide`/`--only`); comment out a single block to drop a one-off. `wallpaper:` tunes
+`topics` (label + colour; `visible: false` hides one by default) and a flat list of `activities`. Toggle any
+topic in the UI (or with `--hide`/`--only`); comment out a single activity to drop a one-off. `wallpaper:` tunes
 the canvas `background`, `margin`, `shadow`, and `screens`.

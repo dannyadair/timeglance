@@ -46,43 +46,43 @@ def load(path):
     return yaml.safe_load(Path(path).read_text())
 
 
-def hidden_activities(cfg, hide):
-    """`hide`: an explicit iterable of activity ids to hide (from the UI/CLI), or None to
-    fall back to the YAML defaults (activities marked `visible: false`)."""
+def hidden_topics(cfg, hide):
+    """`hide`: an explicit iterable of topic ids to hide (from the UI/CLI), or None to
+    fall back to the YAML defaults (topics marked `visible: false`)."""
     if hide is not None:
         return set(hide)
-    return {k for k, a in cfg["activities"].items() if not a.get("visible", True)}
+    return {k for k, t in cfg["topics"].items() if not t.get("visible", True)}
 
 
-def visible_blocks(cfg, hidden):
-    """Return the config's blocks minus any whose activity id is in ``hidden``."""
-    return [b for b in cfg.get("blocks", []) if b["activity"] not in hidden]
+def visible_activities(cfg, hidden):
+    """Return the config's activities minus any whose topic id is in ``hidden``."""
+    return [a for a in cfg.get("activities", []) if a["topic"] not in hidden]
 
 
-def layout(cfg, blocks):
+def layout(cfg, activities):
     """Build the per-day positioned cells, hour gridlines and totals legend for the sheet."""
     day_start = to_min(cfg["day_start"])
     day_end = to_min(cfg["day_end"])
     span = day_end - day_start
-    activities = cfg["activities"]
+    topics = cfg["topics"]
 
     by_day = {day: [] for day in cfg["days"]}
     used = {}
     totals = defaultdict(int)
-    for b in blocks:
-        act = activities[b["activity"]]
-        used[b["activity"]] = act
-        start, end = to_min(b["start"]), to_min(b["end"])
-        totals[b["activity"]] += (end - start) * len(b["days"])
+    for a in activities:
+        topic = topics[a["topic"]]
+        used[a["topic"]] = topic
+        start, end = to_min(a["start"]), to_min(a["end"])
+        totals[a["topic"]] += (end - start) * len(a["days"])
         cell = {
             "top": round((start - day_start) / span * 100, 3),
             "height": round((end - start) / span * 100, 3),
-            "color": act["color"],
-            "label": b.get("label", act["label"]),
+            "color": topic["color"],
+            "label": a.get("label", topic["label"]),
             "time": f"{fmt(start)}\u2013{fmt(end)}",
             "start": start,
         }
-        for day in b["days"]:
+        for day in a["days"]:
             by_day[day].append(cell)
     for day in by_day:
         by_day[day].sort(key=lambda c: c["start"])
@@ -100,11 +100,11 @@ def layout(cfg, blocks):
         )
         t += step
 
-    # Legend follows the `activities:` declaration order (manual control), not block order.
+    # Legend follows the `topics:` declaration order (manual control), not activity order.
     legend = [
-        {"label": a["label"], "color": a["color"], "hours": fmt_hours(totals[aid])}
-        for aid, a in activities.items()
-        if aid in used
+        {"label": t["label"], "color": t["color"], "hours": fmt_hours(totals[tid])}
+        for tid, t in topics.items()
+        if tid in used
     ]
     return by_day, hour_lines, legend
 
@@ -113,7 +113,7 @@ def render(cfg, hide, paper, today=None):
     """`today`: the weekday label (e.g. "Wed") to highlight as the current day; defaults to the
     render date's weekday so a daily-rebuilt sheet marks today. A label not in `days` highlights
     nothing (e.g. a Sat/Sun render of a Mon–Fri sheet)."""
-    by_day, hour_lines, legend = layout(cfg, visible_blocks(cfg, hidden_activities(cfg, hide)))
+    by_day, hour_lines, legend = layout(cfg, visible_activities(cfg, hidden_topics(cfg, hide)))
     track_h = PAGE_SHORT_MM[paper] - 2 * PAGE_MARGIN_MM - HEADER_RESERVE_MM
     today = today or WEEKDAYS[dt.date.today().weekday()]
     env = Environment(loader=FileSystemLoader(HERE / "templates"), autoescape=True)
@@ -122,7 +122,7 @@ def render(cfg, hide, paper, today=None):
         subtitle=cfg.get("subtitle", ""),
         days=cfg["days"],
         today=today,
-        blocks=by_day,
+        activities=by_day,
         hour_lines=hour_lines,
         legend=legend,
         paper=paper,
@@ -184,11 +184,11 @@ def make_wallpaper_renderer(pdf_bytes, background, margin, shadow):
 
 
 def resolve_hide(cfg, args):
-    """The hidden-activity set from CLI flags, falling back to the YAML `visible:` defaults."""
+    """The hidden-topic set from CLI flags, falling back to the YAML `visible:` defaults."""
     if args.only:
         keep = set(args.only.split(","))
-        return {k for k in cfg["activities"] if k not in keep}
-    base = {k for k, a in cfg["activities"].items() if not a.get("visible", True)}
+        return {k for k in cfg["topics"] if k not in keep}
+    base = {k for k, t in cfg["topics"].items() if not t.get("visible", True)}
     return base | set(args.hide)
 
 
@@ -196,8 +196,8 @@ def main():
     """CLI entry point: render the weekly sheet to PDF/HTML or set it as the wallpaper."""
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", default=paths.planner_config("weekly"), type=Path)
-    ap.add_argument("--only", help="show only these activity ids (comma-separated)")
-    ap.add_argument("--hide", action="append", default=[], metavar="ACTIVITY", help="hide an activity id")
+    ap.add_argument("--only", help="show only these topic ids (comma-separated)")
+    ap.add_argument("--hide", action="append", default=[], metavar="TOPIC", help="hide a topic id")
     ap.add_argument("--paper", choices=["A4", "A3"], help="page size (default: YAML `paper:` or A4)")
     ap.add_argument("--format", choices=["pdf", "html", "both"], help="output format (default: YAML `format:` or pdf)")
     ap.add_argument("--out", default=paths.planner_out("weekly"), type=Path)

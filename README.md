@@ -15,7 +15,7 @@
 
 Config-driven time planning at a glance - one web UI controls two planners:
 
-- **Weekly** - your routine sheet with activity layers. Print it or set it as a desktop wallpaper.
+- **Weekly** - your routine sheet with topic layers. Print it or set it as a desktop wallpaper.
 - **Year** - a wide year-at-a-glance planner, with layers fed by your own calendars, public holidays, and manually
   added events. Print it or set it as a desktop wallpaper.
 
@@ -80,5 +80,5 @@ uv run timeglance-weekly --format both                   # -> weekly/out/
 - **Wallpaper-setting is host-only.** The container can't reach a Plasma session, so inside Docker the feature
   self-hides and a scheduled "set wallpaper" renders the files but skips the set (logged as
   `wallpaper skipped (no backend)`). Run the server/CLI on the host to set wallpapers.
-- **Weekly blocks can't overlap in time.** Two activities over the same slot on the same day render on top of each
-  other, so only one reads clearly.
+- **Weekly activities can't overlap in time.** Two activities over the same slot on the same day render on top of
+  each other, so only one reads clearly.
