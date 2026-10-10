@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-10-10)
+
+### Documentation
+
+- Say "current resolution" not "native" for wallpaper rendering
+  ([`56a2c0a`](https://github.com/dannyadair/timeglance/commit/56a2c0a6ce0d07fd5a96ea80c1ced957fe704dea))
+
+### Features
+
+- Show a spinner in the wallpaper dialog while setting
+  ([`7a6dd6f`](https://github.com/dannyadair/timeglance/commit/7a6dd6f77804cdc958014b5239c0793284bfaf41))
+
+- Stable per-screen wallpaper filenames so disconnected screens update on reconnect
+  ([`cb36ddf`](https://github.com/dannyadair/timeglance/commit/cb36ddf47deedbe2414a7c3e85a569939e04ce4b))
+
+
 ## v1.2.0 (2026-10-09)
 
 ### Features
