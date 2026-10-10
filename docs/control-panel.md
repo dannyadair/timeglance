@@ -20,8 +20,9 @@ Two shared, app-wide views sit alongside them:
   seen shows as FYI only. Runs are isolated so one failing planner can't sink the rest. Config lives in
   `schedule.yaml` in the state directory; the **Render overrides (YAML)** box under each planner writes a `render:`
   block there to override the scheduled render (same keys as the quick controls), e.g. a darker theme or a size.
-- **Log** - a persistent activity log of every render, export and wallpaper change, scheduled or manual (live
-  previews aren't logged). **Clear log** wipes it (with confirmation). The activity log persists under `state/`;
-  the schedule lives in `schedule.yaml`.
+- **Log** - a persistent activity log of what timeglance does: startup, config changes, renders, exports and
+  wallpaper changes, scheduled or manual (live previews aren't logged). Lines are also echoed to the server's
+  stdout. **Clear log** wipes it (with confirmation). The activity log persists in the state directory; the
+  schedule lives in `schedule.yaml`.
 
 The YAML is re-read on every request, so external edits show up on reload.
