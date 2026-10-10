@@ -80,6 +80,11 @@ def install(time=None):
     print(f"  next run: systemctl --user list-timers {TIMER}")
 
 
+def available():
+    """True if a systemd user instance is reachable, so install/uninstall make sense."""
+    return shutil.which("systemctl") is not None
+
+
 def enabled():
     """True if the user timer is enabled."""
     if not shutil.which("systemctl"):

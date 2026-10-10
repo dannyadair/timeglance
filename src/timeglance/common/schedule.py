@@ -19,7 +19,6 @@ from timeglance.common.format import human_size
 
 DEFAULTS = {
     "time": "06:00",
-    "autostart": False,
     "planners": ["year"],
 }
 
