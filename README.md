@@ -58,11 +58,15 @@ uv run timeglance-init     # scaffold year/ + weekly/ config.yaml from the templ
 uv run timeglance          # the control panel at http://localhost:8753
 ```
 
+Config, state and rendered output live under the XDG base directories by default
+(`~/.config/timeglance`, `~/.local/state/timeglance`, `~/.local/share/timeglance`); set
+`TIMEGLANCE_HOME=$PWD` to keep it all in the current folder instead.
+
 Headless renders (each flag has a YAML equivalent):
 
 ```sh
-uv run timeglance-year --theme light --layout vertical   # -> year/out/
-uv run timeglance-weekly --format both                   # -> weekly/out/
+uv run timeglance-year --theme light --layout vertical   # render the year planner
+uv run timeglance-weekly --format both                   # render the weekly sheet
 ```
 
 ## Docs

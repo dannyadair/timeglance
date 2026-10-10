@@ -1,9 +1,9 @@
 """Scaffold working configs from the packaged templates.
 
-`timeglance-init` writes `year/config.yaml` and `weekly/config.yaml` into the project
-directory (the current directory) from the bundled `config.yaml.in` templates, so the
-first run - and Docker's bind-mounts, which expect the files to exist - has something
-to read. Existing configs are left untouched.
+`timeglance-init` writes `year/config.yaml` and `weekly/config.yaml` into the config
+directory (`~/.config/timeglance/` by default, or under `TIMEGLANCE_HOME`) from the bundled
+`config.yaml.in` templates, so the first run - and Docker's bind-mounts, which expect the
+files to exist - has something to read. Existing configs are left untouched.
 """
 
 import shutil

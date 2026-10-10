@@ -1,8 +1,7 @@
 """Daily re-render schedule: its on-disk config plus a trigger-agnostic runner.
 
-The config lives in `schedule.yaml` at the project root (beside `year/` and `weekly/`), so
-it sits with the working data and is easy to edit by hand or from the control panel. The
-job is to re-render each selected planner and write its file to disk; setting that file as
+The config lives in `schedule.yaml` in the state directory, easy to edit by hand or from the
+control panel. The job is to re-render each selected planner and write its file to disk; setting that file as
 the desktop wallpaper is an optional extra. `Schedule.run_once` takes the planner registry
 and a log as arguments so the panel's timer, a CLI entry point or cron can all drive it
 without importing the server.
@@ -66,7 +65,7 @@ class Schedule:
     @classmethod
     def load(cls, path=None):
         """Return a Schedule with defaults merged under any `schedule.yaml` on disk."""
-        path = path or paths.project_dir() / "schedule.yaml"
+        path = path or paths.state_dir() / "schedule.yaml"
         data = yaml.safe_load(path.read_text()) if path.exists() else {}
         return cls(path, {**DEFAULTS, **(data or {})})
 
@@ -74,6 +73,7 @@ class Schedule:
         """Persist `cfg` to `schedule.yaml` in a stable key order (DEFAULTS first, then extras)."""
         ordered = {k: self.cfg[k] for k in DEFAULTS if k in self.cfg}
         ordered.update({k: v for k, v in self.cfg.items() if k not in ordered})
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(yaml.safe_dump(ordered, sort_keys=False))
 
     def planner_block(self, name):

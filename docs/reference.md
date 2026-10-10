@@ -1,8 +1,10 @@
 # Reference
 
 Precedence everywhere is **built-in defaults < YAML < CLI flags**. All planners share `--data PATH`, `--out DIR`,
-`--wallpaper`, `--screen NAMES`, and `--list-screens`. Working data (`config.yaml`, `out/`, `state/`) resolves from
-the current directory; override the project root with the `TIMEGLANCE_HOME` environment variable.
+`--wallpaper`, `--screen NAMES`, and `--list-screens`. Working data follows the XDG base directories by default -
+config in `~/.config/timeglance/`, state in `~/.local/state/timeglance/`, cache in `~/.cache/timeglance/`, rendered
+output in `~/.local/share/timeglance/` - or set `TIMEGLANCE_HOME` to put it all under one root (config and output at
+the root, state and cache beneath it), the layout Docker and the dev loop use.
 
 ## Weekly - `timeglance-weekly` (or `python -m timeglance.weekly.build`)
 

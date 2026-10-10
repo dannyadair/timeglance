@@ -18,7 +18,7 @@ Two shared, app-wide views sit alongside them:
   Those controls grey out until the planner itself is ticked to render. Target screens include ones that are
   remembered but currently disconnected (**Forget** drops them); a screen named in config that's never been
   seen shows as FYI only. Runs are isolated so one failing planner can't sink the rest. Config lives in
-  `schedule.yaml` at the project root; the **Render overrides (YAML)** box under each planner writes a `render:`
+  `schedule.yaml` in the state directory; the **Render overrides (YAML)** box under each planner writes a `render:`
   block there to override the scheduled render (same keys as the quick controls), e.g. a darker theme or a size.
 - **Log** - a persistent activity log of every render, export and wallpaper change, scheduled or manual (live
   previews aren't logged). **Clear log** wipes it (with confirmation). The activity log persists under `state/`;

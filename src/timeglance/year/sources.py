@@ -23,7 +23,7 @@ from timeglance.year import render
 DEFAULT_TTL = 300  # seconds; override per source with `refresh:`
 PALETTE = ["#3FA7A0", "#9B6B9E", "#E4884A", "#4E9A51", "#C4553B", "#3D6FB4", "#7A7F87"]
 
-CACHE = paths.state_dir() / "ics-cache"
+CACHE = paths.cache_dir() / "ics-cache"
 _mem = {}  # url -> (fetched_at, text)
 
 

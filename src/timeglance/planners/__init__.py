@@ -43,5 +43,5 @@ PLANNERS = {"year": YearPlanner(), "weekly": WeeklyPlanner()}
 
 
 def output_path(planner):
-    """Path of the file this planner writes, relative to the project root (for the UI)."""
-    return str((planner.out / planner.out_name).relative_to(paths.project_dir()))
+    """Display path of the file this planner writes (for the UI)."""
+    return paths.display(planner.out / planner.out_name)
