@@ -5,7 +5,7 @@ from argparse import Namespace
 import pytest
 import yaml
 
-from timeglance.common.serve import read_config, reset_config, write_config
+from timeglance.common.config import read_config, reset_config, write_config
 from timeglance.year import build as ybuild
 from timeglance.year import render as yrender
 
