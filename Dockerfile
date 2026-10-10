@@ -24,6 +24,6 @@ RUN uv sync --frozen --no-dev
 
 EXPOSE 8753
 
-# Default: the timeglance control panel (both tools). Override for a one-shot render, e.g.
+# Default: the timeglance control panel (both planners). Override for a one-shot render, e.g.
 #   docker compose run --rm timeglance timeglance-weekly
 CMD ["timeglance", "--host", "0.0.0.0"]

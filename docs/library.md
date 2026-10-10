@@ -1,6 +1,6 @@
 # Use as a library
 
-Both tools are plain subpackages of `timeglance`, so you can skip the CLI/server and render straight from your own
+Both planners are plain subpackages of `timeglance`, so you can skip the CLI/server and render straight from your own
 code. The functions below are exactly what the CLI and server call. Config input is just a `dict` (load it from
 YAML with the provided `load()`, or build it yourself). The same system C libraries as the CLI are needed
 (CairoSVG/WeasyPrint).

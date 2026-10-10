@@ -1,7 +1,7 @@
 """Runtime data locations, resolved from the current working directory.
 
 Code and packaged assets (templates, web, the `*.yaml.in` files) live inside the
-installed package; the *working* data a user edits and the app writes - each tool's
+installed package; the *working* data a user edits and the app writes - each planner's
 `config.yaml` and `out/`, plus shared `state/` - live under the project directory,
 which defaults to the current working directory (override with `TIMEGLANCE_HOME`).
 So you `cd` into your project and run `timeglance`; Docker bind-mounts map the same
@@ -17,14 +17,14 @@ def project_dir():
     return Path(os.environ.get("TIMEGLANCE_HOME", Path.cwd()))
 
 
-def tool_config(tool):
-    """Return the path to ``<tool>/config.yaml`` under the project root."""
-    return project_dir() / tool / "config.yaml"
+def planner_config(planner):
+    """Return the path to ``<planner>/config.yaml`` under the project root."""
+    return project_dir() / planner / "config.yaml"
 
 
-def tool_out(tool):
-    """Return the output directory ``<tool>/out`` under the project root."""
-    return project_dir() / tool / "out"
+def planner_out(planner):
+    """Return the output directory ``<planner>/out`` under the project root."""
+    return project_dir() / planner / "out"
 
 
 def state_dir():

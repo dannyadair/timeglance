@@ -71,8 +71,8 @@ def test_resolve_list_and_pick():
 # ---- reset-to-template backup ----
 
 
-class FakeTool:
-    """Minimal tool stub with a working-config path and a template, for config tests."""
+class FakePlanner:
+    """Minimal planner stub with a working-config path and a template, for config tests."""
 
     def __init__(self, tmp):
         """Set up data/template paths under ``tmp`` and seed the template file."""
@@ -83,33 +83,33 @@ class FakeTool:
 
 def test_read_config_falls_back_to_template(tmp_path):
     """read_config returns the template, flagged as such, when no working config exists."""
-    tool = FakeTool(tmp_path)
-    rc = read_config(tool)
+    planner = FakePlanner(tmp_path)
+    rc = read_config(planner)
     assert rc == {"yaml": "template: 1\n", "from_template": True, "path": "config.yaml"}
 
 
 def test_reset_without_existing_data_makes_no_backup(tmp_path):
     """Resetting when no working config exists writes the template and makes no backup."""
-    tool = FakeTool(tmp_path)
-    assert reset_config(tool) is None
-    assert tool.data.read_text() == "template: 1\n"
-    assert read_config(tool)["from_template"] is False
+    planner = FakePlanner(tmp_path)
+    assert reset_config(planner) is None
+    assert planner.data.read_text() == "template: 1\n"
+    assert read_config(planner)["from_template"] is False
 
 
 def test_reset_backs_up_existing_data(tmp_path):
     """Resetting over an existing config backs it up before overwriting with the template."""
-    tool = FakeTool(tmp_path)
-    tool.data.write_text("user: 2\n")
-    backup = reset_config(tool)
+    planner = FakePlanner(tmp_path)
+    planner.data.write_text("user: 2\n")
+    backup = reset_config(planner)
     assert backup and backup.endswith(".bak")
-    assert tool.data.read_text() == "template: 1\n"
-    assert tool.data.with_name(backup).read_text() == "user: 2\n"
+    assert planner.data.read_text() == "template: 1\n"
+    assert planner.data.with_name(backup).read_text() == "user: 2\n"
 
 
 def test_write_config_validates_yaml(tmp_path):
     """write_config persists valid YAML and raises on malformed YAML."""
-    tool = FakeTool(tmp_path)
-    write_config(tool, "a: 1\n")
-    assert tool.data.read_text() == "a: 1\n"
+    planner = FakePlanner(tmp_path)
+    write_config(planner, "a: 1\n")
+    assert planner.data.read_text() == "a: 1\n"
     with pytest.raises(yaml.YAMLError):
-        write_config(tool, "a: [unclosed\n")
+        write_config(planner, "a: [unclosed\n")

@@ -10,7 +10,7 @@ render one screen at its current resolution and leave the others untouched.
 
 apply() is the generic driver: it walks the chosen screens, hands each to a caller-
 supplied render_png(screen, path) callback, and sets the results. The callback is the
-only tool-specific part (year rasterises its SVG; weekly composites its PDF).
+only planner-specific part (year rasterises its SVG; weekly composites its PDF).
 """
 
 import json
@@ -166,13 +166,13 @@ def resolve_screens(backend, spec):
 def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="wallpaper"):
     """Render each screen via render_png(screen, path) and set the results.
 
-    render_png must write a PNG for `screen` to `path` (sized however the tool wants;
+    render_png must write a PNG for `screen` to `path` (sized however the planner wants;
     for a crisp result render at screen.pw x screen.ph). Screens that share a resolution
     reuse one render. Each screen gets a stable `{prefix}-{name}.png`, overwritten in place:
     a disconnected output then picks up the fresh image when it reconnects, since Plasma
     restores its remembered path and reloads from disk. A connected output is nudged to
-    reload via the `#stamp` cache-bust (see PlasmaBackend._script). `prefix` is tool-scoped
-    (e.g. `year-wallpaper`) so both tools' files can share one directory.
+    reload via the `#stamp` cache-bust (see PlasmaBackend._script). `prefix` is planner-scoped
+    (e.g. `year-wallpaper`) so both planners' files can share one directory.
     Returns (assignments, info) where info has `requested`/`applied` screen names and the
     detected `desktops` geometries (so a geometry mismatch is visible, not silent).
     """

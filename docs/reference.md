@@ -1,6 +1,6 @@
 # Reference
 
-Precedence everywhere is **built-in defaults < YAML < CLI flags**. All tools share `--data PATH`, `--out DIR`,
+Precedence everywhere is **built-in defaults < YAML < CLI flags**. All planners share `--data PATH`, `--out DIR`,
 `--wallpaper`, `--screen NAMES`, and `--list-screens`. Working data (`config.yaml`, `out/`, `state/`) resolves from
 the current directory; override the project root with the `TIMEGLANCE_HOME` environment variable.
 
