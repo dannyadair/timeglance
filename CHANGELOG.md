@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.3.0 (2026-10-11)
+
+### Continuous Integration
+
+- Attach the .deb without a checkout and gate PyPI on the deb matrix
+  ([`732d62a`](https://github.com/dannyadair/timeglance/commit/732d62a2a1a829dc6df5138834b6570ecc1fc50e))
+
+### Features
+
+- Build the .deb as a proper Debian source package
+  ([`31fc2cc`](https://github.com/dannyadair/timeglance/commit/31fc2cc241e0652c2a150b926b9da855b2dab859))
+
+
 ## v3.2.1 (2026-10-11)
 
 ### Bug Fixes
