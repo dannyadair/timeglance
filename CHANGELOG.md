@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v3.2.0 (2026-10-11)
+
+### Documentation
+
+- **weekly**: Document light/dark themes and vertical/horizontal layouts
+  ([`4e4965a`](https://github.com/dannyadair/timeglance/commit/4e4965a83e981be26ccee827fac43898828d55f3))
+
+### Features
+
+- **panel**: Add a light/dark theme toggle for the control panel
+  ([`55ad658`](https://github.com/dannyadair/timeglance/commit/55ad658d136354f4383a19053957f0e3cd816f53))
+
+- **weekly**: Add light/dark themes and horizontal layout to the renderer
+  ([`d6cabee`](https://github.com/dannyadair/timeglance/commit/d6cabee14465a8beb77b7b9b8c039ad35a04be1e))
+
+- **weekly**: Expose themes and layouts in the CLI, control panel and wallpaper
+  ([`ec88bb2`](https://github.com/dannyadair/timeglance/commit/ec88bb2ffb9323605d8a71319d9d16d45825b7d0))
+
+
 ## v3.1.0 (2026-10-11)
 
 ### Build System
