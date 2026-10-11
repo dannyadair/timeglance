@@ -1,4 +1,4 @@
-# timeglance: renders weekly sheets (WeasyPrint) and the year planner (CairoSVG).
+# timeglance: renders the weekly sheet (WeasyPrint) and the year planner (CairoSVG).
 FROM python:3.13-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \

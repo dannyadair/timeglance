@@ -8,7 +8,7 @@
 #   docker compose run --rm timeglance timeglance render year
 #   docker compose run --rm timeglance timeglance render weekly --format both
 #
-# Wallpaper-setting is host-only (needs a Plasma session); it is auto-hidden in the UI here.
+# A container can't reach your desktop session, so setting the wallpaper is unavailable here (the UI auto-hides it).
 
 # Output and state are written as your host user (defaults to 1000:1000); override with
 #   UID=$(id -u) GID=$(id -g) docker compose up

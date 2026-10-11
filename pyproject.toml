@@ -1,7 +1,7 @@
 [project]
 name = "timeglance"
 version = "3.0.0"
-description = "Printable weekly routine sheets and a year-at-a-glance planner / desktop wallpaper."
+description = "A printable weekly routine sheet and a year-at-a-glance planner / desktop wallpaper."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Danny W. Adair", email = "danny.adair@unfold.nz" }]

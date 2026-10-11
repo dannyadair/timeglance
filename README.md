@@ -57,15 +57,16 @@ libraries (Cairo, Pango, GDK-PixBuf, fonts) for you:
 sudo apt install ./timeglance_<version>_amd64.deb
 ```
 
-That puts `timeglance` on your `PATH` - a self-contained install under `/opt/timeglance` using the system Python.
-Scaffold the configs and open the panel:
+Then launch **timeglance** from your applications menu - the tray icon appears and opens the control panel, no
+terminal needed. Or drive it from the CLI (`timeglance` is now on your `PATH`):
 
 ```sh
 timeglance init     # scaffold year/ + weekly/ config.yaml from the templates
 timeglance serve    # the control panel at http://localhost:8753
 ```
 
-Built for Ubuntu 24.04 / Debian 13 (Python 3.12); remove with `sudo apt remove timeglance`.
+A self-contained install under `/opt/timeglance` using the system Python. Built for Ubuntu 24.04 / Debian 13
+(Python 3.12); remove with `sudo apt remove timeglance`.
 
 ## Install (Python/uv)
 
@@ -110,22 +111,20 @@ Setting the Plasma wallpaper needs an active graphical session, so a render whil
 files but can't paint - it repaints on your next session. For renders while logged out (no wallpaper), enable
 lingering: `loginctl enable-linger $USER`.
 
-## Tray controller (optional)
+## Tray controller
 
 A system-tray menu to open the panel and flip the schedule - a launcher and quick toggles, _not_ the scheduler (the
 timer above keeps running whether or not the tray is open).
 
-The tray isn't in the `.deb`: its KDE backend needs the system AppIndicator/GObject libraries, so install it with
-`pipx` (allowed to see system packages):
+The `.deb` already includes it: after `apt install`, launch **timeglance** from your applications menu and the tray
+icon appears (it pulls the system AppIndicator/GObject libraries as dependencies). From a source checkout, add the
+extra and the system libraries, then run it:
 
 ```sh
 sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
-pipx install --system-site-packages 'timeglance[tray]'
-timeglance tray
+uv sync --extra tray
+uv run timeglance tray
 ```
-
-(From a source checkout it's `uv sync --extra tray` then `uv run timeglance tray`, but on Plasma the icon may not
-appear without the system libraries above.)
 
 The menu opens the control panel (starting the server first if needed), starts/stops it, picks the port, and toggles
 the schedule: enabled, time, which planners render, and which set the wallpaper. **Autostart** adds an XDG
@@ -144,8 +143,5 @@ Quitting the tray only closes the panel it started - the systemd timer keeps run
 
 ## Limitations
 
-- **Wallpaper-setting is host-only.** The container can't reach a Plasma session, so inside Docker the feature
-  self-hides and a scheduled "set wallpaper" renders the files but skips the set (logged as
-  `wallpaper skipped (no backend)`). Run the server/CLI on the host to set wallpapers.
 - **Weekly activities can't overlap in time.** Two activities over the same slot on the same day render on top of
   each other, so only one reads clearly.

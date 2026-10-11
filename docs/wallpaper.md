@@ -23,4 +23,5 @@ changes, so each apply appends a throwaway `#<stamp>` fragment to the `file://` 
 (forcing a reload) while Qt strips the fragment and loads the same file. Configure defaults under `wallpaper:`
 in each YAML (`screens`, `fill`, `background`/`margin`/`shadow` for weekly, `theme`/`layout` for year).
 
-Wallpaper-setting is **host-only** - see [Limitations](../README.md#limitations).
+Setting the wallpaper needs a live Plasma session, so it isn't available inside the
+[Docker test drive](../README.md#try-it-instantly-docker).
