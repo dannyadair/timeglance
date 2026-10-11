@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.3.2 (2026-10-11)
+
+### Bug Fixes
+
+- Build the .deb in an ubuntu:25.10 container
+  ([`20de88b`](https://github.com/dannyadair/timeglance/commit/20de88be2c7b17fb1aea4bc663d695347d731794))
+
+
 ## v3.3.1 (2026-10-11)
 
 ### Bug Fixes
