@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.2.1 (2026-10-11)
+
+### Bug Fixes
+
+- Make the .deb installable on current Ubuntu
+  ([`e36ebe3`](https://github.com/dannyadair/timeglance/commit/e36ebe3842cd0299affe81b766543c1e8d908933))
+
+### Documentation
+
+- Refresh control-panel screenshots for themes/layouts and the day/night toggle
+  ([`b0612e4`](https://github.com/dannyadair/timeglance/commit/b0612e46f3b8f3967adb3a24702e5117fabc720e))
+
+
 ## v3.2.0 (2026-10-11)
 
 ### Documentation
