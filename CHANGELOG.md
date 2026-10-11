@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.3.1 (2026-10-11)
+
+### Bug Fixes
+
+- Install build-essential in the .deb build job
+  ([`6cd3704`](https://github.com/dannyadair/timeglance/commit/6cd3704f7c6cd83e5da90a13f45a3967b3199887))
+
+
 ## v3.3.0 (2026-10-11)
 
 ### Continuous Integration
