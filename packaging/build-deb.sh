@@ -1,38 +1,52 @@
 #!/usr/bin/env bash
-# Build a timeglance .deb: a self-contained venv under /opt/timeglance built against the
-# distro's system python3 (3.12 on Ubuntu 24.04), fronted by a /usr/bin/timeglance launcher.
-# Run inside the target distro (e.g. ubuntu:24.04) so the venv's interpreter matches the one
-# the package Depends on. Writes timeglance_<version>_<arch>.deb into the current directory.
+# Build a Debian-native timeglance .deb: the pure-Python package under
+# /usr/lib/python3/dist-packages, run by the distro's own python3, with every
+# dependency satisfied by the distro's apt packages (Depends:). No bundled
+# interpreter, venv or wheels, so apt matches each dependency's C extensions to
+# the system python automatically. Writes timeglance_<version>_all.deb into the
+# current directory.
 set -euo pipefail
 
-VERSION="${1:?usage: build-deb.sh VERSION WHEEL}"
-WHEEL="${2:?usage: build-deb.sh VERSION WHEEL}"
-ARCH="$(dpkg --print-architecture)"
+VERSION="${1:?usage: build-deb.sh VERSION}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-PREFIX=/opt/timeglance
+REPO="$(cd "$HERE/.." && pwd)"
 STAGE="$(mktemp -d)"
+chmod 755 "$STAGE"
+SITE=/usr/lib/python3/dist-packages
 
-# Native libraries WeasyPrint/CairoSVG load at runtime (mirrors the Dockerfile), the system
-# interpreter the bundled venv points at, the fonts the templates reference, and the tray's
-# AppIndicator/GObject stack - the tray ships in the package, so its venv is built with
-# --system-site-packages to import the system `gi` that pip can't provide.
-DEPENDS="python3 (>= 3.12), python3-gi, gir1.2-ayatanaappindicator3-0.1, libcairo2, libpango-1.0-0, libpangocairo-1.0-0, libgdk-pixbuf-2.0-0, libffi8, shared-mime-info, fonts-dejavu-core, fonts-noto-core"
+# Every runtime dependency as a distro package: apt resolves the ABI-matching
+# build for the system python3. python3-gi + the AppIndicator typelib back the
+# tray; poppler-utils rasterises the weekly PDF for the wallpaper; weasyprint and
+# python3-cairosvg pull their own native (Cairo/Pango) stack.
+DEPENDS="python3, python3-yaml, python3-jinja2, weasyprint, python3-cairosvg, python3-dateutil, python3-icalendar, python3-recurring-ical-events, python3-holidays, python3-pil, python3-pystray, python3-gi, gir1.2-ayatanaappindicator3-0.1, poppler-utils, fonts-dejavu-core, fonts-noto-core"
 
-python3 -m venv --system-site-packages "$PREFIX"
-"$PREFIX/bin/pip" install --no-cache-dir "${WHEEL}[tray]"
+install -d "$STAGE$SITE" "$STAGE/usr/bin" "$STAGE/usr/share/applications" \
+          "$STAGE/usr/share/icons/hicolor/scalable/apps" \
+          "$STAGE/usr/share/metainfo" "$STAGE/usr/share/doc/timeglance" "$STAGE/DEBIAN"
 
-install -d "$STAGE$PREFIX" "$STAGE/usr/bin" "$STAGE/usr/share/applications" \
-          "$STAGE/usr/share/icons/hicolor/scalable/apps" "$STAGE/DEBIAN"
-cp -a "$PREFIX/." "$STAGE$PREFIX/"
-ln -s "$PREFIX/bin/timeglance" "$STAGE/usr/bin/timeglance"
+# The package verbatim from the source tree (pure Python plus its web/template data).
+cp -a "$REPO/src/timeglance" "$STAGE$SITE/timeglance"
+find "$STAGE$SITE/timeglance" -name __pycache__ -type d -prune -exec rm -rf {} +
+
+cat > "$STAGE/usr/bin/timeglance" <<'LAUNCH'
+#!/usr/bin/python3
+from timeglance.cli import main
+
+raise SystemExit(main())
+LAUNCH
+chmod 755 "$STAGE/usr/bin/timeglance"
+
 install -m644 "$HERE/timeglance.desktop" "$STAGE/usr/share/applications/timeglance.desktop"
-install -m644 "$(ls "$PREFIX"/lib/python*/site-packages/timeglance/common/web/favicon.svg)" \
+install -m644 "$REPO/src/timeglance/common/web/favicon.svg" \
         "$STAGE/usr/share/icons/hicolor/scalable/apps/timeglance.svg"
+install -m644 "$HERE/nz.unfold.timeglance.metainfo.xml" \
+        "$STAGE/usr/share/metainfo/nz.unfold.timeglance.metainfo.xml"
+install -m644 "$HERE/copyright" "$STAGE/usr/share/doc/timeglance/copyright"
 
 cat > "$STAGE/DEBIAN/control" <<CTL
 Package: timeglance
 Version: $VERSION
-Architecture: $ARCH
+Architecture: all
 Maintainer: Danny W. Adair <danny.adair@unfold.nz>
 Depends: $DEPENDS
 Section: utils
@@ -43,4 +57,4 @@ Description: A printable weekly routine sheet and a year-at-a-glance planner.
  control panel, with KDE Plasma desktop-wallpaper rendering.
 CTL
 
-dpkg-deb --build --root-owner-group "$STAGE" "timeglance_${VERSION}_${ARCH}.deb"
+dpkg-deb --build --root-owner-group "$STAGE" "timeglance_${VERSION}_all.deb"
