@@ -15,7 +15,7 @@ import yaml
 
 from timeglance import paths
 from timeglance.common import wallpaper
-from timeglance.common.format import human_size
+from timeglance.common.format import png_size
 
 DEFAULTS = {
     "time": "06:00",
@@ -93,7 +93,8 @@ class Schedule:
                 _, fname, data = planner.export(params)
                 planner.out.mkdir(parents=True, exist_ok=True)
                 (planner.out / fname).write_bytes(data)
-                log.log(name, f"wrote {fname} ({human_size(len(data))})")
+                detail = f" ({png_size(data)})" if fname.endswith(".png") else ""
+                log.log(name, f"wrote {fname}{detail}")
                 for w in planner.warnings():
                     log.log(name, f"WARNING {w}")
                 if not pc["wallpaper"]:

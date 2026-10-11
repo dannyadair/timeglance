@@ -1,12 +1,21 @@
-"""Small presentation helpers shared across the app (byte sizes, local timezone)."""
+"""Small presentation helpers shared across the app (byte sizes, image size, local timezone)."""
 
 import datetime as dt
+import io
+
+from PIL import Image
 
 
 def human_size(n):
     """Format a byte count as a human-readable KB/MB string."""
     kb = n / 1024
     return f"{kb:.0f} KB" if kb < 1024 else f"{kb / 1024:.1f} MB"
+
+
+def png_size(data):
+    """'WIDTH×HEIGHT' for the given PNG bytes."""
+    w, h = Image.open(io.BytesIO(data)).size
+    return f"{w}×{h}"
 
 
 def local_tz():
