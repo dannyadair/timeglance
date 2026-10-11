@@ -15,6 +15,7 @@ import yaml
 
 from timeglance import paths
 from timeglance.common import wallpaper
+from timeglance.common.variants import pick, resolve_list
 from timeglance.year import render, sources
 
 HERE = Path(__file__).parent
@@ -89,31 +90,6 @@ def apply_cli(raw, args):
                 lyr["visible"] = False
 
 
-def resolve_list(cli, yaml_val, allowed):
-    """Resolve a theme/layout selection (CLI > YAML > all) and validate it against ``allowed``."""
-    spec = cli if cli is not None else yaml_val
-    if not spec:
-        return allowed
-    items = [s.strip() for s in str(spec).split(",")]
-    bad = [i for i in items if i not in allowed]
-    if bad:
-        raise SystemExit(f"unknown value(s): {', '.join(bad)} (allowed: {', '.join(allowed)})")
-    return items
-
-
-def _pick(cli, yaml_val, fallback, allowed, what):
-    """Choose the single variant for the wallpaper: explicit single CLI value > YAML > fallback."""
-    val = None
-    if cli:
-        items = [s.strip() for s in cli.split(",")]
-        if len(items) == 1:
-            val = items[0]
-    val = val or yaml_val or fallback
-    if val not in allowed:
-        raise SystemExit(f"unknown wallpaper {what}: {val}  (allowed: {', '.join(allowed)})")
-    return val
-
-
 def apply_wallpaper(cfg, backend, screens, fill, out):
     """Render each screen at its current resolution and set it as that screen's wallpaper."""
 
@@ -175,8 +151,8 @@ def main(argv=None):
         if not backend:
             raise SystemExit("--wallpaper needs a supported desktop (KDE Plasma not detected)")
         wp = raw.get("wallpaper") or {}
-        raw["theme"] = _pick(args.theme, wp.get("theme"), themes[0], ALL_THEMES, "theme")
-        raw["layout"] = _pick(args.layout, wp.get("layout"), layouts[0], ALL_LAYOUTS, "layout")
+        raw["theme"] = pick(args.theme, wp.get("theme"), themes[0], ALL_THEMES, "theme")
+        raw["layout"] = pick(args.layout, wp.get("layout"), layouts[0], ALL_LAYOUTS, "layout")
         if args.week_align is None and "week_align" in wp:
             raw["week_align"] = wp["week_align"]
         cfg = render.parse(raw)

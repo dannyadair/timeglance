@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Render a weekly routine (config.yaml) to a printable PDF / HTML sheet."""
+"""Render a weekly routine (config.yaml) to a printable PDF / HTML sheet.
+
+Config precedence: built-in defaults < config.yaml < command-line flags.
+Theme and layout may be a comma list or omitted (omitted = render all variants).
+"""
 
 import argparse
 import datetime as dt
@@ -14,6 +18,7 @@ from weasyprint import HTML
 
 from timeglance import paths
 from timeglance.common import wallpaper
+from timeglance.common.variants import pick, resolve_list
 
 HERE = Path(__file__).parent
 TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance init`)
@@ -235,6 +240,8 @@ def main(argv=None):
     """CLI entry point: render the weekly sheet to PDF/HTML or set it as the wallpaper."""
     ap = argparse.ArgumentParser(prog="timeglance render weekly", description=__doc__)
     ap.add_argument("--data", default=paths.planner_config("weekly"), type=Path)
+    ap.add_argument("--theme", help="light / dark / comma list; omit for all")
+    ap.add_argument("--layout", help="vertical / horizontal / comma list; omit for all")
     ap.add_argument("--only", help="show only these topic ids (comma-separated)")
     ap.add_argument("--hide", action="append", default=[], metavar="TOPIC", help="hide a topic id")
     ap.add_argument("--paper", choices=["A4", "A3"], help="page size (default: YAML `paper:` or A4)")
@@ -259,14 +266,18 @@ def main(argv=None):
     hide = resolve_hide(cfg, args)
     paper = args.paper or cfg.get("paper", "A4")
     out_format = args.format or cfg.get("format", "pdf")
+    themes = resolve_list(args.theme, cfg.get("theme"), ALL_THEMES)
+    layouts = resolve_list(args.layout, cfg.get("layout"), ALL_LAYOUTS)
 
     if args.wallpaper:
         if not backend:
             raise SystemExit("--wallpaper needs a supported desktop (KDE Plasma not detected)")
         wp = cfg.get("wallpaper") or {}
+        theme = pick(args.theme, wp.get("theme"), themes[0], ALL_THEMES, "theme")
+        layout = pick(args.layout, wp.get("layout"), layouts[0], ALL_LAYOUTS, "layout")
         screens = wallpaper.resolve_screens(backend, args.screen or wp.get("screens", "all"))
         render_png = make_wallpaper_renderer(
-            render_pdf(cfg, hide, paper),
+            render_pdf(cfg, hide, paper, theme=theme, layout=layout),
             wp.get("background", "#2b2f36"),
             wp.get("margin", 0.05),
             resolve_shadow(wp),
@@ -274,19 +285,22 @@ def main(argv=None):
         _, info = wallpaper.apply(backend, screens, args.out, render_png, prefix="weekly-wallpaper")
         applied = ", ".join(info["applied"]) or "(none - no desktop matched)"
         extra = "".join(f"; {k} {', '.join(info[k])}" for k in ("pending", "unseen") if info.get(k))
-        print(f"wallpaper applied on: {applied}; desktops: {info['desktops']}{extra}")
+        print(f"wallpaper ({theme}/{layout}) applied on: {applied}; desktops: {info['desktops']}{extra}")
         return
 
-    html = render(cfg, hide, paper)
     args.out.mkdir(parents=True, exist_ok=True)
-    if out_format in ("html", "both"):
-        path = args.out / "weekly.html"
-        path.write_text(html)
-        print(f"wrote {path}")
-    if out_format in ("pdf", "both"):
-        path = args.out / "weekly.pdf"
-        HTML(string=html, base_url=str(HERE)).write_pdf(path)
-        print(f"wrote {path}")
+    for layout in layouts:
+        for theme in themes:
+            html = render(cfg, hide, paper, theme=theme, layout=layout)
+            stem = "weekly" + (f"-{layout}" if len(layouts) > 1 else "") + f"-{theme}"
+            if out_format in ("html", "both"):
+                path = args.out / f"{stem}.html"
+                path.write_text(html)
+                print(f"wrote {path}")
+            if out_format in ("pdf", "both"):
+                path = args.out / f"{stem}.pdf"
+                HTML(string=html, base_url=str(HERE)).write_pdf(path)
+                print(f"wrote {path}  ({layout}, {theme})")
 
 
 if __name__ == "__main__":
