@@ -24,6 +24,40 @@ PAGE_MARGIN_MM = 9
 HEADER_RESERVE_MM = 30
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
+ALL_LAYOUTS = ["vertical", "horizontal"]
+
+# Chrome colours per theme (activity blocks keep their own topic colours); mirrors the year
+# planner's palette so the two sheets read as one family, light or dark.
+WEEKLY_THEMES = {
+    "light": {
+        "bg": "#ffffff",
+        "text": "#1b1b1b",
+        "muted": "#666666",
+        "line": "#ededed",
+        "line_major": "#dcdcdc",
+        "border": "#cfcfcf",
+        "cell_border": "#e6e6e6",
+        "head_bg": "#f4f4f4",
+        "today_bg": "#3D6FB4",
+        "today_text": "#ffffff",
+        "today_tint": "rgba(61,111,180,0.06)",
+    },
+    "dark": {
+        "bg": "#15171c",
+        "text": "#e8e8ea",
+        "muted": "#9aa0a6",
+        "line": "#23262d",
+        "line_major": "#2e323a",
+        "border": "#3a3f48",
+        "cell_border": "#262a31",
+        "head_bg": "#1b1e24",
+        "today_bg": "#3D6FB4",
+        "today_text": "#ffffff",
+        "today_tint": "rgba(61,111,180,0.16)",
+    },
+}
+ALL_THEMES = list(WEEKLY_THEMES)
+
 
 def to_min(t):
     """Convert a ``HH:MM`` string to minutes past midnight."""
@@ -59,8 +93,10 @@ def visible_activities(cfg, hidden):
     return [a for a in cfg.get("activities", []) if a["topic"] not in hidden]
 
 
-def layout(cfg, activities):
-    """Build the per-day positioned cells, hour gridlines and totals legend for the sheet."""
+def positions(cfg, activities):
+    """Build the per-day positioned cells, hour gridlines and totals legend for the sheet.
+    Positions are axis-agnostic (`pos`/`size` as a % of the day span) so the template can lay
+    them along either axis - down the day columns (vertical) or across the day rows (horizontal)."""
     day_start = to_min(cfg["day_start"])
     day_end = to_min(cfg["day_end"])
     span = day_end - day_start
@@ -75,8 +111,8 @@ def layout(cfg, activities):
         start, end = to_min(a["start"]), to_min(a["end"])
         totals[a["topic"]] += (end - start) * len(a["days"])
         cell = {
-            "top": round((start - day_start) / span * 100, 3),
-            "height": round((end - start) / span * 100, 3),
+            "pos": round((start - day_start) / span * 100, 3),
+            "size": round((end - start) / span * 100, 3),
             "color": topic["color"],
             "label": a.get("label", topic["label"]),
             "time": f"{fmt(start)}\u2013{fmt(end)}",
@@ -93,7 +129,7 @@ def layout(cfg, activities):
     while t <= day_end:
         hour_lines.append(
             {
-                "top": round((t - day_start) / span * 100, 3),
+                "pos": round((t - day_start) / span * 100, 3),
                 "label": fmt(t),
                 "major": (t - day_start) % (step * 2) == 0,
             }
@@ -109,11 +145,12 @@ def layout(cfg, activities):
     return by_day, hour_lines, legend
 
 
-def render(cfg, hide, paper, today=None):
+def render(cfg, hide, paper, today=None, theme="light", layout="vertical"):
     """`today`: the weekday label (e.g. "Wed") to highlight as the current day; defaults to the
     render date's weekday so a daily-rebuilt sheet marks today. A label not in `days` highlights
-    nothing (e.g. a Sat/Sun render of a Mon–Fri sheet)."""
-    by_day, hour_lines, legend = layout(cfg, visible_activities(cfg, hidden_topics(cfg, hide)))
+    nothing (e.g. a Sat/Sun render of a Mon–Fri sheet). `theme`/`layout` select the colour palette
+    and orientation (vertical = days-as-columns, horizontal = days-as-rows)."""
+    by_day, hour_lines, legend = positions(cfg, visible_activities(cfg, hidden_topics(cfg, hide)))
     track_h = PAGE_SHORT_MM[paper] - 2 * PAGE_MARGIN_MM - HEADER_RESERVE_MM
     today = today or WEEKDAYS[dt.date.today().weekday()]
     env = Environment(loader=FileSystemLoader(HERE / "templates"), autoescape=True)
@@ -127,12 +164,14 @@ def render(cfg, hide, paper, today=None):
         legend=legend,
         paper=paper,
         track_h=track_h,
+        theme=WEEKLY_THEMES[theme],
+        layout=layout,
     )
 
 
-def render_pdf(cfg, hide, paper):
+def render_pdf(cfg, hide, paper, theme="light", layout="vertical"):
     """Render the sheet to PDF bytes."""
-    return HTML(string=render(cfg, hide, paper), base_url=str(HERE)).write_pdf()
+    return HTML(string=render(cfg, hide, paper, theme=theme, layout=layout), base_url=str(HERE)).write_pdf()
 
 
 def _fit(inner_w, inner_h, max_w, max_h):

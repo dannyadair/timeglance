@@ -40,7 +40,7 @@ def test_layout_legend_totals_hours_across_days():
         "topics": {"a": {"label": "A", "color": "#111", "visible": True}},
         "activities": [{"topic": "a", "days": ["Mon", "Tue", "Wed"], "start": "09:00", "end": "11:00"}],
     }
-    _, _, legend = wbuild.layout(cfg, wbuild.visible_activities(cfg, set()))
+    _, _, legend = wbuild.positions(cfg, wbuild.visible_activities(cfg, set()))
     assert legend == [{"label": "A", "color": "#111", "hours": "6h"}]  # 2h × 3 days
 
 
@@ -60,7 +60,7 @@ def test_legend_follows_topics_order_not_activity_order():
             {"topic": "x", "days": ["Mon"], "start": "11:00", "end": "12:00"},
         ],
     }
-    _, _, legend = wbuild.layout(cfg, wbuild.visible_activities(cfg, set()))
+    _, _, legend = wbuild.positions(cfg, wbuild.visible_activities(cfg, set()))
     assert [item["label"] for item in legend] == ["X", "Y"]  # declaration order, unused z omitted
 
 
@@ -108,5 +108,5 @@ def test_render_highlights_today_only_when_in_days():
         "topics": {"a": {"label": "A", "color": "#111", "visible": True}},
         "activities": [{"topic": "a", "days": ["Mon"], "start": "09:00", "end": "10:00"}],
     }
-    assert 'class="col today"' in wbuild.render(cfg, None, "A4", today="Tue")
-    assert 'class="col today"' not in wbuild.render(cfg, None, "A4", today="Sun")
+    assert 'class="lane today"' in wbuild.render(cfg, None, "A4", today="Tue")
+    assert 'class="lane today"' not in wbuild.render(cfg, None, "A4", today="Sun")
