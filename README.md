@@ -49,7 +49,7 @@ first Linux user), so it just works for most; if your uid differs, run `UID=$(id
 
 ## Install (local)
 
-Needs Python 3.13 and [uv](https://docs.astral.sh/uv/). WeasyPrint and CairoSVG load native libraries (Cairo, Pango,
+Needs Python 3.12+ and [uv](https://docs.astral.sh/uv/). WeasyPrint and CairoSVG load native libraries (Cairo, Pango,
 GDK-PixBuf) at runtime; most Linux desktops already have these, but on a minimal or server install add them first
 (Debian/Ubuntu):
 

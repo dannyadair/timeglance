@@ -3,7 +3,7 @@ name = "timeglance"
 version = "2.0.0"
 description = "Printable weekly routine sheets and a year-at-a-glance planner / desktop wallpaper."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 authors = [{ name = "Danny W. Adair", email = "danny.adair@unfold.nz" }]
 license = "MIT"
 license-files = ["LICENSE"]
@@ -14,6 +14,7 @@ classifiers = [
     "Environment :: Web Environment",
     "Intended Audience :: End Users/Desktop",
     "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Office/Business :: Scheduling",
     "Topic :: Multimedia :: Graphics",
@@ -67,7 +68,7 @@ skips = ["B310", "B404", "B603", "B607"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
