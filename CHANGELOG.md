@@ -2,6 +2,30 @@
 
 <!-- version list -->
 
+## v3.1.0 (2026-10-11)
+
+### Build System
+
+- **deps**: Bump actions/upload-artifact from 7.0.1 to 7.0.2
+  ([`d78d91a`](https://github.com/dannyadair/timeglance/commit/d78d91a5244e6c414d2560b7020d421becba5073))
+
+- **deps**: Bump holidays from 0.105 to 0.106
+  ([`56e7021`](https://github.com/dannyadair/timeglance/commit/56e7021d17e812f9b4da6840d26075d5fa43ecb4))
+
+- **deps**: Bump pypdfium2 from 5.13.0 to 5.14.0
+  ([`4a74dbd`](https://github.com/dannyadair/timeglance/commit/4a74dbd79f97609b8a802d5846d3f4235cfc61eb))
+
+### Documentation
+
+- Tray-in-.deb, Docker wallpaper framing, singular "sheet"
+  ([`4a9732a`](https://github.com/dannyadair/timeglance/commit/4a9732a845b9d461c680a78b1f1263bd7b2b07ec))
+
+### Features
+
+- Ship the tray in the .deb with a desktop launcher
+  ([`b5d5d1e`](https://github.com/dannyadair/timeglance/commit/b5d5d1e5227888bbc4bf921c55b3e38c5daf7a69))
+
+
 ## v3.0.0 (2026-10-11)
 
 ### Bug Fixes
