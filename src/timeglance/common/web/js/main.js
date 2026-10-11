@@ -90,6 +90,7 @@ const overlayToggle = (view) => () => {
 };
 $("#schedBtn").onclick = overlayToggle("schedule");
 $("#logBtn").onclick = overlayToggle("log");
+$(".brand").onclick = () => selectView("preview");
 
 // The embedded browser doesn't reliably toggle a checkbox on click, so rows carry
 // data-toggle and their children are pointer-events:none: every click lands on the

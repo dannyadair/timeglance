@@ -12,7 +12,7 @@
   body { margin: 0; font-family: "Noto Sans", system-ui, sans-serif; color: #1b1b1b; background: #fafafa; }
   header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
            padding: 8px 16px; border-bottom: 1px solid var(--bd); background: #fff; }
-  header .brand { font-weight: 700; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; }
+  header .brand { font-weight: 700; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; cursor: pointer; }
   header .brand img { width: 22px; height: 22px; border-radius: 5px; display: block; }
   .seg { display: inline-flex; border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; }
   .seg button { border: none; border-radius: 0; background: #fff; padding: 5px 12px; }
@@ -34,6 +34,7 @@
   aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin: 4px 0 8px; }
   .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
   .row label, .modal .scr label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; }
+  aside .row label { white-space: nowrap; }
   .row .sw { width: 13px; height: 13px; border-radius: 3px; flex: none; }
   [data-toggle] { cursor: pointer; }
   [data-toggle] * { pointer-events: none; }
@@ -64,8 +65,9 @@
   .sched { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
   .sched-head h1 { font-size: 18px; margin: 0 0 2px; }
   .sched-head p { font-size: 13px; color: var(--mut); margin: 0; }
-  .sched-status { font-size: 13px; padding: 8px 11px; border-radius: 6px; color: var(--mut);
-       border: 1px solid var(--bd); background: #f7f8fa; }
+  .sched-status { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 8px 11px;
+       border-radius: 6px; color: var(--mut); border: 1px solid var(--bd); background: #f7f8fa; }
+  .sched-status span { flex: 1; }
   .sched-status.on { color: #2E7D32; border-color: #bfe0c0; background: #f1f8f1; }
   .sched .card { border: 1px solid var(--bd); border-radius: 8px; background: #fff; padding: 14px 16px; }
   .sched pre { background: #0f1116; color: #d7dbe0; padding: 12px; border-radius: 8px; overflow: auto;
