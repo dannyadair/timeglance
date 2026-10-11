@@ -88,7 +88,7 @@ jobs:
           ref: ${{ needs.release.outputs.version }}
       - name: Install the Debian build tooling
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends
-          dpkg-dev debhelper dh-python pybuild-plugin-pyproject python3-hatchling python3-all
+          build-essential dpkg-dev debhelper dh-python pybuild-plugin-pyproject python3-hatchling python3-all
       - name: Stamp the released version into debian/changelog
         run: sed -i "1s/^timeglance (.*)/timeglance ($VERSION)/" debian/changelog
       - name: Build the package
