@@ -46,6 +46,11 @@ export function buildControls() {
     );
   } else {
     controls.append(
+      grp("Theme", `<select id="c_theme">${opt(m.themes, m.theme)}</select>`),
+      grp(
+        "Layout",
+        `<select id="c_layout">${opt(m.layouts, m.layout)}</select>`,
+      ),
       grp("Paper", `<select id="c_paper">${opt(m.papers, m.paper)}</select>`),
     );
   }

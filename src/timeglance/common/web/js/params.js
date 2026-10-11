@@ -18,6 +18,8 @@ export function params() {
     if ($("#c_end").value) p.set("end", $("#c_end").value);
     if ($("#c_size").value) p.set("size", $("#c_size").value);
   } else {
+    p.set("theme", $("#c_theme").value);
+    p.set("layout", $("#c_layout").value);
     p.set("paper", $("#c_paper").value);
   }
   return p;

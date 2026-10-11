@@ -55,17 +55,17 @@ def test_cli_only_and_hide_toggle_layer_visibility():
 
 
 def test_resolve_list_and_pick():
-    """resolve_list and _pick apply CLI > YAML > fallback and validate against allowed values."""
+    """resolve_list and pick apply CLI > YAML > fallback and validate against allowed values."""
     assert ybuild.resolve_list(None, None, ["x", "y"]) == ["x", "y"]
     assert ybuild.resolve_list("x", None, ["x", "y"]) == ["x"]
     assert ybuild.resolve_list(None, "y,x", ["x", "y"]) == ["y", "x"]
     with pytest.raises(SystemExit):
         ybuild.resolve_list("bad", None, ["x", "y"])
 
-    assert ybuild._pick("dark", "light", "light", ["light", "dark"], "theme") == "dark"
-    assert ybuild._pick(None, "dark", "light", ["light", "dark"], "theme") == "dark"
-    assert ybuild._pick(None, None, "light", ["light", "dark"], "theme") == "light"
-    assert ybuild._pick("a,b", "dark", "light", ["light", "dark"], "theme") == "dark"  # multi-CLI ignored
+    assert ybuild.pick("dark", "light", "light", ["light", "dark"], "theme") == "dark"
+    assert ybuild.pick(None, "dark", "light", ["light", "dark"], "theme") == "dark"
+    assert ybuild.pick(None, None, "light", ["light", "dark"], "theme") == "light"
+    assert ybuild.pick("a,b", "dark", "light", ["light", "dark"], "theme") == "dark"  # multi-CLI ignored
 
 
 # ---- reset-to-template backup ----
