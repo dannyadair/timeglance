@@ -29,6 +29,15 @@ def load(path):
     return yaml.safe_load(Path(path).read_text())
 
 
+def _country_holidays(country, subdiv, years):
+    """Public-holiday calendar for the given years. `country_holidays`/`subdiv` arrived in a
+    later `holidays`; on older ones (e.g. Ubuntu 24.04's 0.10) fall back to `CountryHoliday`,
+    which only knows the national set - any `subdiv` is dropped there."""
+    if hasattr(holidays_lib, "country_holidays"):
+        return holidays_lib.country_holidays(country, subdiv=subdiv, years=years)
+    return holidays_lib.CountryHoliday(country, years=years)
+
+
 def add_holidays(raw):
     """Expand a `holidays:` block into single-day events for every year in the range."""
     spec = raw.get("holidays")
@@ -36,7 +45,7 @@ def add_holidays(raw):
         return None
     start, end = render.resolve_range(raw, dt.date.today())
     years = list(range(start[0], end[0] + 1))
-    cal = holidays_lib.country_holidays(spec["country"], subdiv=spec.get("subdiv"), years=years)
+    cal = _country_holidays(spec["country"], spec.get("subdiv"), years)
     keep_observed = spec.get("observed", True)
     layer = spec.get("layer", "holidays")
     n = 0

@@ -6,6 +6,6 @@ Comment=A weekly routine sheet and a year-at-a-glance planner
 Exec=timeglance tray
 Icon=timeglance
 Terminal=false
-Categories=Utility;Office;Calendar;
+Categories=Utility;
 Keywords=planner;calendar;schedule;routine;wallpaper;
 StartupNotify=false

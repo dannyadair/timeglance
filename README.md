@@ -50,11 +50,11 @@ first Linux user), so it just works for most; if your uid differs, run `UID=$(id
 ## Install (Ubuntu/Debian)
 
 The simplest way on a Debian-based desktop. Grab the `.deb` from the
-[latest release](https://github.com/dannyadair/timeglance/releases/latest) and install it - `apt` pulls the native
-libraries (Cairo, Pango, GDK-PixBuf, fonts) for you:
+[latest release](https://github.com/dannyadair/timeglance/releases/latest) and install it - `apt` pulls every
+dependency (the Python libraries, poppler, native Cairo/Pango stack, tray AppIndicator, fonts) from your distro:
 
 ```sh
-sudo apt install ./timeglance_<version>_amd64.deb
+sudo apt install ./timeglance_<version>_all.deb
 ```
 
 Then launch **timeglance** from your applications menu - the tray icon appears and opens the control panel, no
@@ -65,17 +65,18 @@ timeglance init     # scaffold year/ + weekly/ config.yaml from the templates
 timeglance serve    # the control panel at http://localhost:8753
 ```
 
-A self-contained install under `/opt/timeglance` using the system Python. Built for Ubuntu 24.04 / Debian 13
-(Python 3.12); remove with `sudo apt remove timeglance`.
+A pure-Python install under `/usr/lib/python3/dist-packages` run by your system Python, with every dependency
+satisfied by your distro's own apt packages. CI builds and install-tests the `.deb` on Ubuntu 24.04, 25.10 and
+26.04; other recent releases may work. Remove with `sudo apt remove timeglance`.
 
 ## Install (Python/uv)
 
 Needs Python 3.12+ and [uv](https://docs.astral.sh/uv/). WeasyPrint and CairoSVG load native libraries (Cairo, Pango,
-GDK-PixBuf) at runtime; most Linux desktops already have these, but on a minimal or server install add them first
-(Debian/Ubuntu):
+GDK-PixBuf) at runtime, and the wallpaper feature rasterizes the sheet with poppler's `pdftocairo`; most Linux desktops
+already have these, but on a minimal or server install add them first (Debian/Ubuntu):
 
 ```sh
-sudo apt-get install libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0
+sudo apt-get install libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 poppler-utils
 uv sync
 uv run timeglance init      # scaffold year/ + weekly/ config.yaml from the templates
 uv run timeglance serve     # the control panel at http://localhost:8753

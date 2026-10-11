@@ -7,10 +7,11 @@ Theme and layout may be a comma list or omitted (omitted = render all variants).
 
 import argparse
 import datetime as dt
+import subprocess
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
-import pypdfium2 as pdfium
 import yaml
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image, ImageDraw, ImageFilter
@@ -197,12 +198,21 @@ def resolve_shadow(wp):
     return {**SHADOW_DEFAULTS, **spec}
 
 
+def _pdf_page_size(pdf_path):
+    """(width, height) of the PDF's first page in points, via poppler's `pdfinfo`."""
+    out = subprocess.run(["pdfinfo", str(pdf_path)], capture_output=True, text=True, check=True).stdout
+    size = next(line for line in out.splitlines() if line.startswith("Page size:")).split()
+    return float(size[2]), float(size[4])
+
+
 def make_wallpaper_renderer(pdf_bytes, background, margin, shadow):
     """render_png(screen, path): the page-shaped sheet centred on a `background` canvas at
     the screen's current resolution, with `margin` (fraction of the short edge) kept clear
     and an optional soft drop shadow so it reads as a page sitting on the desk."""
-    page = pdfium.PdfDocument(pdf_bytes)[0]
-    pt_w, pt_h = page.get_size()
+    tmp = Path(tempfile.mkdtemp(prefix="timeglance-wp-"))
+    pdf_path = tmp / "sheet.pdf"
+    pdf_path.write_bytes(pdf_bytes)
+    pt_w, pt_h = _pdf_page_size(pdf_path)
 
     def render_png(scr, path):
         """Render the sheet onto a screen-sized canvas and save it as a PNG."""
@@ -210,7 +220,22 @@ def make_wallpaper_renderer(pdf_bytes, background, margin, shadow):
         pad = round(short * margin)
         w, h = _fit(pt_w, pt_h, scr.pw - 2 * pad, scr.ph - 2 * pad)
         x, y = (scr.pw - w) // 2, (scr.ph - h) // 2
-        sheet = page.render(scale=h / pt_h).to_pil().convert("RGB").resize((w, h))
+        sheet_stem = tmp / "page"
+        subprocess.run(
+            [
+                "pdftocairo",
+                "-png",
+                "-singlefile",
+                "-scale-to-x",
+                str(w),
+                "-scale-to-y",
+                str(h),
+                str(pdf_path),
+                str(sheet_stem),
+            ],
+            check=True,
+        )
+        sheet = Image.open(sheet_stem.with_suffix(".png")).convert("RGB")
         canvas = Image.new("RGB", (scr.pw, scr.ph), background)
         if shadow:
             off = round(short * shadow["offset"])

@@ -67,48 +67,72 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  # Build a Debian package and attach it to the GitHub Release. The package is a self-contained
-  # venv under /opt/timeglance plus a /usr/bin/timeglance launcher, built inside an ubuntu:24.04
-  # container so the venv targets that distro's system python3 (what the package Depends on) and
-  # the native WeasyPrint/CairoSVG libraries resolve the same way they do at install time. It is
-  # smoke-tested in a fresh container (install, init, render) before upload, so a broken Depends
-  # list can never ship. Gated on an actual release, like publish.
-  deb:
+  # Build a Debian package: the pure-Python timeglance under /usr/lib/python3/dist-packages
+  # plus a /usr/bin/timeglance launcher, run by the distro's own python3 with every dependency
+  # satisfied by apt packages (Depends:). It is Architecture: all - no bundled interpreter,
+  # venv or wheels - so apt matches each dependency's C extensions to whatever python the target
+  # ships. Gated on an actual release, like publish.
+  deb-build:
     name: Build .deb
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write # upload the asset to the release
     env:
       VERSION: ${{ needs.release.outputs.version }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.release.outputs.version }}
-      - uses: actions/setup-python@v7
+      - name: Build the .deb
+        run: bash packaging/build-deb.sh "$VERSION"
+      - uses: actions/upload-artifact@v4
         with:
-          python-version: "3.12"
-      - name: Build the wheel
-        run: pip install uv && uv build --wheel
-      - name: Build the .deb in a clean ubuntu:24.04
+          name: deb
+          path: timeglance_${{ env.VERSION }}_all.deb
+
+  # Install the .deb in a fresh container of each supported distro (apt resolves the Depends from
+  # that distro's archive) and smoke-test it - the import that used to crash, the CLI, both renders
+  # and the poppler wallpaper rasterisation - so a broken package can never reach the Release. The
+  # matrix is the set of distros we actually confirm; newer releases are a free bonus.
+  deb-test:
+    name: Test .deb
+    needs: [release, deb-build]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:24.04", "ubuntu:25.10", "ubuntu:26.04"]
+    env:
+      VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.version }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb
+      - name: Install and smoke-test in ${{ matrix.image }}
         run: |
-          docker run --rm -v "$PWD:/w" -w /w ubuntu:24.04 bash -euc '
+          docker run --rm -v "$PWD:/w" -w /w -e DEBIAN_FRONTEND=noninteractive ${{ matrix.image }} bash -euc '
             apt-get update -qq
-            apt-get install -y -qq --no-install-recommends python3 python3-venv ca-certificates
-            bash packaging/build-deb.sh "'"$VERSION"'" "$(ls dist/timeglance-*.whl)"
+            apt-get install -y -qq "./timeglance_'"$VERSION"'_all.deb"
+            bash packaging/smoke-deb.sh
           '
-      - name: Smoke-test the .deb in a fresh container
-        run: |
-          docker run --rm -v "$PWD:/w" -w /w ubuntu:24.04 bash -euc '
-            apt-get update -qq
-            apt-get install -y -qq "./timeglance_'"$VERSION"'_amd64.deb"
-            export TIMEGLANCE_HOME=/tmp/tg
-            timeglance init
-            timeglance render year
-            timeglance render weekly --format pdf
-          '
+
+  # Attach the .deb to the GitHub Release only after every distro passed its install-test.
+  deb-release:
+    name: Attach .deb
+    needs: [release, deb-test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # upload the asset to the release
+    env:
+      VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb
       - name: Attach the .deb to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$VERSION" "timeglance_${VERSION}_amd64.deb" --clobber
+        run: gh release upload "$VERSION" "timeglance_${VERSION}_all.deb" --clobber

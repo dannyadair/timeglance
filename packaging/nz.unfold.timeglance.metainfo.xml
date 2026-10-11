@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>nz.unfold.timeglance</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>timeglance</name>
+  <summary>A printable weekly routine sheet and a year-at-a-glance planner</summary>
+  <description>
+    <p>
+      timeglance renders two config-driven planners from a simple YAML schedule: a printable
+      weekly routine sheet and a year-at-a-glance calendar, each to PDF, PNG and SVG.
+    </p>
+    <p>
+      A web control panel ties them together with live previews, and on KDE Plasma it can set
+      the rendered sheet as a per-screen desktop wallpaper. The system tray controller runs the
+      control panel and the scheduled render in the background.
+    </p>
+  </description>
+  <developer id="nz.unfold">
+    <name>Danny W. Adair</name>
+  </developer>
+  <launchable type="desktop-id">timeglance.desktop</launchable>
+  <url type="homepage">https://github.com/dannyadair/timeglance</url>
+  <url type="bugtracker">https://github.com/dannyadair/timeglance/issues</url>
+  <content_rating type="oars-1.1" />
+</component>

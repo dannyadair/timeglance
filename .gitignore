@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 dist/
 state/
+*.deb
 
 # Render artifacts from the committed demo project (docs/demo); only its config.yaml is tracked
 docs/demo/*/out/
