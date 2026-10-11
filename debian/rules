@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+export PYBUILD_NAME=timeglance
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+# The test suite needs pytest and the runtime deps (which are Depends, not
+# Build-Depends); it runs in CI, not during the package build.
+override_dh_auto_test:
+
+# pybuild installs the package and the `timeglance` console script; add the
+# desktop entry, scalable icon and AppStream metainfo (not part of the wheel).
+execute_after_dh_auto_install:
+	install -D -m644 debian/timeglance.desktop \
+		debian/timeglance/usr/share/applications/timeglance.desktop
+	install -D -m644 src/timeglance/common/web/favicon.svg \
+		debian/timeglance/usr/share/icons/hicolor/scalable/apps/timeglance.svg
+	install -D -m644 debian/nz.unfold.timeglance.metainfo.xml \
+		debian/timeglance/usr/share/metainfo/nz.unfold.timeglance.metainfo.xml

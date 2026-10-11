@@ -69,8 +69,9 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  # Build a Debian package: the pure-Python timeglance under /usr/lib/python3/dist-packages
-  # plus a /usr/bin/timeglance launcher, run by the distro's own python3 with every dependency
+  # Build a proper Debian source package with debhelper + dh-python (pybuild), producing the
+  # pure-Python timeglance under /usr/lib/python3/dist-packages plus the wheel's own
+  # /usr/bin/timeglance console script, run by the distro's python3 with every dependency
   # satisfied by apt packages (Depends:). It is Architecture: all - no bundled interpreter,
   # venv or wheels - so apt matches each dependency's C extensions to whatever python the target
   # ships. Gated on an actual release, like publish.
@@ -85,8 +86,15 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.release.outputs.version }}
-      - name: Build the .deb
-        run: bash packaging/build-deb.sh "$VERSION"
+      - name: Install the Debian build tooling
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends
+          dpkg-dev debhelper dh-python pybuild-plugin-pyproject python3-hatchling python3-all
+      - name: Stamp the released version into debian/changelog
+        run: sed -i "1s/^timeglance (.*)/timeglance ($VERSION)/" debian/changelog
+      - name: Build the package
+        run: dpkg-buildpackage -us -uc -b
+      - name: Collect the artifact
+        run: mv "../timeglance_${VERSION}_all.deb" .
       - uses: actions/upload-artifact@v4
         with:
           name: deb
@@ -118,7 +126,7 @@ jobs:
           docker run --rm -v "$PWD:/w" -w /w -e DEBIAN_FRONTEND=noninteractive ${{ matrix.image }} bash -euc '
             apt-get update -qq
             apt-get install -y -qq "./timeglance_'"$VERSION"'_all.deb"
-            bash packaging/smoke-deb.sh
+            bash debian/tests/smoke
           '
 
   # Attach the .deb to the GitHub Release only after every distro passed its install-test.
