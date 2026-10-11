@@ -93,19 +93,20 @@ lingering: `loginctl enable-linger $USER`.
 ### Tray controller (optional)
 
 A system-tray menu to open the panel and flip the schedule - a launcher and quick toggles, _not_ the scheduler (the
-timer above keeps running whether or not the tray is open):
+timer above keeps running whether or not the tray is open).
 
-```sh
-pipx install 'timeglance[tray]'   # or: uv sync --extra tray
-timeglance tray
-```
-
-On KDE the tray backend also needs the system AppIndicator/GObject libraries, which pipx must be allowed to see:
+Everything else here runs from the source checkout as `uv run timeglance …`. The tray is the one piece worth
+installing system-wide: its KDE backend needs the system AppIndicator/GObject libraries a uv venv can't reach, and
+`pipx` also puts a bare `timeglance` on your `PATH`:
 
 ```sh
 sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
 pipx install --system-site-packages 'timeglance[tray]'
+timeglance tray
 ```
+
+(From a source checkout it's `uv sync --extra tray` then `uv run timeglance tray`, but on Plasma the icon may not
+appear without the system libraries above.)
 
 The menu opens the control panel (starting the server first if needed), starts/stops it, picks the port, and toggles
 the schedule: enabled, time, which planners render, and which set the wallpaper. **Autostart** adds an XDG
