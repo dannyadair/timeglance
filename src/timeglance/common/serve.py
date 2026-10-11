@@ -21,7 +21,7 @@ import yaml
 from timeglance import init, service
 from timeglance.common import schedule, wallpaper
 from timeglance.common.config import read_config, reset_config, write_config
-from timeglance.common.format import human_size
+from timeglance.common.format import png_size
 from timeglance.common.log import LOG
 from timeglance.common.scheduler import SCHED
 from timeglance.planners import PLANNERS
@@ -93,8 +93,8 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/export":
                 planner = self._planner(p)
                 ctype, fname, body = planner.export(p)
-                fmt = fname.rsplit(".", 1)[-1].upper()
-                LOG.log(planner.name, f"exported {fname} ({fmt}, {human_size(len(body))})")
+                detail = f" ({png_size(body)})" if ctype == "image/png" else ""
+                LOG.log(planner.name, f"exported {fname}{detail}")
                 self._send(200, ctype, body, {"Content-Disposition": f'inline; filename="{fname}"'})
             elif u.path == "/api/schedule":
                 self._json(self._sched_status())
