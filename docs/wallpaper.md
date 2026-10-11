@@ -21,7 +21,7 @@ that was disconnected at render time still picks up the fresh image when it reco
 its path and reloads from disk. Plasma's `org.kde.image` otherwise only reloads when the image config string
 changes, so each apply appends a throwaway `#<stamp>` fragment to the `file://` path - that changes the string
 (forcing a reload) while Qt strips the fragment and loads the same file. Configure defaults under `wallpaper:`
-in each YAML (`screens`, `fill`, `background`/`margin`/`shadow` for weekly, `theme`/`layout` for year).
+in each YAML (`screens`, `fill`; `background`/`margin`/`shadow` for weekly; `theme`/`layout` for both).
 
 Setting the wallpaper needs a live Plasma session, so it isn't available inside the
 [Docker test drive](../README.md#try-it-instantly-docker).
