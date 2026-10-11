@@ -40,13 +40,15 @@ jobs:
           github_token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
   # Publish to PyPI only when a release was actually cut (gated on the action's structured
-  # `released` output, never log-grepping). It runs in the `pypi` environment, so the OIDC
-  # token - and thus publishing rights - is scoped to this job rather than the whole workflow.
-  # Trusted publishing means no API token, and gh-action-pypi-publish attaches sigstore
-  # attestations by default. Dormant until the first release (1.0.0) is cut.
+  # `released` output, never log-grepping) AND the .deb installed and smoke-tested cleanly on
+  # every target distro - PyPI uploads are irreversible, so they wait on the strongest end-to-end
+  # check we have (the same code, imported and rendering on real 3.12/3.13/3.14). It runs in the
+  # `pypi` environment, so the OIDC token - and thus publishing rights - is scoped to this job
+  # rather than the whole workflow. Trusted publishing means no API token, and
+  # gh-action-pypi-publish attaches sigstore attestations by default.
   publish:
     name: Publish to PyPI
-    needs: release
+    needs: [release, deb-test]
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-24.04
     environment:
@@ -135,4 +137,5 @@ jobs:
       - name: Attach the .deb to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }} # no checkout here, so point gh at the repo explicitly
         run: gh release upload "$VERSION" "timeglance_${VERSION}_all.deb" --clobber
