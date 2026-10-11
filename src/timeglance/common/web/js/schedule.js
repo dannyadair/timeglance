@@ -15,7 +15,7 @@ export async function showSchedule() {
     el(
       "div",
       { className: "sched-head" },
-      "<h1>Schedule</h1><p>Re-render each planner to disk daily - and, per planner, set it as the desktop wallpaper.</p>",
+      "<h1>Schedule</h1><p>A daily re-render to disk, optionally set as the wallpaper.</p>",
     ),
   );
 
@@ -25,12 +25,21 @@ export async function showSchedule() {
     : s.systemd
       ? "The schedule only runs while the timeglance server is running. Install it as a service to run without it."
       : "The schedule only runs while the timeglance server is running.";
+  const statusBox = el("div", {
+    className: "sched-status" + (s.installed ? " on" : ""),
+  });
+  statusBox.append(el("span", {}, statusText));
+  if (s.systemd) {
+    const svc = el(
+      "button",
+      {},
+      s.installed ? "Uninstall" : "Install as service",
+    );
+    svc.onclick = () => post(s.installed ? "uninstall" : "install");
+    statusBox.append(svc);
+  }
   card.append(
-    el(
-      "div",
-      { className: "sched-status" + (s.installed ? " on" : "") },
-      statusText,
-    ),
+    statusBox,
     el(
       "div",
       { className: "grp", style: "margin:12px 0" },
@@ -83,16 +92,17 @@ export async function showSchedule() {
           : sc.connected
             ? chosen.length === 0 || chosen.includes(sc.name)
             : chosen.includes(sc.name);
-        const note = !seen
-          ? ' <span class="off">· in config, never seen</span>'
-          : sc.connected
-            ? ""
-            : ` <span class="off">· offline, seen ${sc.last_seen}</span>`;
+        const model =
+          sc.model ||
+          (/^(eDP|LVDS)/i.test(sc.name) ? "Built-in display" : sc.name);
+        const detail = !seen
+          ? `${sc.name} · in config, never seen`
+          : `${sc.name} · ${sc.w}×${sc.h}${sc.primary ? " · primary" : sc.connected ? "" : ` · offline, seen ${sc.last_seen}`}`;
         const opt = el("span", { className: "schd-scr-opt" });
         const toggle = el(
           "span",
           {},
-          `<input type="checkbox" class="schd-scr" data-planner="${name}" value="${sc.name}" ${on ? "checked" : ""}><label>${sc.model || sc.name}${note}</label>`,
+          `<input type="checkbox" class="schd-scr" data-planner="${name}" value="${sc.name}" ${on ? "checked" : ""}><label>${model} <span class="off">${detail}</span></label>`,
         );
         toggle.dataset.toggle = `scr_${name}_${sc.name}`;
         toggle.querySelector("input").id = `scr_${name}_${sc.name}`;
@@ -153,17 +163,8 @@ export async function showSchedule() {
 
   const bar = el("div", { className: "grp", style: "margin-top:14px" });
   const save = el("button", { className: "primary" }, "Save");
-  const runNow = el("button", {}, "Render now");
+  const runNow = el("button", {}, "Run now");
   bar.append(save, runNow);
-  if (s.systemd) {
-    const svc = el(
-      "button",
-      {},
-      s.installed ? "Uninstall service" : "Install as service",
-    );
-    svc.onclick = () => post(s.installed ? "uninstall" : "install");
-    bar.append(svc);
-  }
   bar.append(
     el(
       "span",
@@ -204,7 +205,7 @@ export async function showSchedule() {
   };
   const done = {
     save: "schedule saved",
-    run: "rendering now",
+    run: "ran once",
     install: "installed as a service",
     uninstall: "service removed",
   };
