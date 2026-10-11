@@ -66,3 +66,49 @@ jobs:
         run: pip install uv && uv build
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  # Build a Debian package and attach it to the GitHub Release. The package is a self-contained
+  # venv under /opt/timeglance plus a /usr/bin/timeglance launcher, built inside an ubuntu:24.04
+  # container so the venv targets that distro's system python3 (what the package Depends on) and
+  # the native WeasyPrint/CairoSVG libraries resolve the same way they do at install time. It is
+  # smoke-tested in a fresh container (install, init, render) before upload, so a broken Depends
+  # list can never ship. Gated on an actual release, like publish.
+  deb:
+    name: Build .deb
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # upload the asset to the release
+    env:
+      VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.version }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Build the wheel
+        run: pip install uv && uv build --wheel
+      - name: Build the .deb in a clean ubuntu:24.04
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w ubuntu:24.04 bash -euc '
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends python3 python3-venv ca-certificates
+            bash packaging/build-deb.sh "'"$VERSION"'" "$(ls dist/timeglance-*.whl)"
+          '
+      - name: Smoke-test the .deb in a fresh container
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w ubuntu:24.04 bash -euc '
+            apt-get update -qq
+            apt-get install -y -qq "./timeglance_'"$VERSION"'_amd64.deb"
+            export TIMEGLANCE_HOME=/tmp/tg
+            timeglance init
+            timeglance render year
+            timeglance render weekly --format pdf
+          '
+      - name: Attach the .deb to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$VERSION" "timeglance_${VERSION}_amd64.deb" --clobber
