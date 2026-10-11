@@ -47,7 +47,27 @@ Config, outputs and scheduler state are bind-mounted under `./year`, `./weekly` 
 files on your host. Outputs are written as your host user — the compose file defaults to `1000:1000` (the usual
 first Linux user), so it just works for most; if your uid differs, run `UID=$(id -u) GID=$(id -g) docker compose up`.
 
-## Install (local)
+## Install (Ubuntu/Debian)
+
+The simplest way on a Debian-based desktop. Grab the `.deb` from the
+[latest release](https://github.com/dannyadair/timeglance/releases/latest) and install it - `apt` pulls the native
+libraries (Cairo, Pango, GDK-PixBuf, fonts) for you:
+
+```sh
+sudo apt install ./timeglance_<version>_amd64.deb
+```
+
+That puts `timeglance` on your `PATH` - a self-contained install under `/opt/timeglance` using the system Python.
+Scaffold the configs and open the panel:
+
+```sh
+timeglance init     # scaffold year/ + weekly/ config.yaml from the templates
+timeglance serve    # the control panel at http://localhost:8753
+```
+
+Built for Ubuntu 24.04 / Debian 13 (Python 3.12); remove with `sudo apt remove timeglance`.
+
+## Install (Python/uv)
 
 Needs Python 3.12+ and [uv](https://docs.astral.sh/uv/). WeasyPrint and CairoSVG load native libraries (Cairo, Pango,
 GDK-PixBuf) at runtime; most Linux desktops already have these, but on a minimal or server install add them first
@@ -71,33 +91,32 @@ uv run timeglance render year --theme light --layout vertical   # render the yea
 uv run timeglance render weekly --format both                   # render the weekly sheet
 ```
 
-### Set and forget (systemd timer)
+## Set and forget (systemd timer)
 
 To re-render (and optionally re-wallpaper) on a schedule with nothing running and nothing to start after a reboot:
 
 ```sh
-uv run timeglance install              # write a user service + timer and enable it now
-uv run timeglance install --time 06:30 # or pick the time (default: schedule.yaml's)
-uv run timeglance uninstall            # remove it
+timeglance install              # write a user service + timer and enable it now
+timeglance install --time 06:30 # or pick the time (default: schedule.yaml's)
+timeglance uninstall            # remove it
 ```
 
-This drops `timeglance-render.service` (a oneshot that runs `timeglance run`, honouring your `schedule.yaml`) and
-`timeglance-render.timer` into `~/.config/systemd/user/`, then enables the timer. `Persistent=true` means a run
-missed while the machine was off happens on the next boot. Change the time by re-running
-`uv run timeglance install --time HH:MM`.
+(From a source checkout, prefix these with `uv run`.) This drops `timeglance-render.service` (a oneshot that runs
+`timeglance run`, honouring your `schedule.yaml`) and `timeglance-render.timer` into `~/.config/systemd/user/`, then
+enables the timer. `Persistent=true` means a run missed while the machine was off happens on the next boot. Change
+the time by re-running `timeglance install --time HH:MM`.
 
 Setting the Plasma wallpaper needs an active graphical session, so a render while you're fully logged out writes the
 files but can't paint - it repaints on your next session. For renders while logged out (no wallpaper), enable
 lingering: `loginctl enable-linger $USER`.
 
-### Tray controller (optional)
+## Tray controller (optional)
 
 A system-tray menu to open the panel and flip the schedule - a launcher and quick toggles, _not_ the scheduler (the
 timer above keeps running whether or not the tray is open).
 
-Everything else here runs from the source checkout as `uv run timeglance …`. The tray is the one piece worth
-installing system-wide: its KDE backend needs the system AppIndicator/GObject libraries a uv venv can't reach, and
-`pipx` also puts a bare `timeglance` on your `PATH`:
+The tray isn't in the `.deb`: its KDE backend needs the system AppIndicator/GObject libraries, so install it with
+`pipx` (allowed to see system packages):
 
 ```sh
 sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
