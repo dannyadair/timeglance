@@ -11,6 +11,8 @@ subtitle: At a glance
 
 paper: A4    # A4 | A3 (landscape)   - override per-run with --paper
 format: pdf  # pdf | html | both     - override per-run with --format
+# theme: light     # light | dark | comma list      - --theme; comment out -> render all
+# layout: vertical # vertical (days as columns, default) | horizontal (days as rows) - --layout; omit -> all
 
 days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
 day_start: "06:00"

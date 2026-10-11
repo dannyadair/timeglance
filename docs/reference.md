@@ -13,19 +13,22 @@ the root, state and cache beneath it), the layout Docker and the dev loop use.
 
 ## Weekly - `timeglance render weekly` (or `python -m timeglance.weekly.build`)
 
-| Flag           | YAML       | Values / default                  | Notes                                             |
-| -------------- | ---------- | --------------------------------- | ------------------------------------------------- |
-| `--paper`      | `paper`    | `A4` \| `A3` (default `A4`)       | Landscape page size; sets the timeline height.    |
-| `--format`     | `format`   | `pdf` \| `html` \| `both` (`pdf`) | `both` writes `weekly.pdf` **and** `weekly.html`. |
-| `--only IDS`   | -          | comma list of topic ids           | Show only these topics.                           |
-| `--hide TOPIC` | `visible:` | repeatable                        | Hide a topic id (adds to YAML defaults).          |
-| `--wallpaper`  | -          | flag                              | Set the sheet as the desktop wallpaper.           |
+| Flag           | YAML       | Values / default                                           | Notes                                              |
+| -------------- | ---------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| `--theme`      | `theme`    | `light` \| `dark` \| comma; omit → all                     | One value → single variant; omitted → render both. |
+| `--layout`     | `layout`   | `vertical` (default) \| `horizontal` \| comma; omit → both | Orientation: days as columns vs rows.              |
+| `--paper`      | `paper`    | `A4` \| `A3` (default `A4`)                                | Landscape page size; sets the timeline height.     |
+| `--format`     | `format`   | `pdf` \| `html` \| `both` (`pdf`)                          | `both` writes `weekly.pdf` **and** `weekly.html`.  |
+| `--only IDS`   | -          | comma list of topic ids                                    | Show only these topics.                            |
+| `--hide TOPIC` | `visible:` | repeatable                                                 | Hide a topic id (adds to YAML defaults).           |
+| `--wallpaper`  | -          | flag                                                       | Set the sheet as the desktop wallpaper.            |
 
 **`weekly/config.yaml`**
 
 | Key                    | Type / values                             | Meaning                                                                                              |
 | ---------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `title`, `subtitle`    | string                                    | Header text.                                                                                         |
+| `theme`, `layout`      | see flags above                           | Light/dark palette and orientation (days as columns vs rows); omit to render all.                    |
 | `paper`                | `A4` \| `A3` (default `A4`)               | Page size (landscape).                                                                               |
 | `format`               | `pdf` \| `html` \| `both` (default `pdf`) | Output(s) written to `out/`.                                                                         |
 | `days`                 | list, e.g. `[Mon, …, Sun]`                | Columns, in order.                                                                                   |

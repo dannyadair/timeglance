@@ -110,3 +110,26 @@ def test_render_highlights_today_only_when_in_days():
     }
     assert 'class="lane today"' in wbuild.render(cfg, None, "A4", today="Tue")
     assert 'class="lane today"' not in wbuild.render(cfg, None, "A4", today="Sun")
+
+
+def test_render_applies_theme_and_layout():
+    """Theme feeds the CSS palette and layout flips the sheet between day-columns and day-rows."""
+    cfg = {
+        "title": "T",
+        "days": ["Mon", "Tue"],
+        "day_start": "08:00",
+        "day_end": "18:00",
+        "topics": {"a": {"label": "A", "color": "#111", "visible": True}},
+        "activities": [{"topic": "a", "days": ["Mon"], "start": "09:00", "end": "10:00"}],
+    }
+    dark = wbuild.render(cfg, None, "A4", theme="dark", layout="horizontal")
+    assert wbuild.WEEKLY_THEMES["dark"]["bg"] in dark
+    assert "time running left to right" in dark
+
+    light = wbuild.render(cfg, None, "A4", theme="light", layout="vertical")
+    assert wbuild.WEEKLY_THEMES["light"]["bg"] in light
+    assert "time running top to bottom" in light
+
+    for layout in wbuild.ALL_LAYOUTS:
+        for theme in wbuild.ALL_THEMES:
+            assert wbuild.render_pdf(cfg, None, "A4", theme=theme, layout=layout)

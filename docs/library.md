@@ -32,6 +32,7 @@ pdf = build.render_pdf(cfg, None, "A4")  # -> PDF bytes
 ```
 
 The second argument to `render`/`render_pdf` is `hide` - an iterable of topic ids to hide, or `None` to honour
-the YAML `visible:` defaults. No network is used unless the year config has URL `sources:` (a `holidays:` block is
+the YAML `visible:` defaults; the `theme` (`light`/`dark`) and `layout` (`vertical`/`horizontal`) keyword args pick
+the palette and orientation (default `light`/`vertical`). No network is used unless the year config has URL `sources:` (a `holidays:` block is
 computed locally). Setting the desktop wallpaper lives in `timeglance.common.wallpaper` (KDE Plasma only; see
 [Wallpaper](wallpaper.md)).
