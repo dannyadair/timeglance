@@ -1,0 +1,37 @@
+Source: timeglance
+Section: utils
+Priority: optional
+Maintainer: Danny W. Adair <danny.adair@unfold.nz>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               pybuild-plugin-pyproject,
+               python3-all,
+               python3-hatchling
+Standards-Version: 4.7.0
+Homepage: https://github.com/dannyadair/timeglance
+Rules-Requires-Root: no
+
+Package: timeglance
+Architecture: all
+Depends: ${python3:Depends},
+         ${misc:Depends},
+         python3-yaml,
+         python3-jinja2,
+         weasyprint,
+         python3-cairosvg,
+         python3-dateutil,
+         python3-icalendar,
+         python3-recurring-ical-events,
+         python3-holidays,
+         python3-pil,
+         python3-pystray,
+         python3-gi,
+         gir1.2-ayatanaappindicator3-0.1,
+         poppler-utils,
+         fonts-dejavu-core,
+         fonts-noto-core
+Description: printable weekly routine sheet and year-at-a-glance planner
+ A config-driven weekly routine sheet, a year-at-a-glance planner and a web
+ control panel, with KDE Plasma desktop-wallpaper rendering. Both planners
+ render from a simple YAML schedule to PDF, PNG and SVG; the weekly sheet can
+ also be set as a per-screen desktop wallpaper on KDE Plasma.

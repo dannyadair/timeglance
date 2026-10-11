@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Smoke-test an installed timeglance .deb: the import that used to crash, the CLI,
-# both renders, and the poppler-backed wallpaper rasterisation. Run in a fresh
-# container after `apt-get install ./timeglance_*.deb` (which pulls the Depends).
+# Smoke-test an installed timeglance: the import that used to crash, the CLI, both
+# renders, and the poppler-backed wallpaper rasterisation. Runs as an autopkgtest
+# (debian/tests) and is invoked directly in CI after installing the built .deb.
 set -euo pipefail
 
-export TIMEGLANCE_HOME="$(mktemp -d)"
+export TIMEGLANCE_HOME="${AUTOPKGTEST_TMP:-$(mktemp -d)}"
 
 python3 -c "import timeglance.cli"
 timeglance --help >/dev/null

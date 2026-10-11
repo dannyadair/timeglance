@@ -1,0 +1,9 @@
+timeglance (3.2.1) unstable; urgency=medium
+
+  * Build as a proper Debian source package with debhelper and dh-python
+    (pybuild), replacing the hand-assembled dpkg-deb build. The `timeglance`
+    launcher is now the wheel's own console script, and dependencies, desktop
+    entry, scalable icon, AppStream metainfo and copyright install the Debian
+    way.
+
+ -- Danny W. Adair <danny.adair@unfold.nz>  Mon, 12 Oct 2026 04:40:00 +1300
