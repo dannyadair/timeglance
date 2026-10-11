@@ -2,6 +2,85 @@
 
 <!-- version list -->
 
+## v3.0.0 (2026-10-11)
+
+### Bug Fixes
+
+- Control-panel first-run polish
+  ([`ab2e908`](https://github.com/dannyadair/timeglance/commit/ab2e9083170806704dc4a2dfcbf66dadbbc43c84))
+
+- Label the tray toggle "Autostart"
+  ([`348afa5`](https://github.com/dannyadair/timeglance/commit/348afa54bd77570540c2347baf458a63bde463b6))
+
+- Let the weekly legend fill the sheet width
+  ([`73a6c79`](https://github.com/dannyadair/timeglance/commit/73a6c799d0f6aa6283044d6d34e0c9d438189c92))
+
+- Log render resolution instead of file size
+  ([`e5a7066`](https://github.com/dannyadair/timeglance/commit/e5a7066256e2f0c2dc851328aa6e48a6e1aac8f8))
+
+- Widen the config editor so long YAML comments stop wrapping
+  ([`f04d24f`](https://github.com/dannyadair/timeglance/commit/f04d24ffc6022275cb22bae632b848dd2bde1549))
+
+- Year preview and init messaging on first run
+  ([`d37f23d`](https://github.com/dannyadair/timeglance/commit/d37f23dfc017dc958c1915c5bfa6d25102f9e7ba))
+
+### Chores
+
+- Group year/weekly out/ with their configs in .gitignore
+  ([`8399104`](https://github.com/dannyadair/timeglance/commit/8399104ea5bdbb14126652633db17f167affef26))
+
+### Documentation
+
+- Clarify tray install (uv run vs pipx)
+  ([`07bd55d`](https://github.com/dannyadair/timeglance/commit/07bd55dcbdcd325e768a8b2fd5c3803bb370893b))
+
+- Present Docker as a test drive, not a deployment target
+  ([`e8626ad`](https://github.com/dannyadair/timeglance/commit/e8626ad6b0da0e5b191f37828b252cc640dd0c35))
+
+- Refresh control-panel screenshots for the topics rename and preview fit
+  ([`e1ab773`](https://github.com/dannyadair/timeglance/commit/e1ab773592cf59afa0f2d18e63e279496cadb422))
+
+- Split install into Ubuntu/Debian (.deb) and Python/uv
+  ([`3e2b0f1`](https://github.com/dannyadair/timeglance/commit/3e2b0f1d63fc9a0c5415db3a7b9b15f2f51ffe0d))
+
+- Use uv run in the systemd section; clarify weekly wallpaper
+  ([`e03bade`](https://github.com/dannyadair/timeglance/commit/e03bade65ddfe2eb949e33d193a88b5482094362))
+
+### Features
+
+- Add optional system tray controller
+  ([`17759c8`](https://github.com/dannyadair/timeglance/commit/17759c8243cadb3a49b3d357eee83641eb42d178))
+
+- Build a .deb and attach it to each release
+  ([`0b0e58a`](https://github.com/dannyadair/timeglance/commit/0b0e58a7a4d89b10e9e907ddae8941381d7ed1bc))
+
+- Consolidate entry points into a single timeglance CLI
+  ([`d3a445b`](https://github.com/dannyadair/timeglance/commit/d3a445b38c011544892bee6fdf5541657530b04b))
+
+- Narrate app lifecycle through the activity log
+  ([`9a1efd6`](https://github.com/dannyadair/timeglance/commit/9a1efd6545a38e3aaa46c500b34307755a679d15))
+
+- Resolve config/state/cache/output to XDG base directories
+  ([`61b29b9`](https://github.com/dannyadair/timeglance/commit/61b29b95fc3a25d6d0e34c09a31d283d6d8788b2))
+
+- Schedule screen reflects the real trigger, with Save and Install
+  ([`91a3eaf`](https://github.com/dannyadair/timeglance/commit/91a3eaf62a7959327be60009765dd7927e6cd0c4))
+
+- Support Python 3.12
+  ([`3d9d69b`](https://github.com/dannyadair/timeglance/commit/3d9d69b87520af9c1fb9cce747b2929e5896f8a3))
+
+- Timeglance install - nightly render via a systemd user timer
+  ([`80ea5d8`](https://github.com/dannyadair/timeglance/commit/80ea5d875291fac40218193ef41fcacc10117c5f))
+
+- Tray "Start at login" and a clearer tray --help
+  ([`b0c713f`](https://github.com/dannyadair/timeglance/commit/b0c713fb0cb4667a3577b14caf53da86fa1e0091))
+
+### Refactoring
+
+- Name the render units timeglance-render.service/.timer
+  ([`60620eb`](https://github.com/dannyadair/timeglance/commit/60620eb10e82cca52887a3b763781c7d43d784d2))
+
+
 ## v2.0.0 (2026-10-10)
 
 ### Bug Fixes
