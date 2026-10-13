@@ -64,6 +64,25 @@ def test_legend_follows_topics_order_not_activity_order():
     assert [item["label"] for item in legend] == ["X", "Y"]  # declaration order, unused z omitted
 
 
+def test_pack_day_lanes_non_overlapping_keep_full_width():
+    """Activities that never clash in time each span the full day width."""
+    cells = [{"start": 420, "end": 480}, {"start": 540, "end": 1020}]  # 07-08, 09-17
+    wbuild.pack_day_lanes(cells)
+    assert all(c["lane_pos"] == 0 and c["lane_size"] == 100 for c in cells)
+
+
+def test_pack_day_lanes_splits_only_the_overlap():
+    """A background block shares width with an overlapping meeting; an unrelated block stays full."""
+    gym = {"start": 420, "end": 480}  # 07:00-08:00, no clash
+    work = {"start": 540, "end": 1020}  # 09:00-17:00
+    meeting = {"start": 600, "end": 660}  # 10:00-11:00, overlaps work
+    cells = sorted([gym, work, meeting], key=lambda c: c["start"])
+    wbuild.pack_day_lanes(cells)
+    assert gym["lane_pos"] == 0 and gym["lane_size"] == 100  # lone -> full width
+    assert work["lane_pos"] == 0 and work["lane_size"] == 50  # shares with the meeting
+    assert meeting["lane_pos"] == 50 and meeting["lane_size"] == 50
+
+
 def test_hidden_topics_from_yaml_defaults():
     """With no explicit hide list, topics marked not-visible in YAML are hidden."""
     assert wbuild.hidden_topics(CFG, None) == {"b"}
