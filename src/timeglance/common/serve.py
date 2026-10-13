@@ -69,7 +69,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Route GET requests: static assets, config, preview, export, schedule and log."""
         u = urlparse(self.path)
-        p = {k: v[0] for k, v in parse_qs(u.query).items()}
+        p = {k: v[0] for k, v in parse_qs(u.query, keep_blank_values=True).items()}
         try:
             if u.path == "/":
                 self._send(200, "text/html; charset=utf-8", (WEB / "index.html").read_bytes(), NO_CACHE)
@@ -110,7 +110,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         """Route POST requests: config save/reset, wallpaper, log clear and schedule control."""
         u = urlparse(self.path)
-        p = {k: v[0] for k, v in parse_qs(u.query).items()}
+        p = {k: v[0] for k, v in parse_qs(u.query, keep_blank_values=True).items()}
         try:
             if u.path == "/api/config":
                 planner = self._planner(p)
