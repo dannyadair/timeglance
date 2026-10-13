@@ -61,6 +61,11 @@ def planner_out(planner):
     return data_dir() / planner / "out"
 
 
+def tray_pid():
+    """Path to the running tray's PID file (so ``uninstall`` can signal it to quit)."""
+    return state_dir() / "tray.pid"
+
+
 def display(path):
     """A compact display form: relative to home as ``~/…`` when possible, else absolute."""
     path = Path(path)

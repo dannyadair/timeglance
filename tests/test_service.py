@@ -2,7 +2,7 @@
 
 import types
 
-from timeglance import service
+from timeglance import autostart, service
 
 
 def test_timer_unit_pads_time_and_persists():
@@ -36,20 +36,59 @@ def test_install_writes_units_and_enables(tmp_path, monkeypatch):
     assert ["systemctl", "--user", "enable", "--now", service.TIMER] in calls
 
 
+def test_stop_tray_signals_and_removes_pidfile(tmp_path, monkeypatch):
+    """stop_tray SIGTERMs the recorded pid and clears the pid file."""
+    monkeypatch.setenv("TIMEGLANCE_HOME", str(tmp_path))
+    pid_file = service.paths.tray_pid()
+    pid_file.parent.mkdir(parents=True, exist_ok=True)
+    pid_file.write_text("4242")
+    killed = []
+    monkeypatch.setattr(service.os, "kill", lambda pid, sig: killed.append((pid, sig)))
+
+    assert service.stop_tray() is True
+    assert killed == [(4242, service.signal.SIGTERM)]
+    assert not pid_file.exists()
+
+
+def test_stop_tray_without_pidfile_is_noop(tmp_path, monkeypatch):
+    """stop_tray reports nothing to do when no tray pid file exists."""
+    monkeypatch.setenv("TIMEGLANCE_HOME", str(tmp_path))
+    assert service.stop_tray() is False
+
+
+def test_stop_tray_stale_pid_is_cleared(tmp_path, monkeypatch):
+    """A pid file pointing at a dead process is removed and reported as not-signalled."""
+    monkeypatch.setenv("TIMEGLANCE_HOME", str(tmp_path))
+    pid_file = service.paths.tray_pid()
+    pid_file.parent.mkdir(parents=True, exist_ok=True)
+    pid_file.write_text("999999")
+
+    def _dead(pid, sig):
+        raise ProcessLookupError
+
+    monkeypatch.setattr(service.os, "kill", _dead)
+
+    assert service.stop_tray() is False
+    assert not pid_file.exists()
+
+
 def test_uninstall_disables_and_removes(tmp_path, monkeypatch):
-    """uninstall disables the timer and deletes the unit files."""
+    """uninstall disables the timer, deletes the unit files, and clears the tray autostart entry."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
     monkeypatch.setattr(service.shutil, "which", lambda _: "/usr/bin/systemctl")
     monkeypatch.setattr(service.subprocess, "run", lambda cmd, check=True: None)
     unit_dir = tmp_path / "systemd" / "user"
     unit_dir.mkdir(parents=True)
     (unit_dir / service.SERVICE).write_text("x")
     (unit_dir / service.TIMER).write_text("x")
+    autostart.enable()
 
     service.uninstall()
 
     assert not (unit_dir / service.SERVICE).exists()
     assert not (unit_dir / service.TIMER).exists()
+    assert not autostart.enabled()
 
 
 def test_enabled_reads_is_enabled(monkeypatch):

@@ -69,9 +69,11 @@ A pure-Python install under `/usr/lib/python3/dist-packages` run by your system 
 satisfied by your distro's own apt packages. CI builds and install-tests the `.deb` on Ubuntu 24.04, 25.10 and
 26.04; other recent releases may work.
 
-**Uninstalling.** timeglance installs a _user_ systemd timer for the daily render that `apt` can't remove, so
-run `timeglance uninstall` first, then `sudo apt remove timeglance`. Your per-user configs and output
-(`~/.config/timeglance`, `~/.local/state/timeglance`, `~/.local/share/timeglance`) are left untouched either way.
+**Uninstalling.** timeglance sets up _user_-level bits that `apt` can't remove: a systemd timer for the daily
+render and, if you enabled it, a tray autostart entry. Run `timeglance uninstall` first - it stops a running
+tray, disables the timer, and removes both the unit files and the autostart entry - then `sudo apt remove
+timeglance`. Your per-user configs and output (`~/.config/timeglance`, `~/.local/state/timeglance`,
+`~/.local/share/timeglance`) are left untouched either way.
 
 ## Install (Python/uv)
 

@@ -11,10 +11,12 @@ logged out renders the files but can't paint; ``Persistent=true`` repaints on th
 
 import os
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
 
+from timeglance import autostart, paths
 from timeglance.common import schedule
 
 SERVICE = "timeglance-render.service"
@@ -106,10 +108,25 @@ def disable():
     _systemctl("disable", "--now", TIMER, check=False)
 
 
+def stop_tray():
+    """SIGTERM a running tray so it exits cleanly; True only if a live process was signalled."""
+    pid_file = paths.tray_pid()
+    if not pid_file.exists():
+        return False
+    pid = int(pid_file.read_text())
+    pid_file.unlink()
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except ProcessLookupError:  # stale pid file, tray already gone
+        return False
+    return True
+
+
 def uninstall():
-    """Disable the timer and remove the unit files."""
+    """Disable the timer, remove its unit files, stop a running tray, and drop its autostart entry."""
     if not shutil.which("systemctl"):
         raise SystemExit("systemctl not found - a systemd user instance is required")
+    stopped = stop_tray()
     _systemctl("disable", "--now", TIMER, check=False)
     unit_dir = _unit_dir()
     for name in (SERVICE, TIMER):
@@ -117,3 +134,8 @@ def uninstall():
     _systemctl("daemon-reload")
     print(f"uninstalled {TIMER}")
     print(f"  units removed from {unit_dir}")
+    if autostart.enabled():
+        autostart.disable()
+        print("  removed the tray login-autostart entry")
+    if stopped:
+        print("  stopped the running tray")
