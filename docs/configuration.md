@@ -18,6 +18,68 @@ See the [Reference](reference.md) for the full list of flags and YAML keys.
 - **`layers`** / **`events`** - a single day uses `date:`, a span uses `start:`+`end:` (inclusive); recurrence via
   `repeat: yearly|weekly|monthly` or a full `rrule:` (RFC 5545 / dateutil).
 
+### Recurring events
+
+`repeat:` covers the common cases; `rrule:` takes any RFC 5545 rule (parsed by
+[`dateutil`](https://dateutil.readthedocs.io/en/stable/rrule.html#dateutil.rrule.rrulestr)) for everything
+else. The event's `date:` (or `start:`) is the recurrence anchor (`DTSTART`). Omit it and an `rrule:` anchors
+at the start of the render window — which only matters for `INTERVAL` rules. A `start:`+`end:` span keeps its
+length on every occurrence, and `repeat: yearly` clamps a Feb-29 anchor to Feb-28 in non-leap years.
+
+```yaml
+events:
+  # repeat: shorthands (anchor = date/start)
+  - { layer: birthdays, date: 1990-02-14, label: Alex, repeat: yearly } # same day every year
+  - { layer: work, date: 2026-01-05, label: Standup, repeat: weekly } # same weekday every week
+  - { layer: work, date: 2026-01-01, label: Rent due, repeat: monthly } # same day every month
+
+  # rrule: everything else (quote the string)
+  - {
+      layer: work,
+      date: 2026-01-05,
+      label: Weekdays,
+      rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+    }
+  - {
+      layer: work,
+      date: 2026-01-07,
+      label: Fortnightly,
+      rrule: "FREQ=WEEKLY;INTERVAL=2",
+    }
+  - { layer: meetups, label: Python meetup, rrule: "FREQ=MONTHLY;BYDAY=+3TH" } # 3rd Thursday (no anchor needed)
+  - {
+      layer: meetups,
+      label: Last-Friday drinks,
+      rrule: "FREQ=MONTHLY;BYDAY=-1FR",
+    } # last Friday
+  - {
+      layer: work,
+      date: 2026-01-01,
+      label: Quarterly review,
+      rrule: "FREQ=MONTHLY;INTERVAL=3",
+    }
+  - {
+      layer: leave,
+      date: 2026-07-04,
+      label: Independence Day,
+      rrule: "FREQ=YEARLY;BYMONTH=7;BYMONTHDAY=4",
+    }
+  - {
+      layer: work,
+      date: 2026-01-05,
+      label: Sprint demo,
+      rrule: "FREQ=WEEKLY;INTERVAL=2;COUNT=10",
+    }
+  - {
+      layer: work,
+      date: 2026-01-05,
+      label: Weekly check-in,
+      rrule: "FREQ=WEEKLY;UNTIL=20260401",
+    }
+```
+
+Stop an open-ended rule with `COUNT=N` (N occurrences) or `UNTIL=YYYYMMDD` (inclusive), as in the last two above.
+
 ### Calendar sources (.ics)
 
 Let your existing calendars _be_ the editor. Any number of `.ics` feeds are merged into the event stream and mapped
