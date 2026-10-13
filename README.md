@@ -67,7 +67,11 @@ timeglance serve    # the control panel at http://localhost:8753
 
 A pure-Python install under `/usr/lib/python3/dist-packages` run by your system Python, with every dependency
 satisfied by your distro's own apt packages. CI builds and install-tests the `.deb` on Ubuntu 24.04, 25.10 and
-26.04; other recent releases may work. Remove with `sudo apt remove timeglance`.
+26.04; other recent releases may work.
+
+**Uninstalling.** timeglance installs a _user_ systemd timer for the daily render that `apt` can't remove, so
+run `timeglance uninstall` first, then `sudo apt remove timeglance`. Your per-user configs and output
+(`~/.config/timeglance`, `~/.local/state/timeglance`, `~/.local/share/timeglance`) are left untouched either way.
 
 ## Install (Python/uv)
 
