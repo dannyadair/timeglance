@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.4.0 (2026-10-13)
+
+### Features
+
+- Lay out overlapping weekly activities side by side
+  ([`99d44bb`](https://github.com/dannyadair/timeglance/commit/99d44bb880423ab75966218cc885aee18435180e))
+
+
 ## v3.3.5 (2026-10-13)
 
 ### Bug Fixes
