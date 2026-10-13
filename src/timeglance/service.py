@@ -115,4 +115,5 @@ def uninstall():
     for name in (SERVICE, TIMER):
         (unit_dir / name).unlink(missing_ok=True)
     _systemctl("daemon-reload")
-    print(f"removed {TIMER} and {SERVICE}")
+    print(f"uninstalled {TIMER}")
+    print(f"  units removed from {unit_dir}")
