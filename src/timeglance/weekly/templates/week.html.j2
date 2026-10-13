@@ -28,8 +28,10 @@
   .legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
   .legend .hrs { color: var(--muted); font-weight: 400; margin-left: 4px; }
 
+  /* A transparent border (clipped background) gives the inter-lane gap and edge inset without a
+     percentage-plus-pixel calc, which WeasyPrint < 63 can't resolve - it collapses the block to auto. */
   .block { position: absolute; border-radius: 4px; padding: 2px 5px; overflow: hidden; color: #fff;
-           box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+           box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); background-clip: padding-box; border: 0 solid transparent; }
   .block .t { font-size: 8px; opacity: 0.9; line-height: 1.1; }
   .block .l { font-size: 10px; font-weight: 600; line-height: 1.15; }
 
@@ -48,6 +50,7 @@
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--line); }
   .gl.major { border-left: 1px solid var(--line-major); }
   .glabel { position: absolute; top: 3px; transform: translateX(-50%); font-size: 9px; color: var(--muted); }
+  .block { border-top-width: 3px; border-bottom-width: 3px; }
 {% else %}
   /* Days as columns, time running top to bottom. */
   .grid { display: grid; grid-template-columns: 42px repeat({{ days | length }}, 1fr);
@@ -63,6 +66,7 @@
   .gl { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
   .gl.major { border-top: 1px solid var(--line-major); }
   .glabel { position: absolute; right: 4px; transform: translateY(-50%); font-size: 9px; color: var(--muted); }
+  .block { border-left-width: 2px; border-right-width: 2px; }
 {% endif %}
 
   @media screen {
@@ -111,9 +115,9 @@
           {% endfor %}
           {% for a in activities[day] %}
           {% if layout == 'horizontal' %}
-            <div class="block" style="left: {{ a.pos }}%; width: {{ a.size }}%; top: calc({{ a.lane_pos }}% + 3px); height: calc({{ a.lane_size }}% - 6px); background: {{ a.color }}">
+            <div class="block" style="left: {{ a.pos }}%; width: {{ a.size }}%; top: {{ a.lane_pos }}%; height: {{ a.lane_size }}%; background: {{ a.color }}">
           {% else %}
-            <div class="block" style="top: {{ a.pos }}%; height: {{ a.size }}%; left: calc({{ a.lane_pos }}% + 2px); width: calc({{ a.lane_size }}% - 4px); background: {{ a.color }}">
+            <div class="block" style="top: {{ a.pos }}%; height: {{ a.size }}%; left: {{ a.lane_pos }}%; width: {{ a.lane_size }}%; background: {{ a.color }}">
           {% endif %}
               <div class="t">{{ a.time }}</div>
               <div class="l">{{ a.label }}</div>
