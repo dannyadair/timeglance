@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v3.3.4 (2026-10-13)
+
+### Bug Fixes
+
+- Clearer timeglance uninstall output (disambiguate from systemctl)
+  ([`65398e6`](https://github.com/dannyadair/timeglance/commit/65398e6fc2b09e04432b233396d513b4038ac0e8))
+
+### Documentation
+
+- Show rrule recurrence examples in the year config guide
+  ([`6c30559`](https://github.com/dannyadair/timeglance/commit/6c30559cae843fb448365dbd472498fb7017f503))
+
+- Tell Debian users to run timeglance uninstall before apt remove
+  ([`afa34e9`](https://github.com/dannyadair/timeglance/commit/afa34e9fb6ec3d7567c38e2ec457cc5a4c1f2d08))
+
+
 ## v3.3.3 (2026-10-13)
 
 ### Bug Fixes
