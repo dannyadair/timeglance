@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.3.3 (2026-10-13)
+
+### Bug Fixes
+
+- Expand year-planner event bars to fill lanes free of overlap
+  ([`7e899b7`](https://github.com/dannyadair/timeglance/commit/7e899b716600c5c132960a13eb99b10b9e195424))
+
+
 ## v3.3.2 (2026-10-11)
 
 ### Bug Fixes
