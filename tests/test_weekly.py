@@ -83,6 +83,21 @@ def test_pack_day_lanes_splits_only_the_overlap():
     assert meeting["lane_pos"] == 50 and meeting["lane_size"] == 50
 
 
+def test_render_blocks_avoid_calc():
+    """Blocks must not use `calc()` mixing % and px - WeasyPrint < 63 (Ubuntu 25.10 ships 62.3)
+    can't resolve it and collapses the block to its text width."""
+    cfg = {
+        "title": "T",
+        "days": ["Mon"],
+        "day_start": "08:00",
+        "day_end": "18:00",
+        "topics": {"a": {"label": "A", "color": "#111", "visible": True}},
+        "activities": [{"topic": "a", "days": ["Mon"], "start": "09:00", "end": "10:00"}],
+    }
+    for layout in wbuild.ALL_LAYOUTS:
+        assert "calc(" not in wbuild.render(cfg, None, "A4", layout=layout)
+
+
 def test_hidden_topics_from_yaml_defaults():
     """With no explicit hide list, topics marked not-visible in YAML are hidden."""
     assert wbuild.hidden_topics(CFG, None) == {"b"}
