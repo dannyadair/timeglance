@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.3.5 (2026-10-13)
+
+### Bug Fixes
+
+- Make timeglance uninstall fully tear down user-level bits
+  ([`714a3e4`](https://github.com/dannyadair/timeglance/commit/714a3e4073a50dde331eca7ceb89be55199624b1))
+
+
 ## v3.3.4 (2026-10-13)
 
 ### Bug Fixes
