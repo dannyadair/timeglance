@@ -113,6 +113,27 @@ def test_day_slots_packed_is_31():
     assert yrender.day_slots(cfg) == 31
 
 
+def test_lane_span_lone_event_fills_full_width():
+    """A pair of same-day events splits only that day; events on other days keep the full width."""
+    sixth = {"c0": 5, "c1": 5, "lane": 0}
+    thirteenth = {"c0": 12, "c1": 12, "lane": 0}
+    twentieth_a = {"c0": 19, "c1": 19, "lane": 0}
+    twentieth_b = {"c0": 19, "c1": 19, "lane": 1}
+    segs = [sixth, thirteenth, twentieth_a, twentieth_b]
+    assert yrender.lane_span(sixth, segs, 2) == 2
+    assert yrender.lane_span(thirteenth, segs, 2) == 2
+    assert yrender.lane_span(twentieth_a, segs, 2) == 1
+    assert yrender.lane_span(twentieth_b, segs, 2) == 1
+
+
+def test_lane_span_stops_at_next_overlap():
+    """Expansion reaches across free lanes but stops at the first overlapping neighbour."""
+    seg = {"c0": 0, "c1": 10, "lane": 0}
+    gap_lane = {"c0": 0, "c1": 10, "lane": 2}
+    segs = [seg, {"c0": 20, "c1": 25, "lane": 1}, gap_lane]
+    assert yrender.lane_span(seg, segs, 3) == 2
+
+
 def test_parse_rejects_invalid_range_token():
     """parse() surfaces an invalid range token as a ValueError."""
     with pytest.raises(ValueError):
