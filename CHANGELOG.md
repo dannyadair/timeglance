@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.4.1 (2026-10-13)
+
+### Bug Fixes
+
+- Keep blank query params so an empty hide shows all topics
+  ([`a507da8`](https://github.com/dannyadair/timeglance/commit/a507da81a66b102aa743b471eb3595ed2adcaeec))
+
+
 ## v3.4.0 (2026-10-13)
 
 ### Features
