@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import calendar
 import datetime as dt
-from collections import defaultdict
 from dataclasses import dataclass, field
 from html import escape
 
@@ -299,6 +298,17 @@ def pack_lanes(segments):
     return segments
 
 
+def lane_span(seg, segs, nlanes):
+    """How many adjacent lanes ``seg`` may widen into: it grows right until a segment that
+    overlaps it on the day axis blocks the way. So an event with no concurrent neighbour fills
+    the full ``nlanes`` width, and only the days that genuinely overlap stay subdivided."""
+    reach = nlanes - seg["lane"]
+    for other in segs:
+        if other["lane"] > seg["lane"] and other["c0"] <= seg["c1"] and seg["c0"] <= other["c1"]:
+            reach = min(reach, other["lane"] - seg["lane"])
+    return reach
+
+
 # ---- svg primitives -------------------------------------------------------
 
 
@@ -494,44 +504,36 @@ def render_svg(cfg: Config) -> str:
             continue
         used = min(n_lanes, lane_cap)
         lane_h = min(lane_max, lane_avail / used)
-        bh = lane_h - lane_gap
-        span_font = min(11.0, max(8.0, bh - 7))
-
-        lanes = defaultdict(list)
-        for seg in segs:
-            if seg["lane"] < used:
-                lanes[seg["lane"]].append(seg)
-
-        for lane, items in lanes.items():
-            by = row_top + num_band + lane * lane_h
-            for seg in items:
-                ev = seg["ev"]
-                color = layer_by_id[ev.layer].color
-                if seg["c1"] > seg["c0"]:  # span -> filled bar
-                    bx = grid_left + seg["c0"] * col_w
-                    bw = (seg["c1"] - seg["c0"] + 1) * col_w
-                    out.append(_rect(bx + 1, by, bw - 2, bh, color, rx=3))
-                    d = seg["s"]
-                    while d <= seg["e"]:
-                        if is_weekend(d):
-                            cl = grid_left + col_of(cfg, d) * col_w
-                            ox, orr = max(cl, bx + 1), min(cl + col_w, bx + bw - 1)
-                            if orr > ox:
-                                out.append(_rect(ox, by, orr - ox, bh, t["weekend_tint"], opacity=t["weekend_tint_op"]))
-                        d += dt.timedelta(days=1)
-                    lab = _fit(ev.label, bw - 10, span_font)
-                    if lab:
-                        out.append(
-                            _text(bx + 6, by + bh / 2 + span_font * 0.35, lab, span_font, "#ffffff", weight="600")
-                        )
-                else:  # single day -> colored tick + label filling its own column
-                    cx = grid_left + seg["c0"] * col_w
-                    out.append(_rect(cx + 1, by, 2.5, bh, color, rx=1))
-                    size, lines = _fit_box(ev.label, col_w - 8, bh)
-                    pitch = size + 0.8
-                    y0 = by + (bh - len(lines) * pitch) / 2 + size
-                    for k, ln in enumerate(lines):
-                        out.append(_text(cx + 6, y0 + k * pitch, ln, size, t["text"], weight="600"))
+        kept = [seg for seg in segs if seg["lane"] < used]
+        for seg in kept:
+            by = row_top + num_band + seg["lane"] * lane_h
+            bh = lane_span(seg, kept, used) * lane_h - lane_gap
+            span_font = min(11.0, max(8.0, bh - 7))
+            ev = seg["ev"]
+            color = layer_by_id[ev.layer].color
+            if seg["c1"] > seg["c0"]:  # span -> filled bar
+                bx = grid_left + seg["c0"] * col_w
+                bw = (seg["c1"] - seg["c0"] + 1) * col_w
+                out.append(_rect(bx + 1, by, bw - 2, bh, color, rx=3))
+                d = seg["s"]
+                while d <= seg["e"]:
+                    if is_weekend(d):
+                        cl = grid_left + col_of(cfg, d) * col_w
+                        ox, orr = max(cl, bx + 1), min(cl + col_w, bx + bw - 1)
+                        if orr > ox:
+                            out.append(_rect(ox, by, orr - ox, bh, t["weekend_tint"], opacity=t["weekend_tint_op"]))
+                    d += dt.timedelta(days=1)
+                lab = _fit(ev.label, bw - 10, span_font)
+                if lab:
+                    out.append(_text(bx + 6, by + bh / 2 + span_font * 0.35, lab, span_font, "#ffffff", weight="600"))
+            else:  # single day -> colored tick + label filling its own column
+                cx = grid_left + seg["c0"] * col_w
+                out.append(_rect(cx + 1, by, 2.5, bh, color, rx=1))
+                size, lines = _fit_box(ev.label, col_w - 8, bh)
+                pitch = size + 0.8
+                y0 = by + (bh - len(lines) * pitch) / 2 + size
+                for k, ln in enumerate(lines):
+                    out.append(_text(cx + 6, y0 + k * pitch, ln, size, t["text"], weight="600"))
 
     if today_box:
         x, row_top = today_box
@@ -645,11 +647,10 @@ def _render_vertical(cfg: Config) -> str:
         avail = col_w - gutter - 1
         used = min(n_lanes, max(1, int(avail / 11)))
         lane_w = avail / used
-        bw = lane_w - lane_gap
-        for seg in segs:
-            if seg["lane"] >= used:
-                continue
+        kept = [seg for seg in segs if seg["lane"] < used]
+        for seg in kept:
             ev = seg["ev"]
+            bw = lane_span(seg, kept, used) * lane_w - lane_gap
             bx = cx + gutter + seg["lane"] * lane_w
             by = grid_top + seg["c0"] * row_h
             bh = (seg["c1"] - seg["c0"] + 1) * row_h
