@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.4.2 (2026-10-13)
+
+### Bug Fixes
+
+- Weekly blocks collapse to text width on WeasyPrint < 63
+  ([`da82eb0`](https://github.com/dannyadair/timeglance/commit/da82eb0402a80cd95f5e6e764486664fb0b48fc4))
+
+
 ## v3.4.1 (2026-10-13)
 
 ### Bug Fixes
