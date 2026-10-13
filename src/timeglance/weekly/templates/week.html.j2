@@ -48,7 +48,6 @@
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--line); }
   .gl.major { border-left: 1px solid var(--line-major); }
   .glabel { position: absolute; top: 3px; transform: translateX(-50%); font-size: 9px; color: var(--muted); }
-  .block { top: 3px; bottom: 3px; }
 {% else %}
   /* Days as columns, time running top to bottom. */
   .grid { display: grid; grid-template-columns: 42px repeat({{ days | length }}, 1fr);
@@ -64,7 +63,6 @@
   .gl { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
   .gl.major { border-top: 1px solid var(--line-major); }
   .glabel { position: absolute; right: 4px; transform: translateY(-50%); font-size: 9px; color: var(--muted); }
-  .block { left: 2px; right: 2px; }
 {% endif %}
 
   @media screen {
@@ -113,9 +111,9 @@
           {% endfor %}
           {% for a in activities[day] %}
           {% if layout == 'horizontal' %}
-            <div class="block" style="left: {{ a.pos }}%; width: {{ a.size }}%; background: {{ a.color }}">
+            <div class="block" style="left: {{ a.pos }}%; width: {{ a.size }}%; top: calc({{ a.lane_pos }}% + 3px); height: calc({{ a.lane_size }}% - 6px); background: {{ a.color }}">
           {% else %}
-            <div class="block" style="top: {{ a.pos }}%; height: {{ a.size }}%; background: {{ a.color }}">
+            <div class="block" style="top: {{ a.pos }}%; height: {{ a.size }}%; left: calc({{ a.lane_pos }}% + 2px); width: calc({{ a.lane_size }}% - 4px); background: {{ a.color }}">
           {% endif %}
               <div class="t">{{ a.time }}</div>
               <div class="l">{{ a.label }}</div>

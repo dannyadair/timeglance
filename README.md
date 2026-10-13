@@ -147,8 +147,3 @@ Quitting the tray only closes the panel it started - the systemd timer keeps run
 - [Wallpaper](docs/wallpaper.md) - KDE Plasma, per-screen native-resolution rendering
 - [Use as a library](docs/library.md) - import and render PNG/PDF/SVG from Python
 - [Contributing](CONTRIBUTING.md) - setup, CI, releasing
-
-## Limitations
-
-- **Weekly activities can't overlap in time.** Two activities over the same slot on the same day render on top of
-  each other, so only one reads clearly.

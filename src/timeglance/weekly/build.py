@@ -99,10 +99,37 @@ def visible_activities(cfg, hidden):
     return [a for a in cfg.get("activities", []) if a["topic"] not in hidden]
 
 
+def pack_day_lanes(cells):
+    """Lay a day's time-sorted cells into side-by-side lanes so overlapping activities stay
+    visible. Each cell gets a cross-axis `lane_pos`/`lane_size` (% of the day's width): greedy
+    interval packing assigns the lowest free lane, then every block widens across the lanes to
+    its right that carry no time clash - so a block with no overlap keeps the full width and only
+    genuinely overlapping blocks share it."""
+    lane_ends = []
+    for c in cells:
+        for i, end in enumerate(lane_ends):
+            if c["start"] >= end:
+                c["lane"] = i
+                lane_ends[i] = c["end"]
+                break
+        else:
+            c["lane"] = len(lane_ends)
+            lane_ends.append(c["end"])
+    n = len(lane_ends)
+    for c in cells:
+        reach = n - c["lane"]
+        for o in cells:
+            if o["lane"] > c["lane"] and o["start"] < c["end"] and c["start"] < o["end"]:
+                reach = min(reach, o["lane"] - c["lane"])
+        c["lane_pos"] = round(c["lane"] / n * 100, 3)
+        c["lane_size"] = round(reach / n * 100, 3)
+
+
 def positions(cfg, activities):
     """Build the per-day positioned cells, hour gridlines and totals legend for the sheet.
     Positions are axis-agnostic (`pos`/`size` as a % of the day span) so the template can lay
-    them along either axis - down the day columns (vertical) or across the day rows (horizontal)."""
+    them along either axis - down the day columns (vertical) or across the day rows (horizontal).
+    Overlapping activities within a day are packed into side-by-side lanes (`lane_pos`/`lane_size`)."""
     day_start = to_min(cfg["day_start"])
     day_end = to_min(cfg["day_end"])
     span = day_end - day_start
@@ -123,11 +150,13 @@ def positions(cfg, activities):
             "label": a.get("label", topic["label"]),
             "time": f"{fmt(start)}\u2013{fmt(end)}",
             "start": start,
+            "end": end,
         }
         for day in a["days"]:
-            by_day[day].append(cell)
+            by_day[day].append(dict(cell))  # a copy per day: lanes are packed per-day
     for day in by_day:
         by_day[day].sort(key=lambda c: c["start"])
+        pack_day_lanes(by_day[day])
 
     hour_lines = []
     step = cfg.get("hour_marks", 1) * 60
