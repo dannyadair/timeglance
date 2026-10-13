@@ -8,6 +8,8 @@ Needs the ``[tray]`` extra (``pystray``) plus the system AppIndicator/GObject li
 (e.g. ``apt install python3-gi gir1.2-ayatanaappindicator3-0.1``); see the README.
 """
 
+import os
+import signal
 import socket
 import subprocess
 import sys
@@ -16,9 +18,10 @@ import webbrowser
 from pathlib import Path
 
 import pystray
+from gi.repository import GLib
 from PIL import Image
 
-from timeglance import autostart, service
+from timeglance import autostart, paths, service
 from timeglance.common import schedule, settings
 from timeglance.planners import PLANNERS
 
@@ -203,7 +206,21 @@ class Tray:
 
 def main():
     tray = Tray()
-    pystray.Icon("timeglance", Image.open(ICON), "timeglance", menu=tray.menu()).run()
+    icon = pystray.Icon("timeglance", Image.open(ICON), "timeglance", menu=tray.menu())
+    pid = paths.tray_pid()
+    pid.parent.mkdir(parents=True, exist_ok=True)
+    pid.write_text(str(os.getpid()))
+
+    def _quit():
+        tray.quit(icon)
+        return GLib.SOURCE_REMOVE
+
+    # a GLib source (not a plain signal handler) so SIGTERM is serviced by the GTK main loop
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, _quit)
+    try:
+        icon.run()
+    finally:
+        pid.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
