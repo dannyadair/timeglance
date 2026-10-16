@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.5.4 (2026-10-16)
+
+### Bug Fixes
+
+- Step-by-step wallpaper log, config-date errors, and override hint
+  ([`7ace580`](https://github.com/dannyadair/timeglance/commit/7ace58009816690fc89b20562dcc3a483658e716))
+
+
 ## v3.5.3 (2026-10-16)
 
 ### Bug Fixes
