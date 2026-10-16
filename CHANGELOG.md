@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.5.1 (2026-10-16)
+
+### Bug Fixes
+
+- Lay weekly lanes out with flexbox so blocks fill their day lane
+  ([`dc9a21b`](https://github.com/dannyadair/timeglance/commit/dc9a21b7bdb49536bf2539b4f56eab633c3323c3))
+
+
 ## v3.5.0 (2026-10-16)
 
 ### Continuous Integration
