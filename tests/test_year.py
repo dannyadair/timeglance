@@ -134,6 +134,32 @@ def test_lane_span_stops_at_next_overlap():
     assert yrender.lane_span(seg, segs, 3) == 2
 
 
+def test_pack_event_lanes_stable_across_months():
+    """Two events that both cross a month boundary keep their lanes instead of swapping sides;
+    a later non-overlapping block reuses the freed lane."""
+    annual = yrender.Event(layer="l", label="Annual", start=dt.date(2026, 12, 21), end=dt.date(2026, 12, 31))
+    yimei = yrender.Event(layer="l", label="Yimei", start=dt.date(2026, 12, 23), end=dt.date(2027, 1, 24))
+    jan_annual = yrender.Event(layer="l", label="Annual", start=dt.date(2027, 1, 4), end=dt.date(2027, 1, 14))
+    lane_of = yrender.pack_event_lanes([yimei, annual, jan_annual])  # unsorted input
+    assert lane_of[id(annual)] == 0
+    assert lane_of[id(yimei)] == 1  # overlaps the December block, so a second lane
+    assert lane_of[id(jan_annual)] == 0  # no overlap with the December block -> reuses lane 0
+
+
+def test_assign_month_lanes_compacts_preserving_order():
+    """A month missing a lower global lane still packs flush from 0, keeping higher lanes to the right."""
+    a, b = (
+        yrender.Event("l", "a", dt.date(2027, 1, 1), dt.date(2027, 1, 5)),
+        yrender.Event("l", "b", dt.date(2027, 1, 2), dt.date(2027, 1, 9)),
+    )
+    lane_of = {id(a): 0, id(b): 2}  # global lane 1 belongs to an event not in this month
+    segs = [{"ev": b}, {"ev": a}]
+    n = yrender.assign_month_lanes(segs, lane_of)
+    assert n == 2
+    assert next(s["lane"] for s in segs if s["ev"] is a) == 0
+    assert next(s["lane"] for s in segs if s["ev"] is b) == 1  # stays right of a
+
+
 def test_parse_rejects_invalid_range_token():
     """parse() surfaces an invalid range token as a ValueError."""
     with pytest.raises(ValueError):
