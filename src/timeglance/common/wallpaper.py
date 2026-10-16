@@ -107,10 +107,14 @@ class PlasmaBackend:
         want = ",".join(f"{{x:{s.x},y:{s.y},w:{s.lw},h:{s.lh},path:'file://{path}{frag}'}}" for s, path in assignments)
         # Match each Plasma desktop to a target by logical geometry, set the image, and report
         # back which geometries exist and which got set so callers can tell if a match happened.
+        # Skip desktops with screen<0: a disconnected monitor's containment is parked off-screen,
+        # and screenGeometry() falls back to the primary's rect for an invalid screen, so without
+        # this guard the orphan matches the primary target and gets the wrong image painted on it.
         return (
             f"var want=[{want}]; var ds=desktops(); var found=[], done=[];"
             "for (var i=0;i<ds.length;i++){"
-            " var d=ds[i], g=screenGeometry(d.screen), key=g.x+','+g.y+','+g.width+'x'+g.height, hit=null;"
+            " var d=ds[i]; if(d.screen<0)continue;"
+            " var g=screenGeometry(d.screen), key=g.x+','+g.y+','+g.width+'x'+g.height, hit=null;"
             " found.push(key);"
             " for (var j=0;j<want.length;j++){"
             "  if(g.x==want[j].x&&g.y==want[j].y&&g.width==want[j].w&&g.height==want[j].h){hit=want[j];break;}"
