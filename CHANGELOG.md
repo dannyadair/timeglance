@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.5.5 (2026-10-16)
+
+### Bug Fixes
+
+- Don't paint disconnected screens' parked desktops
+  ([`e57f11c`](https://github.com/dannyadair/timeglance/commit/e57f11c667f86a3e75acbc3f936f604ca2187660))
+
+### Continuous Integration
+
+- Pin CI deps and Docker base image by hash (OSSF Scorecard Pinned-Dependencies)
+  ([`e1bffb1`](https://github.com/dannyadair/timeglance/commit/e1bffb142ab22c6a08bbf24a36d391fcb82635ec))
+
+
 ## v3.5.4 (2026-10-16)
 
 ### Bug Fixes
