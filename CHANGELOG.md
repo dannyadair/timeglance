@@ -2,6 +2,24 @@
 
 <!-- version list -->
 
+## v3.5.0 (2026-10-16)
+
+### Continuous Integration
+
+- Pin workflow actions by SHA and set minimal token permissions
+  ([`2841847`](https://github.com/dannyadair/timeglance/commit/284184754c31bdaacfc99035aa612821bbfb918c))
+
+### Features
+
+- Sign released .deb with SLSA build provenance
+  ([`1d28e47`](https://github.com/dannyadair/timeglance/commit/1d28e47bf25b613d5f3155074fa4766a76a8e3cf))
+
+### Testing
+
+- Add a render-correctness DEP-8 test
+  ([`6079ef7`](https://github.com/dannyadair/timeglance/commit/6079ef7740a6b4d986f6dcdbca817d96146e3ac1))
+
+
 ## v3.4.2 (2026-10-13)
 
 ### Bug Fixes
