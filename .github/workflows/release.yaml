@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+# Minimal default; the jobs that need more widen it themselves (contents: write to push the
+# release commit and attach the .deb, id-token: write for PyPI trusted publishing).
+permissions:
+  contents: read
+
 # semantic-release pushes its `RELEASE: {version}` commit with a PAT, which re-triggers this
 # workflow. That commit has nothing to test or release, so skip every job on it (the alternative,
 # `[skip ci]` in the commit message, works too but is less explicit). On the RELEASE commit all
@@ -29,13 +34,13 @@ jobs:
       released: ${{ steps.release.outputs.released }}
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
       - name: Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v10
+        uses: python-semantic-release/python-semantic-release@b700dbeb1f431a0fcc30a79f3f0869407fe07278 # v10
         with:
           github_token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
@@ -58,16 +63,16 @@ jobs:
       id-token: write
       contents: read # checkout needs read access while the repo is private
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.release.outputs.version }} # the tag semantic-release just pushed
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
       - name: Build distributions
         run: pip install uv && uv build
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
 
   # Build a proper Debian source package with debhelper + dh-python (pybuild), producing the
   # pure-Python timeglance under /usr/lib/python3/dist-packages plus the wheel's own
@@ -88,7 +93,7 @@ jobs:
     env:
       VERSION: ${{ needs.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.release.outputs.version }}
       - name: Build the package
@@ -102,7 +107,7 @@ jobs:
             dpkg-buildpackage -us -uc -b
             cp "../timeglance_${VERSION}_all.deb" /w/
           '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: deb
           path: timeglance_${{ env.VERSION }}_all.deb
@@ -123,10 +128,10 @@ jobs:
     env:
       VERSION: ${{ needs.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.release.outputs.version }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: deb
       - name: Install and smoke-test in ${{ matrix.image }}
@@ -148,7 +153,7 @@ jobs:
     env:
       VERSION: ${{ needs.release.outputs.version }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: deb
       - name: Attach the .deb to the GitHub Release
