@@ -138,7 +138,7 @@ export async function showSchedule() {
     });
     ta.value = cfg.render_yaml || "";
     ta.placeholder =
-      name === "year" ? "theme: dark\nlayout: compact" : "paper: A3";
+      name === "year" ? "optional, e.g.  theme: dark" : "optional, e.g.  paper: A3";
     det.append(ta);
     sec.append(det);
     // Setting a wallpaper only makes sense if the file gets rendered, so the wallpaper toggle,

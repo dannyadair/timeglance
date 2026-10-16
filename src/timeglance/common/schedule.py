@@ -107,11 +107,7 @@ class Schedule:
                 if not r["ok"]:
                     log.log(name, f"wallpaper FAILED {r['error']}")
                     continue
-                detail = "set " + (",".join(r["applied"]) or "nothing matched")
-                if r.get("pending"):
-                    detail += f"; pending {','.join(r['pending'])}"
-                if r.get("unseen"):
-                    detail += f"; unseen {','.join(r['unseen'])}"
-                log.log(name, f"wallpaper {detail}")
+                for line in wallpaper.describe_apply(r):
+                    log.log(name, line)
             except (Exception, SystemExit):
                 log.log(name, f"ERROR\n{traceback.format_exc().strip()}")

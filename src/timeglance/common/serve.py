@@ -126,12 +126,10 @@ class Handler(BaseHTTPRequestHandler):
                 planner = self._planner(p)
                 r = planner.set_wallpaper(self._body())
                 if r["ok"]:
-                    detail = ",".join(r["applied"]) or "nothing matched"
-                    if r.get("pending"):
-                        detail += f"; pending {','.join(r['pending'])}"
-                    if r.get("unseen"):
-                        detail += f"; unseen {','.join(r['unseen'])}"
-                    LOG.log(planner.name, f"wallpaper set {detail} (manual)")
+                    lines = wallpaper.describe_apply(r)
+                    lines[-1] += " (manual)"
+                    for line in lines:
+                        LOG.log(planner.name, line)
                 else:
                     LOG.log(planner.name, f"wallpaper FAILED {r['error']} (manual)")
                 self._json(r)

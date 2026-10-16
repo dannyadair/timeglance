@@ -202,6 +202,9 @@ def parse(raw) -> Config:
     layers = [Layer(**lyr) for lyr in raw["layers"]]
     events = []
     for e in raw["events"]:
+        for key in ("date", "start", "end"):
+            if key in e and not isinstance(e[key], dt.date):
+                raise ValueError(f"event {e.get('label', '(unlabelled)')!r}: {key} is not a date: {e[key]!r}")
         if "date" in e:
             base_start = e["date"]
         elif "start" in e:
