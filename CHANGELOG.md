@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.5.3 (2026-10-16)
+
+### Bug Fixes
+
+- Size weekly day lanes in mm so blocks don't collapse on WeasyPrint 63-65
+  ([`3900f51`](https://github.com/dannyadair/timeglance/commit/3900f5100ac5685547d257f22d20f44bada74f45))
+
+
 ## v3.5.2 (2026-10-16)
 
 ### Bug Fixes
