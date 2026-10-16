@@ -36,50 +36,60 @@
   .block .l { font-size: 10px; font-weight: 600; line-height: 1.15; }
 
 {% if layout == 'horizontal' %}
-  /* Days as rows, time running left to right. Lanes are flex tracks, not a CSS grid: WeasyPrint
-     before 62 has no grid, and even 60.x won't give a grid 1fr track a definite width for the
-     absolutely-positioned blocks to size against (it collapses them to their text). */
-  .grid { display: flex; flex-direction: column;
-          height: {{ track_h }}mm; border: 1px solid var(--border); border-top: none; }
-  .lane { flex: 1 1 0; min-height: 0; display: flex; border-top: 1px solid var(--cell-border); }
-  .lane.axis { flex: none; height: 22px; border-top: none; }
+  /* Days as rows, time running left to right. The block cross axis is its row height, sized as a %
+     of the day track, so the track gets a definite mm height: a flex-stretched height isn't
+     definite enough for WeasyPrint 63-65, which collapses the blocks to their label. */
+  .grid { display: flex; flex-direction: column; border: 1px solid var(--border); border-top: none; }
+  .lane { display: flex; border-top: 1px solid var(--cell-border); }
+  .lane.axis { border-top: none; }
   .rail { width: 42px; flex: none; display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 600; border-right: 1px solid var(--border); background: var(--head-bg); }
   .lane.axis .rail { background: transparent; }
   .lane.today .rail { background: var(--today-bg); color: var(--today-text); }
   .lane.today .track { background: var(--today-tint); }
-  .track { position: relative; flex: 1 1 auto; min-width: 0; }
+  .track { position: relative; flex: 1 1 auto; min-width: 0; height: {{ lane_cross }}mm; }
+  .lane.axis .track { height: {{ axis_cross }}mm; }
   .gl { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--line); }
   .gl.major { border-left: 1px solid var(--line-major); }
   .glabel { position: absolute; top: 3px; transform: translateX(-50%); font-size: 9px; color: var(--muted); }
   .block { border-top-width: 3px; border-bottom-width: 3px; }
 {% else %}
-  /* Days as columns, time running top to bottom. Lanes are flex tracks, not a CSS grid - see the
-     horizontal note: a grid 1fr column has no definite width on WeasyPrint 60.x, so the blocks
-     sized as a % of it collapse to their text. */
+  /* Days as columns, time running top to bottom. The block cross axis is its column width, sized
+     as a % of the day track, so the track gets a definite mm width - see the horizontal note; a
+     flex-stretched width collapses the blocks on WeasyPrint 65. */
   .grid { display: flex; border: 1px solid var(--border); border-left: none; }
-  .lane { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--cell-border); }
-  .lane.axis { flex: none; width: 42px; border-left: none; }
+  .lane { display: flex; flex-direction: column; border-left: 1px solid var(--cell-border); }
+  .lane.axis { border-left: none; }
   .rail { height: 24px; flex: none; display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border); background: var(--head-bg); }
   .lane.axis .rail { background: transparent; }
   .lane.today .rail { background: var(--today-bg); color: var(--today-text); }
   .lane.today .track { background: var(--today-tint); }
-  .track { position: relative; height: {{ track_h }}mm; }
+  .track { position: relative; width: {{ lane_cross }}mm; height: {{ track_h }}mm; }
+  .lane.axis .track { width: {{ axis_cross }}mm; }
   .gl { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
   .gl.major { border-top: 1px solid var(--line-major); }
   .glabel { position: absolute; right: 4px; transform: translateY(-50%); font-size: 9px; color: var(--muted); }
   .block { border-left-width: 2px; border-right-width: 2px; }
 {% endif %}
 
+  /* On screen the sheet fills the panel instead of a fixed page: flex the day lanes back so they
+     share the available space (browsers resolve the blocks' % against a flexed track just fine).
+     The thin time-axis lane keeps its mm track size. */
   @media screen {
     html, body { height: 100%; }
     .sheet { height: 100%; padding: 9mm; }
-{% if layout == 'horizontal' %}
-    .grid { height: auto; flex: 1 1 auto; min-height: 0; }
-{% else %}
     .grid { flex: 1 1 auto; min-height: 0; }
-    .track { height: auto; flex: 1 1 auto; min-height: 0; }
+    .lane { flex: 1 1 0; }
+    .lane.axis { flex: none; }
+{% if layout == 'horizontal' %}
+    .lane { min-height: 0; }
+    .track { height: auto; }
+    .lane.axis .track { height: {{ axis_cross }}mm; }
+{% else %}
+    .lane { min-width: 0; }
+    .track { width: auto; height: auto; flex: 1 1 auto; min-height: 0; }
+    .lane.axis .track { width: {{ axis_cross }}mm; }
 {% endif %}
   }
 </style>

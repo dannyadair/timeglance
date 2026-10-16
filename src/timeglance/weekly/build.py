@@ -24,10 +24,15 @@ from timeglance.common.variants import pick, resolve_list
 HERE = Path(__file__).parent
 TEMPLATE = HERE / "config.yaml.in"  # packaged annotated template (see `timeglance init`)
 
-# Short edge of each page in mm (landscape). Timeline height is derived from it.
+# Page dimensions in mm (landscape). The timeline height is derived from the short edge, the day
+# columns from the long edge.
 PAGE_SHORT_MM = {"A4": 210, "A3": 297}
+PAGE_LONG_MM = {"A4": 297, "A3": 420}
 PAGE_MARGIN_MM = 9
 HEADER_RESERVE_MM = 30
+# Time-axis lane thickness in mm (column width when vertical, row height when horizontal).
+AXIS_V_MM = 11
+AXIS_H_MM = 6
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 ALL_LAYOUTS = ["vertical", "horizontal"]
@@ -187,6 +192,15 @@ def render(cfg, hide, paper, today=None, theme="light", layout="vertical"):
     and orientation (vertical = days-as-columns, horizontal = days-as-rows)."""
     by_day, hour_lines, legend = positions(cfg, visible_activities(cfg, hidden_topics(cfg, hide)))
     track_h = PAGE_SHORT_MM[paper] - 2 * PAGE_MARGIN_MM - HEADER_RESERVE_MM
+    # Day lanes get a definite mm cross-axis size (column width when vertical, row height when
+    # horizontal) so every block's % dimension resolves against a definite box. A flex-stretched
+    # track isn't definite enough for WeasyPrint 63-65, which collapses such blocks to their label.
+    n_days = len(cfg["days"])
+    if layout == "horizontal":
+        axis_cross, lane_cross = AXIS_H_MM, round((track_h - AXIS_H_MM) / n_days, 3)
+    else:
+        content_w = PAGE_LONG_MM[paper] - 2 * PAGE_MARGIN_MM
+        axis_cross, lane_cross = AXIS_V_MM, round((content_w - AXIS_V_MM) / n_days, 3)
     today = today or WEEKDAYS[dt.date.today().weekday()]
     env = Environment(loader=FileSystemLoader(HERE / "templates"), autoescape=True)
     return env.get_template("week.html.j2").render(
@@ -199,6 +213,8 @@ def render(cfg, hide, paper, today=None, theme="light", layout="vertical"):
         legend=legend,
         paper=paper,
         track_h=track_h,
+        axis_cross=axis_cross,
+        lane_cross=lane_cross,
         theme=WEEKLY_THEMES[theme],
         layout=layout,
     )
