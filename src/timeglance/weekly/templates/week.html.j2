@@ -36,11 +36,13 @@
   .block .l { font-size: 10px; font-weight: 600; line-height: 1.15; }
 
 {% if layout == 'horizontal' %}
-  /* Days as rows, time running left to right. */
-  .grid { display: grid; grid-template-rows: 22px repeat({{ days | length }}, 1fr);
+  /* Days as rows, time running left to right. Lanes are flex tracks, not a CSS grid: WeasyPrint
+     before 62 has no grid, and even 60.x won't give a grid 1fr track a definite width for the
+     absolutely-positioned blocks to size against (it collapses them to their text). */
+  .grid { display: flex; flex-direction: column;
           height: {{ track_h }}mm; border: 1px solid var(--border); border-top: none; }
-  .lane { display: flex; border-top: 1px solid var(--cell-border); min-height: 0; }
-  .lane.axis { border-top: none; }
+  .lane { flex: 1 1 0; min-height: 0; display: flex; border-top: 1px solid var(--cell-border); }
+  .lane.axis { flex: none; height: 22px; border-top: none; }
   .rail { width: 42px; flex: none; display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 600; border-right: 1px solid var(--border); background: var(--head-bg); }
   .lane.axis .rail { background: transparent; }
@@ -52,11 +54,12 @@
   .glabel { position: absolute; top: 3px; transform: translateX(-50%); font-size: 9px; color: var(--muted); }
   .block { border-top-width: 3px; border-bottom-width: 3px; }
 {% else %}
-  /* Days as columns, time running top to bottom. */
-  .grid { display: grid; grid-template-columns: 42px repeat({{ days | length }}, 1fr);
-          border: 1px solid var(--border); border-left: none; }
-  .lane { display: flex; flex-direction: column; border-left: 1px solid var(--cell-border); }
-  .lane.axis { border-left: none; }
+  /* Days as columns, time running top to bottom. Lanes are flex tracks, not a CSS grid - see the
+     horizontal note: a grid 1fr column has no definite width on WeasyPrint 60.x, so the blocks
+     sized as a % of it collapse to their text. */
+  .grid { display: flex; border: 1px solid var(--border); border-left: none; }
+  .lane { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--cell-border); }
+  .lane.axis { flex: none; width: 42px; border-left: none; }
   .rail { height: 24px; flex: none; display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border); background: var(--head-bg); }
   .lane.axis .rail { background: transparent; }
@@ -75,7 +78,7 @@
 {% if layout == 'horizontal' %}
     .grid { height: auto; flex: 1 1 auto; min-height: 0; }
 {% else %}
-    .grid { flex: 1 1 auto; grid-template-rows: 1fr; min-height: 0; }
+    .grid { flex: 1 1 auto; min-height: 0; }
     .track { height: auto; flex: 1 1 auto; min-height: 0; }
 {% endif %}
   }
