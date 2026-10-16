@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Check the *rendered output* is laid out correctly by this distro's render stack, not just that
+# rendering runs. A full-day activity must span most of its day column; if it collapses to the
+# label width (as a %+px calc did on WeasyPrint < 63), this fails while `smoke` still passes -
+# pointing straight at the installed/updated render library rather than at timeglance itself.
+# Output-based (reads back the rasterised pixels), so it's independent of the WeasyPrint version.
+set -euo pipefail
+
+python3 - <<'PY'
+import subprocess
+import tempfile
+from pathlib import Path
+
+from PIL import Image
+
+from timeglance.weekly import build as wb
+
+cfg = {
+    "title": "t",
+    "days": ["Mon"],  # a single column spans almost the whole sheet width
+    "day_start": "08:00",
+    "day_end": "18:00",
+    "topics": {"x": {"label": "X", "color": "#ff0000", "visible": True}},
+    "activities": [{"topic": "x", "days": ["Mon"], "start": "09:00", "end": "17:00"}],
+}
+tmp = Path(tempfile.mkdtemp())
+(tmp / "s.pdf").write_bytes(wb.render_pdf(cfg, None, "A4"))
+subprocess.run(
+    ["pdftocairo", "-png", "-singlefile", "-scale-to-x", "1200", "-scale-to-y", "-1", str(tmp / "s.pdf"), str(tmp / "s")],
+    check=True,
+)
+img = Image.open(tmp / "s.png").convert("RGB")
+w, h = img.size
+px = img.load()
+widest = 0
+for y in range(0, h, 4):
+    run = 0
+    for x in range(w):
+        r, g, b = px[x, y]
+        if r > 180 and g < 80 and b < 80:
+            run += 1
+            widest = max(widest, run)
+        else:
+            run = 0
+assert widest > 0.3 * w, f"activity block only {widest}px wide of {w} - its width collapsed"
+print(f"full-day block spans {widest}px of {w} (OK)")
+PY
+
+echo "render-correctness test OK"
