@@ -143,21 +143,35 @@ jobs:
             bash debian/tests/render-correctness
           '
 
-  # Attach the .deb to the GitHub Release only after every distro passed its install-test.
+  # Attach the .deb to the GitHub Release only after every distro passed its install-test, together
+  # with a signed SLSA build-provenance attestation. The attestation proves this exact .deb came
+  # from this workflow (`gh attestation verify timeglance_*.deb -R dannyadair/timeglance`) and,
+  # shipped as a release asset, satisfies Scorecard's Signed-Releases check.
   deb-release:
     name: Attach .deb
     needs: [release, deb-test]
     runs-on: ubuntu-24.04
     permissions:
       contents: write # upload the asset to the release
+      id-token: write # OIDC identity that signs the provenance
+      attestations: write # record the provenance attestation
     env:
       VERSION: ${{ needs.release.outputs.version }}
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: deb
-      - name: Attach the .deb to the GitHub Release
+      - name: Attest build provenance
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: timeglance_${{ env.VERSION }}_all.deb
+      - name: Attach the .deb and its provenance to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }} # no checkout here, so point gh at the repo explicitly
-        run: gh release upload "$VERSION" "timeglance_${VERSION}_all.deb" --clobber
+        run: |
+          cp "${{ steps.attest.outputs.bundle-path }}" "timeglance_${VERSION}_all.deb.intoto.jsonl"
+          gh release upload "$VERSION" \
+            "timeglance_${VERSION}_all.deb" \
+            "timeglance_${VERSION}_all.deb.intoto.jsonl" --clobber
