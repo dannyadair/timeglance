@@ -110,7 +110,8 @@ jobs:
   # Install the .deb in a fresh container of each supported distro (apt resolves the Depends from
   # that distro's archive) and smoke-test it - the import that used to crash, the CLI, both renders
   # and the poppler wallpaper rasterisation - so a broken package can never reach the Release. The
-  # matrix is the set of distros we actually confirm; newer releases are a free bonus.
+  # matrix is the set of distros we commit to supporting; a newer release we haven't added yet may
+  # happen to work, but that isn't promised until it's in the matrix.
   deb-test:
     name: Test .deb
     needs: [release, deb-build]
@@ -134,6 +135,7 @@ jobs:
             apt-get update -qq
             apt-get install -y -qq "./timeglance_'"$VERSION"'_all.deb"
             bash debian/tests/smoke
+            bash debian/tests/render-correctness
           '
 
   # Attach the .deb to the GitHub Release only after every distro passed its install-test.
