@@ -24,7 +24,6 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       - name: Run pre-commit
-        run: pre-commit run --all-files --show-diff-on-failure --color=always
+        run: uvx pre-commit run --all-files --show-diff-on-failure --color=always
