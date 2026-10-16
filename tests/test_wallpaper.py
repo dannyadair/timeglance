@@ -95,6 +95,15 @@ def test_apply_renders_disconnected_but_defers(tmp_path):
     assert set(info["written"]) == {"eDP-1", "DP-8"}
 
 
+def test_script_skips_disconnected_orphan_desktops():
+    """A disconnected monitor's desktop is parked at screen<0, where Plasma's screenGeometry()
+    falls back to the primary's rect - so it must be skipped before matching, else the orphan
+    matches the primary target and gets the primary's image painted onto it (which is how a
+    widescreen woke up showing the laptop's weekly wallpaper)."""
+    script = wallpaper.PlasmaBackend()._script([(_scr("eDP-1", primary=True), "/tmp/x.png")], "preserveAspectCrop")
+    assert script.index("d.screen<0") < script.index("screenGeometry(d.screen)")
+
+
 def test_apply_skips_unseen(tmp_path):
     def render_png(scr, path):
         path.write_bytes(b"PNG")
