@@ -164,3 +164,13 @@ def test_parse_rejects_invalid_range_token():
     """parse() surfaces an invalid range token as a ValueError."""
     with pytest.raises(ValueError):
         yrender.parse({"layers": [], "events": [], "range": {"start": "nonsense"}})
+
+
+def test_parse_rejects_non_date_event_field():
+    """A mistyped date (YAML keeps `2027-01-3` as a string) is a clear ValueError, not a TypeError."""
+    raw = {
+        "layers": [{"id": "work", "label": "Work", "color": "#000"}],
+        "events": [{"layer": "work", "label": "Trip", "start": dt.date(2027, 1, 10), "end": "2027-01-3"}],
+    }
+    with pytest.raises(ValueError, match="'Trip': end is not a date"):
+        yrender.parse(raw)

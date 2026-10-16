@@ -313,6 +313,20 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
         "applied": [by_key[k] for k in report.get("set", []) if k in by_key],
         "pending": [s.name for s in screens if s.seen and not s.connected],
         "unseen": [s.name for s in screens if not s.seen],
+        "dims": {s.name: f"{s.pw}×{s.ph}" for s in screens if s.seen},
         "desktops": report.get("desktops", []),
     }
     return assignments, info
+
+
+def describe_apply(info):
+    """Activity-log lines for an apply(), one per action the wallpaper step takes: convert the
+    planner's render to a per-screen image, then set each screen (or defer/skip it). This makes
+    the conversion visible instead of jumping straight from the print file to 'wallpaper set'."""
+    lines = [f"converted to {info['dims'][n]} image for {n}" for n in info["written"]]
+    lines += [f"set wallpaper on {n}" for n in info["applied"]]
+    lines += [f"deferred wallpaper on {n} - offline, set on reconnect" for n in info["pending"]]
+    unmatched = [n for n in info["written"] if n not in info["applied"] and n not in info["pending"]]
+    lines += [f"could not set wallpaper on {n} - no matching Plasma desktop" for n in unmatched]
+    lines += [f"skipped {n} - never seen" for n in info["unseen"]]
+    return lines
