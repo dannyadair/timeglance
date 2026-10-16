@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.5.2 (2026-10-16)
+
+### Bug Fixes
+
+- Keep year events in one lane across month boundaries
+  ([`be1b695`](https://github.com/dannyadair/timeglance/commit/be1b69586fba75545208f699018fa73921ea428c))
+
+
 ## v3.5.1 (2026-10-16)
 
 ### Bug Fixes
