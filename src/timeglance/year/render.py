@@ -283,19 +283,34 @@ def is_weekend(d: dt.date) -> bool:
 # ---- lane packing ---------------------------------------------------------
 
 
-def pack_lanes(segments):
-    """Assign each segment the lowest non-overlapping lane index (greedy interval packing)."""
-    lane_ends = []
-    for seg in sorted(segments, key=lambda s: (s["c0"], s["c1"])):
+def pack_event_lanes(events):
+    """Give every event a lane that holds for its whole extent, by greedy date-interval packing.
+    Lanes are assigned once over the real start/end dates - not per month - so an event keeps the
+    same sub-lane in every month it crosses. Re-packing each month off the clipped dates let two
+    events that both span a boundary swap sides (lowest-start-first flips when the clip changes)."""
+    lane_of, lane_ends = {}, []
+    for ev in sorted(events, key=lambda e: (e.start, e.end)):
         for i, end in enumerate(lane_ends):
-            if seg["c0"] > end:
-                seg["lane"] = i
-                lane_ends[i] = seg["c1"]
+            if ev.start > end:
+                lane_of[id(ev)] = i
+                lane_ends[i] = ev.end
                 break
         else:
-            seg["lane"] = len(lane_ends)
-            lane_ends.append(seg["c1"])
-    return segments
+            lane_of[id(ev)] = len(lane_ends)
+            lane_ends.append(ev.end)
+    return lane_of
+
+
+def assign_month_lanes(segs, lane_of):
+    """Place a month's segments at their event's global lane, then compact the lanes actually
+    present this month to 0..k-1, preserving order. Order-preserving keeps co-present events from
+    swapping sides, while compaction lets a month with gaps still pack flush and reclaim width.
+    Returns the lane count ``k``."""
+    present = sorted({lane_of[id(seg["ev"])] for seg in segs})
+    remap = {g: i for i, g in enumerate(present)}
+    for seg in segs:
+        seg["lane"] = remap[lane_of[id(seg["ev"])]]
+    return len(present)
 
 
 def lane_span(seg, segs, nlanes):
@@ -482,7 +497,8 @@ def render_svg(cfg: Config) -> str:
 
     out.append(_line(grid_left, grid_top + grid_h, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
 
-    # event bars, lane-packed per month row
+    # event bars: each event keeps its global lane (stable across months), compacted per row
+    lane_of = pack_event_lanes([ev for ev in cfg.events if ev.layer in visible])
     for ri, (y, m) in enumerate(months):
         row_top = grid_top + ri * row_h
         m_first = dt.date(y, m, 1)
@@ -497,9 +513,7 @@ def render_svg(cfg: Config) -> str:
             if s > e:
                 continue
             segs.append({"c0": col_of(cfg, s), "c1": col_of(cfg, e), "s": s, "e": e, "ev": ev})
-        pack_lanes(segs)
-
-        n_lanes = 1 + max((s["lane"] for s in segs), default=-1)
+        n_lanes = assign_month_lanes(segs, lane_of)
         if not n_lanes:
             continue
         used = min(n_lanes, lane_cap)
@@ -624,7 +638,8 @@ def _render_vertical(cfg: Config) -> str:
         out.append(_line(cx, grid_top, cx, grid_top + grid_h, t["grid"], 1))
     out.append(_line(grid_left + grid_w, grid_top, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
 
-    # events: vertical bars, lane-packed into sub-columns within each month
+    # events: vertical bars; each event keeps its global lane (stable across months), compacted per column
+    lane_of = pack_event_lanes([ev for ev in cfg.events if ev.layer in visible])
     for ci, (y, m) in enumerate(months):
         cx = grid_left + ci * col_w
         m_first = dt.date(y, m, 1)
@@ -639,9 +654,7 @@ def _render_vertical(cfg: Config) -> str:
             if s > e:
                 continue
             segs.append({"c0": col_of(cfg, s), "c1": col_of(cfg, e), "s": s, "e": e, "ev": ev})
-        pack_lanes(segs)
-
-        n_lanes = 1 + max((seg["lane"] for seg in segs), default=-1)
+        n_lanes = assign_month_lanes(segs, lane_of)
         if not n_lanes:
             continue
         avail = col_w - gutter - 1
