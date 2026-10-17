@@ -2,6 +2,27 @@
 
 <!-- version list -->
 
+## v3.7.0 (2026-10-17)
+
+### Continuous Integration
+
+- Run the full test suite per distro and report coverage to Codecov
+  ([`c7306ca`](https://github.com/dannyadair/timeglance/commit/c7306ca6186afaf71cd17426479fdac669a58ac4))
+
+- Run the full test suite per distro and report coverage to Codecov
+  ([`5305fc1`](https://github.com/dannyadair/timeglance/commit/5305fc1a7e99c50e86323c96a0761bfa3b06fc2f))
+
+### Features
+
+- Control-panel version, layer all/none, Weekly-first order, paper from config
+  ([`ed0d103`](https://github.com/dannyadair/timeglance/commit/ed0d10383d80e620d5bcbabdf232fe79be97ed08))
+
+### Refactoring
+
+- **config**: Group templates into settings / sources / events sections
+  ([`9ceb341`](https://github.com/dannyadair/timeglance/commit/9ceb34164d744c39841ec25611884b820542f8b7))
+
+
 ## v3.6.0 (2026-10-17)
 
 ### Bug Fixes
