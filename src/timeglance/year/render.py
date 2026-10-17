@@ -350,9 +350,12 @@ def _text(x, y, s, size, fill, weight="normal", anchor="start", opacity=1.0):
     )
 
 
-def _line(x1, y1, x2, y2, stroke, sw=1.0):
+def _line(x1, y1, x2, y2, stroke, sw=1.0, opacity=1.0):
     """Build an SVG ``<line>`` element string."""
-    return f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}"/>'
+    s = f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}"'
+    if opacity != 1.0:
+        s += f' opacity="{opacity}"'
+    return s + "/>"
 
 
 def _fit(label, width, size):
@@ -495,11 +498,17 @@ def render_svg(cfg: Config) -> str:
             if cfg.show_today and d == today:
                 today_box = (x, row_top)
             out.append(_text(x + 3, row_top + 12, day, 10.5, t["text"], weight="600"))
-            out.append(_text(x + 3, row_top + 12 + 8, WD3[d.weekday()], 6.5, t["muted"]))
+            out.append(_text(x + 3, row_top + 12 + 9, WD3[d.weekday()], 8, t["rail"], weight="600"))
 
         out.append(_line(grid_left, row_top, grid_left + grid_w, row_top, t["grid"], 1))
 
     out.append(_line(grid_left, grid_top + grid_h, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
+
+    if cfg.week_align:  # Sun|Mon boundary emphasised, grouping the weekday-aligned columns into weeks
+        for c in range(1, cols):
+            if (c + cfg.start_idx) % 7 == 0:
+                wx = grid_left + c * col_w
+                out.append(_line(wx, grid_top, wx, grid_top + grid_h, t["rail"], 1, 0.55))
 
     # event bars: each event keeps its global lane (stable across months), compacted per row
     lane_of = pack_event_lanes([ev for ev in cfg.events if ev.layer in visible])
@@ -606,15 +615,17 @@ def _render_vertical(cfg: Config) -> str:
         out.append(
             _text(
                 grid_left - 6,
-                ry + row_h / 2 + 3.5,
+                ry + row_h / 2 + 4,
                 rail,
-                8.5,
-                t["today"] if hot else t["muted"],
-                weight="700" if hot else "normal",
+                11 if aligned else 8.5,
+                t["today"] if hot else t["rail"] if aligned else t["muted"],
+                weight="700" if hot else "600" if aligned else "normal",
                 anchor="end",
             )
         )
-        out.append(_line(grid_left, ry, grid_left + grid_w, ry, t["grid"], 1))
+        week = aligned and r and (r + cfg.start_idx) % 7 == 0  # Sun|Mon boundary emphasised
+        stroke, op = (t["rail"], 0.55) if week else (t["grid"], 1.0)
+        out.append(_line(grid_left, ry, grid_left + grid_w, ry, stroke, 1, op))
     out.append(_line(grid_left, grid_top + grid_h, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
 
     today_box = None
