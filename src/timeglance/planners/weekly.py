@@ -88,7 +88,7 @@ class WeeklyPlanner:
         theme, layout = self._variant(raw, p)
         pdf = wbuild.render_pdf(raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout)
         render_png = wbuild.make_wallpaper_renderer(
-            pdf, wp.get("background", "#2b2f36"), wp.get("margin", 0.05), wbuild.resolve_shadow(wp)
+            pdf, wbuild.canvas_color(wp, theme), wp.get("margin", 0.05), wbuild.resolve_shadow(wp)
         )
         _, info = wallpaper.apply(backend, screens, self.out, render_png, fill, prefix="weekly-wallpaper")
         return {"ok": True, **info}
