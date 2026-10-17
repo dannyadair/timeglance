@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Run the full unit suite against the *installed* package, so the distro's own library stack is
+# exercised - not just the smoke/render paths. `-o pythonpath=` drops the repo's src/ shim so the
+# imports resolve to the installed timeglance under dist-packages. Runs as an autopkgtest
+# (debian/tests) and is invoked directly in CI after installing the built .deb.
+set -euo pipefail
+
+cd "$(dirname "$0")/../.."
+python3 -m pytest -o pythonpath= -p no:cacheprovider tests
+
+echo "unit suite OK"
