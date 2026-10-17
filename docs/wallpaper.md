@@ -9,6 +9,9 @@ rasterised from its PDF (with poppler's `pdftocairo`, from `poppler-utils`) onto
 `.pdf`/`.png`/`.svg` you export or print. Those export artifacts and the wallpaper images are written side by
 side in the planner's `out/`.
 
+Screens read by a friendly name - the monitor's model from its EDID (or "Built-in display" for a laptop panel),
+falling back to the manufacturer + connector, then the bare connector name.
+
 Resolution is never configured - it comes from the screen: its current mode when connected, or the last-seen
 size for a screen that's remembered but disconnected. timeglance remembers every screen it has seen connected
 (in `state/screens.json`, pruned after 30 days), so you can target one that's currently unplugged: its file is
@@ -22,7 +25,8 @@ that was disconnected at render time still picks up the fresh image when it reco
 its path and reloads from disk. Plasma's `org.kde.image` otherwise only reloads when the image config string
 changes, so each apply appends a throwaway `#<stamp>` fragment to the `file://` path - that changes the string
 (forcing a reload) while Qt strips the fragment and loads the same file. Configure defaults under `wallpaper:`
-in each YAML (`screens`, `fill`; `background`/`margin`/`shadow` for weekly; `theme`/`layout` for both).
+in each YAML (`screens`, `fill`; `background` (`auto` follows the theme, or a colour)/`margin`/`shadow` for weekly;
+`theme`/`layout` for both).
 
 Setting the wallpaper needs a live Plasma session, so it isn't available inside the
 [Docker test drive](../README.md#try-it-instantly-docker).

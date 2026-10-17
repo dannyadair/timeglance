@@ -19,13 +19,13 @@ So I grabbed my mate Claude and built timeglance to fill those gaps:
 
 Pulling in `.ics` calendars means I can keep birthdays and other "layers" where they already are - maybe a dedicated calendar just for this overview - and leave calendar editing to my existing calendar software.
 
-Both of these have a notion of "today", and they're just images - so I also wanted a nightly re-render, to highlight the current day (and advance the rolling-year view).
+Both of these have a notion of "today", and they're just images - so I also wanted a daily re-render, to highlight the current day (and advance the rolling-year view).
 
 I use [Kubuntu](https://kubuntu.org/) ([KDE](https://kde.org/) [Plasma](https://kde.org/plasma-desktop/)), where each screen can have its own wallpaper. I never store files on the desktop, so it's only windows sitting on top of the wallpaper. My laptop is often connected to an ultrawide monitor:
 
 - Weekly as the wallpaper on the laptop
 - Year as the wallpaper on the widescreen monitor
-- Nightly refresh to sync calendars and update "today" highlighting
+- A daily refresh to sync calendars and update "today" highlighting
 
 A quick [Meta](https://en.wikipedia.org/wiki/Meta_key)+D gives me that glance I wanted.
 
