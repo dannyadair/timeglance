@@ -4,6 +4,8 @@ I use [Todoist](https://todoist.com) for a [GTD](https://en.wikipedia.org/wiki/G
 [Inbox Zero](https://en.wikipedia.org/wiki/Inbox_Zero), keep a Post-it pad on the fridge for shopping, and use a digital notepad ([Boox](https://www.boox.com)) for daily
 scribbling. That's all the magic, really - and it works very well.
 
+![My everyday productivity setup: a task manager, one calendar, inbox zero, a fridge Post-it, and an e-ink notepad](images/productivity-setup.png)
+
 But there were two gaps in my setup:
 
 - **Weekly routine** - my _planned_ schedule of when I do what in general: getting up, work time, break time,
