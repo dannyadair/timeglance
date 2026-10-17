@@ -2,6 +2,7 @@
 
 [![Python](https://img.shields.io/python/required-version-toml?color=blue&tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdannyadair%2Ftimeglance%2Fmain%2Fpyproject.toml)](https://github.com/dannyadair/timeglance/blob/main/pyproject.toml)
 [![tests](https://github.com/dannyadair/timeglance/actions/workflows/tests.yaml/badge.svg)](https://github.com/dannyadair/timeglance/actions/workflows/tests.yaml)
+[![codecov](https://img.shields.io/codecov/c/github/dannyadair/timeglance)](https://codecov.io/gh/dannyadair/timeglance)
 [![pre-commit](https://img.shields.io/github/actions/workflow/status/dannyadair/timeglance/pre-commit.yaml?label=pre-commit&logo=pre-commit&logoColor=white)](https://github.com/dannyadair/timeglance/actions/workflows/pre-commit.yaml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pip-audit](https://img.shields.io/github/actions/workflow/status/dannyadair/timeglance/pip-audit.yaml?label=pip-audit&logo=python)](https://github.com/dannyadair/timeglance/actions/workflows/pip-audit.yaml)
