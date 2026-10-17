@@ -52,6 +52,7 @@ WEEKLY_THEMES = {
         "today_bg": "#3D6FB4",
         "today_text": "#ffffff",
         "today_tint": "rgba(61,111,180,0.06)",
+        "canvas": "#dfe3e8",
     },
     "dark": {
         "bg": "#15171c",
@@ -65,6 +66,7 @@ WEEKLY_THEMES = {
         "today_bg": "#3D6FB4",
         "today_text": "#ffffff",
         "today_tint": "rgba(61,111,180,0.16)",
+        "canvas": "#2b2f36",
     },
 }
 ALL_THEMES = list(WEEKLY_THEMES)
@@ -250,6 +252,13 @@ def _pdf_page_size(pdf_path):
     return float(size[2]), float(size[4])
 
 
+def canvas_color(wp, theme):
+    """The wallpaper canvas colour behind the sheet: an explicit `background` wins, otherwise the
+    theme's own canvas tone, so a dark sheet gets a dark frame and a light one a light frame."""
+    background = wp.get("background", "auto")
+    return WEEKLY_THEMES[theme]["canvas"] if background == "auto" else background
+
+
 def make_wallpaper_renderer(pdf_bytes, background, margin, shadow):
     """render_png(screen, path): the page-shaped sheet centred on a `background` canvas at
     the screen's current resolution, with `margin` (fraction of the short edge) kept clear
@@ -348,7 +357,7 @@ def main(argv=None):
         screens = wallpaper.resolve_screens(backend, args.screen or wp.get("screens", "all"))
         render_png = make_wallpaper_renderer(
             render_pdf(cfg, hide, paper, theme=theme, layout=layout),
-            wp.get("background", "#2b2f36"),
+            canvas_color(wp, theme),
             wp.get("margin", 0.05),
             resolve_shadow(wp),
         )
