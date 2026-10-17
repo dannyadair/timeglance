@@ -1,6 +1,6 @@
 """The ``timeglance`` command: one entry point with subcommands.
 
-``serve`` runs the on-demand web control panel; ``render year|weekly`` renders a planner to
+``serve`` runs the on-demand web control panel; ``render weekly|year`` renders a planner to
 disk, forwarding the planner's own flags; ``init`` scaffolds the config files from the
 bundled templates. Process lifecycle (reboots, backgrounding) is left to systemd or the tray,
 so ``serve`` runs in the foreground.
@@ -18,7 +18,7 @@ from timeglance.planners import PLANNERS
 from timeglance.weekly import build as wbuild
 from timeglance.year import build as ybuild
 
-RENDERERS = {"year": ybuild.main, "weekly": wbuild.main}
+RENDERERS = {"weekly": wbuild.main, "year": ybuild.main}
 
 
 def main(argv=None):
@@ -26,7 +26,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="timeglance", description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("init", help="scaffold year/ and weekly/ config.yaml from the templates")
+    sub.add_parser("init", help="scaffold weekly/ and year/ config.yaml from the templates")
 
     sp_serve = sub.add_parser("serve", help="run the web control panel")
     sp_serve.add_argument("--host", default="127.0.0.1", help="bind address (use 0.0.0.0 in a container)")

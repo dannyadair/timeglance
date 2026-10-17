@@ -39,7 +39,7 @@ class Planner(Protocol):
     def warnings(self) -> list: ...
 
 
-PLANNERS = {"year": YearPlanner(), "weekly": WeeklyPlanner()}
+PLANNERS = {"weekly": WeeklyPlanner(), "year": YearPlanner()}
 
 
 def output_path(planner):

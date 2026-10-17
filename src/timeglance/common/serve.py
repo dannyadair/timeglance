@@ -18,7 +18,7 @@ from urllib.parse import parse_qs, urlparse
 
 import yaml
 
-from timeglance import init, service
+from timeglance import __version__, init, service
 from timeglance.common import schedule, wallpaper
 from timeglance.common.config import read_config, reset_config, write_config
 from timeglance.common.format import png_size
@@ -54,8 +54,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, "application/json", json.dumps(obj).encode())
 
     def _planner(self, params):
-        """Resolve the target planner from request params (defaults to the year planner)."""
-        return PLANNERS[params.get("planner", "year")]
+        """Resolve the target planner from request params (defaults to the weekly planner)."""
+        return PLANNERS[params.get("planner", "weekly")]
 
     def _sched_status(self):
         """Scheduler state plus whether the systemd render service is available/installed."""
@@ -72,7 +72,8 @@ class Handler(BaseHTTPRequestHandler):
         p = {k: v[0] for k, v in parse_qs(u.query, keep_blank_values=True).items()}
         try:
             if u.path == "/":
-                self._send(200, "text/html; charset=utf-8", (WEB / "index.html").read_bytes(), NO_CACHE)
+                html = (WEB / "index.html").read_text().replace("__TG_VERSION__", __version__)
+                self._send(200, "text/html; charset=utf-8", html, NO_CACHE)
             elif u.path.startswith("/js/") and u.path.count("/") == 2 and u.path.endswith(".js"):
                 mod = WEB / "js" / u.path.rsplit("/", 1)[-1]
                 if mod.is_file():

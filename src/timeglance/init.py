@@ -1,6 +1,6 @@
 """Scaffold working configs from the packaged templates.
 
-`timeglance init` writes `year/config.yaml` and `weekly/config.yaml` into the config
+`timeglance init` writes `weekly/config.yaml` and `year/config.yaml` into the config
 directory (`~/.config/timeglance/` by default, or under `TIMEGLANCE_HOME`) from the bundled
 `config.yaml.in` templates, so the first run - and Docker's bind-mounts, which expect the
 files to exist - has something to read. Existing configs are left untouched.
@@ -16,7 +16,7 @@ from timeglance.year import build as ybuild
 def ensure():
     """Scaffold any missing planner configs from the bundled templates; return the paths written."""
     written = []
-    for planner, template in (("year", ybuild.TEMPLATE), ("weekly", wbuild.TEMPLATE)):
+    for planner, template in (("weekly", wbuild.TEMPLATE), ("year", ybuild.TEMPLATE)):
         dest = paths.planner_config(planner)
         if dest.exists():
             continue
@@ -29,7 +29,7 @@ def ensure():
 def main():
     """Copy each planner's bundled template into the config dir, skipping ones that exist."""
     written = ensure()
-    for planner in ("year", "weekly"):
+    for planner in ("weekly", "year"):
         dest = paths.planner_config(planner)
         print(f"wrote {dest}" if dest in written else f"{dest} already exists - not written")
 
