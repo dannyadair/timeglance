@@ -19,7 +19,8 @@ under one root, which is how Docker and a `cd`-and-run dev loop work.
 
 ## Before you push
 
-`uv run pytest` and `pre-commit run --all-files` should pass. Commit messages follow
+New or changed functionality should land with tests. `uv run pytest` and `pre-commit run --all-files` should pass.
+Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:`, …) - they drive the automated
 version bumps and changelog.
 
