@@ -52,7 +52,8 @@ first Linux user), so it just works for most; if your uid differs, run `UID=$(id
 
 The simplest way on a Debian-based desktop. Grab the `.deb` from the
 [latest release](https://github.com/dannyadair/timeglance/releases/latest) and install it - `apt` pulls every
-dependency (the Python libraries, poppler, native Cairo/Pango stack, tray AppIndicator, fonts) from your distro:
+dependency (the Python libraries, poppler, native Cairo/Pango stack, fonts) from your distro, and the Qt tray as a
+recommended dependency:
 
 ```sh
 sudo apt install ./timeglance_<version>_all.deb
@@ -125,14 +126,16 @@ A system-tray menu to open the panel and flip the schedule - a launcher and quic
 timer above keeps running whether or not the tray is open).
 
 The `.deb` already includes it: after `apt install`, launch **timeglance** from your applications menu and the tray
-icon appears (it pulls the system AppIndicator/GObject libraries as dependencies). From a source checkout, add the
-extra and the system libraries, then run it:
+icon appears. On a Qt desktop like KDE Plasma the tray needs PySide6, which `apt` pulls in automatically as a
+recommended dependency. From a source checkout, add the extra and run it:
 
 ```sh
-sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
 uv sync --extra tray
 uv run timeglance tray
 ```
+
+Ubuntu 24.04 doesn't package PySide6, so the `.deb` installs there without the tray; install it from PyPI instead
+(`pipx install 'timeglance[tray]'`), or add PySide6 yourself (`pip install --user PySide6`).
 
 The menu opens the control panel (starting the server first if needed), starts/stops it, picks the port, and toggles
 the schedule: enabled, time, which planners render, and which set the wallpaper. **Autostart** adds an XDG

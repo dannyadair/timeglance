@@ -32,9 +32,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# System tray controller. Needs the system AppIndicator/GObject libraries on KDE too
-# (e.g. `apt install python3-gi gir1.2-ayatanaappindicator3-0.1`); see the README.
-tray = ["pystray>=0.19.5"]
+# System tray controller (Qt). On a Qt desktop like KDE Plasma this is all it needs.
+tray = ["PySide6>=6.6"]
 
 [project.urls]
 Homepage = "https://github.com/dannyadair/timeglance"

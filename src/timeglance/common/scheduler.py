@@ -53,7 +53,10 @@ class Scheduler:
             self.next_run = nxt.isoformat(timespec="seconds")
             if self._stop.wait((nxt - now).total_seconds()):
                 break
-            self.run_once()
+            if schedule.Schedule.load().enabled:
+                self.run_once()
+            else:
+                LOG.log("scheduler", "disabled - skipped scheduled render")
         self.next_run = None
         LOG.log("scheduler", "stopped")
 
@@ -83,6 +86,7 @@ class Scheduler:
             config[name] = pc
         return {
             "running": self.running,
+            "enabled": self.schedule.enabled,
             "time": self.schedule.cfg["time"],
             "tz": local_tz(),
             "planners": self.schedule.cfg.get("planners", []),

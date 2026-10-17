@@ -24,12 +24,12 @@ Depends: ${python3:Depends},
          python3-recurring-ical-events,
          python3-holidays,
          python3-pil,
-         python3-pystray,
-         python3-gi,
-         gir1.2-ayatanaappindicator3-0.1,
          poppler-utils,
          fonts-dejavu-core,
          fonts-noto-core
+Recommends: python3-pyside6.qtcore,
+            python3-pyside6.qtgui,
+            python3-pyside6.qtwidgets
 Description: printable weekly routine sheet and year-at-a-glance planner
  A config-driven weekly routine sheet, a year-at-a-glance planner and a web
  control panel, with KDE Plasma desktop-wallpaper rendering. Both planners

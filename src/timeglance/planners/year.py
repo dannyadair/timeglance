@@ -90,6 +90,14 @@ class YearPlanner:
         )
         return "image/png", self.out_name, png
 
+    def size_label(self, p):
+        """The export's pixel dimensions for a scheduled render (e.g. '1920×1080'), '' if unset."""
+        raw = self._raw()
+        if p.get("size"):
+            raw["size"] = p["size"]
+        ybuild.resolve_size(raw)
+        return str(raw.get("size") or "").replace("x", "×")
+
     def set_wallpaper(self, p):
         """Render per-screen and set the planner as the desktop wallpaper."""
         backend = wallpaper.detect()

@@ -72,6 +72,10 @@ class WeeklyPlanner:
         pdf = wbuild.render_pdf(raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout)
         return "application/pdf", self.out_name, pdf
 
+    def size_label(self, p):
+        """The sheet's paper size for a scheduled render (e.g. 'A4')."""
+        return p.get("paper") or self._raw().get("paper", "A4")
+
     def set_wallpaper(self, p):
         """Composite the sheet onto a themed canvas and set it as the desktop wallpaper."""
         backend = wallpaper.detect()

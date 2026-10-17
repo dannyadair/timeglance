@@ -41,7 +41,7 @@ def main(argv=None):
     sub.add_parser("uninstall", help="remove the systemd user timer")
     sub.add_parser("run", help="run the scheduled render once (used by the timer)")
     tray_help = "run the system tray controller"
-    if importlib.util.find_spec("pystray") is None:
+    if importlib.util.find_spec("PySide6") is None:
         tray_help += " (not installed)"
     sub.add_parser("tray", help=tray_help)
 
@@ -57,13 +57,15 @@ def main(argv=None):
     elif args.command == "uninstall":
         service.uninstall()
     elif args.command == "tray":
-        if importlib.util.find_spec("pystray") is None:
-            raise SystemExit(
-                "the tray needs the extra: pipx install 'timeglance[tray]' (plus system AppIndicator libs)"
-            )
+        if importlib.util.find_spec("PySide6") is None:
+            raise SystemExit("the tray needs the extra: pipx install 'timeglance[tray]'")
         subprocess.run([sys.executable, "-m", "timeglance.tray"], check=True)
     elif args.command == "run":
-        schedule.Schedule.load().run_once(PLANNERS, LOG)
+        s = schedule.Schedule.load()
+        if s.enabled:
+            s.run_once(PLANNERS, LOG)
+        else:
+            LOG.log("scheduler", "disabled - skipped scheduled render")
 
 
 if __name__ == "__main__":
