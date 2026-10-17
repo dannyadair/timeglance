@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.7.1 (2026-10-17)
+
+### Bug Fixes
+
+- Skip the tray test when no display backend is available
+  ([`29cdb7f`](https://github.com/dannyadair/timeglance/commit/29cdb7fc69c64d2b6ff24e9f115ead17b5503faf))
+
+
 ## v3.7.0 (2026-10-17)
 
 ### Continuous Integration
