@@ -481,7 +481,8 @@ def render_svg(cfg: Config) -> str:
         if m == 1 or y != prev_year:
             label += f" {y % 100:02d}"
         prev_year = y
-        out.append(_text(pad + rail_w - 8, row_top + row_h / 2 + 4, label, 13, t["rail"], weight="700", anchor="end"))
+        mcol = t["today"] if (y, m) == (today.year, today.month) else t["rail"]  # current month picked out in accent
+        out.append(_text(pad + rail_w - 8, row_top + row_h / 2 + 4, label, 13, mcol, weight="700", anchor="end"))
 
         for day in range(1, ndays + 1):
             d = dt.date(y, m, day)
@@ -574,7 +575,7 @@ def _render_vertical(cfg: Config) -> str:
     pad = 26
     header_h = 84
     mhdr_h = 24
-    rail_w = 30
+    rail_w = 36
     lane_gap = 2
     gutter = 14 if aligned else 1  # aligned rows aren't day-numbered, so number cells in a left strip
     months = cfg.months
@@ -625,7 +626,8 @@ def _render_vertical(cfg: Config) -> str:
             label += f" {y % 100:02d}"
         prev_year = y
         mlx = cx + col_w / 2
-        out.append(_text(mlx, grid_top - mhdr_h / 2 + 4, label, 13, t["rail"], weight="700", anchor="middle"))
+        mcol = t["today"] if (y, m) == (today.year, today.month) else t["rail"]  # current month picked out in accent
+        out.append(_text(mlx, grid_top - mhdr_h / 2 + 4, label, 13, mcol, weight="700", anchor="middle"))
 
         for day in range(1, calendar.monthrange(y, m)[1] + 1):
             d = dt.date(y, m, day)
@@ -637,7 +639,7 @@ def _render_vertical(cfg: Config) -> str:
             if cfg.show_today and d == today:
                 today_box = (cx, ry)
             if aligned:
-                out.append(_text(cx + 3, ry + row_h / 2 + 3, day, 8, t["muted"]))
+                out.append(_text(cx + gutter - 2, ry + row_h / 2 + 3, day, 9, t["text"], anchor="end", opacity=0.7))
         out.append(_line(cx, grid_top, cx, grid_top + grid_h, t["grid"], 1))
     out.append(_line(grid_left + grid_w, grid_top, grid_left + grid_w, grid_top + grid_h, t["grid"], 1))
 
