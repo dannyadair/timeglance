@@ -20,15 +20,24 @@ export async function showSchedule() {
   );
 
   const card = el("div", { className: "card" });
-  const statusText = s.installed
-    ? "Installed as a systemd service - the schedule runs even when the control panel is closed."
-    : s.systemd
-      ? "The schedule only runs while the timeglance server is running. Install it as a service to run without it."
-      : "The schedule only runs while the timeglance server is running.";
+  const statusText = !s.enabled
+    ? "Disabled - no automatic renders. Enable to resume (Run now still works)."
+    : s.installed
+      ? "Installed as a systemd service - the schedule runs even when the control panel is closed."
+      : s.systemd
+        ? "The schedule only runs while the timeglance server is running. Install it as a service to run without it."
+        : "The schedule only runs while the timeglance server is running.";
   const statusBox = el("div", {
-    className: "sched-status" + (s.installed ? " on" : ""),
+    className: "sched-status" + (s.enabled && s.installed ? " on" : ""),
   });
-  statusBox.append(el("span", {}, statusText));
+  statusBox.append(
+    el(
+      "div",
+      { className: "grp" },
+      `<span data-toggle="s_enabled"><input type="checkbox" id="s_enabled" ${s.enabled ? "checked" : ""}><label><strong>Enabled</strong></label></span>`,
+    ),
+    el("span", {}, statusText),
+  );
   if (s.systemd) {
     const svc = el(
       "button",
@@ -92,9 +101,7 @@ export async function showSchedule() {
           : sc.connected
             ? chosen.length === 0 || chosen.includes(sc.name)
             : chosen.includes(sc.name);
-        const model =
-          sc.model ||
-          (/^(eDP|LVDS)/i.test(sc.name) ? "Built-in display" : sc.name);
+        const model = sc.model || sc.name;
         const detail = !seen
           ? `${sc.name} · in config, never seen`
           : `${sc.name} · ${sc.w}×${sc.h}${sc.primary ? " · primary" : sc.connected ? "" : ` · offline, seen ${sc.last_seen}`}`;
@@ -179,6 +186,7 @@ export async function showSchedule() {
     .map((sc) => sc.name);
   const collect = (action) => {
     const cfg = {
+      enabled: $("#s_enabled").checked,
       time: $("#s_time").value,
       planners: [...card.querySelectorAll("input.s-pl:checked")].map(
         (c) => c.value,

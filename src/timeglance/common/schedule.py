@@ -18,6 +18,7 @@ from timeglance.common import wallpaper
 from timeglance.common.format import png_size
 
 DEFAULTS = {
+    "enabled": True,
     "time": "06:00",
     "planners": ["year"],
 }
@@ -74,6 +75,11 @@ class Schedule:
         ordered.update({k: v for k, v in self.cfg.items() if k not in ordered})
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(yaml.safe_dump(ordered, sort_keys=False))
+
+    @property
+    def enabled(self):
+        """The dead switch: when false, automatic (scheduled) renders are skipped; Run now still works."""
+        return self.cfg["enabled"]
 
     def planner_block(self, name):
         """A planner's schedule block (wallpaper / target screens / render overrides) with defaults."""

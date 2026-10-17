@@ -46,24 +46,57 @@ class Screen:
     pw: int  # physical size of the current mode (the render target)
     ph: int
     primary: bool = False
-    model: str = ""  # friendly name from EDID, e.g. "DELL U3821DW"
+    model: str = ""  # friendly label: "Built-in display" / EDID monitor name / vendor + connector
     connected: bool = True
     seen: bool = True
 
 
-def _edid_model(name):
-    """Human name from the display's EDID (the 0xFC 'monitor name' descriptor), matched by
-    DRM connector (e.g. `DP-8` -> `/sys/class/drm/*-DP-8/edid`). '' when there's no such
-    descriptor, as is common for laptop panels."""
+_PNP_IDS = Path("/usr/share/hwdata/pnp.ids")
+_BUILTIN = re.compile(r"^(eDP|LVDS|DSI)", re.I)
+
+
+def _edid(name):
+    """The display's 128-byte EDID block, matched by DRM connector (e.g. `DP-8` ->
+    `/sys/class/drm/*-DP-8/edid`), or b'' when there's no connected display there."""
     for path in Path("/sys/class/drm").glob(f"*-{name}/edid"):
         data = path.read_bytes()
-        if len(data) < 128:
-            return ""
-        for i in range(54, 126, 18):
-            d = data[i : i + 18]
-            if d[0:3] == b"\x00\x00\x00" and d[3] == 0xFC:
-                return d[5:18].split(b"\n")[0].decode("ascii", "replace").strip()
+        if len(data) >= 128:
+            return data
+    return b""
+
+
+def _edid_name(data):
+    """The EDID 0xFC 'monitor name' descriptor (e.g. 'DELL C1422H'), or '' when absent, as is
+    common for laptop panels."""
+    for i in range(54, 126, 18):
+        d = data[i : i + 18]
+        if d[0:3] == b"\x00\x00\x00" and d[3] == 0xFC:
+            return d[5:18].split(b"\n")[0].decode("ascii", "replace").strip()
     return ""
+
+
+def _vendor(data):
+    """Manufacturer from the EDID PNP id (bytes 8-9, three 5-bit letters), spelled out via
+    hwdata's pnp.ids when present (e.g. 'DEL' -> 'Dell Inc.'), else the raw three-letter id."""
+    raw = (data[8] << 8) | data[9]
+    pnp = "".join(chr(((raw >> s) & 0x1F) + 0x40) for s in (10, 5, 0))
+    if _PNP_IDS.exists():
+        for line in _PNP_IDS.read_text().splitlines():
+            code, _, name = line.partition("\t")
+            if code == pnp:
+                return name.strip()
+    return pnp
+
+
+def _friendly_name(name):
+    """A human label for an output: 'Built-in display' for a laptop panel, else the EDID monitor
+    name, else manufacturer + connector (e.g. 'Dell Inc. DP-8'), else the bare connector name."""
+    if _BUILTIN.match(name):
+        return "Built-in display"
+    data = _edid(name)
+    if not data:
+        return name
+    return _edid_name(data) or f"{_vendor(data)} {name}"
 
 
 class PlasmaBackend:
@@ -91,7 +124,7 @@ class PlasmaBackend:
                     pw=pw,
                     ph=ph,
                     primary=o["priority"] == 1,
-                    model=_edid_model(o["name"]),
+                    model=_friendly_name(o["name"]),
                 )
             )
         return screens

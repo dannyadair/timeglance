@@ -142,7 +142,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"ok": True})
             elif u.path == "/api/schedule":
                 body = self._body()
-                keys = ("time", "planners", *PLANNERS)
+                keys = ("time", "planners", "enabled", *PLANNERS)
                 cfg = {k: body[k] for k in keys if k in body}
                 for name in PLANNERS:
                     if name in cfg and "render" in cfg[name]:

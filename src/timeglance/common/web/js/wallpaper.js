@@ -46,8 +46,7 @@ export function openWallpaperDialog(wp) {
     .map((n) => ({ name: n, connected: false, seen: false }));
   for (const s of [...wp.screens, ...unseen]) {
     const seen = s.seen !== false;
-    const model =
-      s.model || (/^(eDP|LVDS)/i.test(s.name) ? "Built-in display" : s.name);
+    const model = s.model || s.name;
     const id = "wpscr_" + s.name;
     const row = el("div", { className: "scr" });
     const toggle = el("div", { className: "scr-toggle" });
