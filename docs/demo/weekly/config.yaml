@@ -6,20 +6,35 @@
 # control-panel captures (year.png / weekly.png).
 # ============================================================================
 
+
+# ========================= SETTINGS =========================================
+
+# ---- Basics ----
 title: Weekly Routine
 subtitle: At a glance
-
 paper: A4    # A4 | A3 (landscape)   - override per-run with --paper
 format: pdf  # pdf | html | both     - override per-run with --format
 
+# ---- Layout & appearance ----
 days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
 day_start: "06:00"
 day_end: "22:00"
 hour_marks: 1
 
-# Topic catalogue: label + colour, referenced by activities below. `visible: false` hides
-# a topic's activities by default (toggle any of them on/off in the UI, or with --hide /
-# --only). Here the morning slot starts on Walk; tick Gym (and untick Walk) to swap it in.
+# ---- Wallpaper (KDE Plasma; --wallpaper) ----
+# The page-shaped sheet is centred on a solid canvas at each screen's current resolution.
+wallpaper:
+  background: "#2b2f36" # canvas colour behind the sheet
+  margin: 0.05          # fraction of the screen's short edge kept clear around the sheet
+  screens: all          # all | primary | comma list of output names (e.g. eDP-1,HDMI-A-1)
+  # A soft drop shadow makes the sheet read as a page on the desk. `false` disables it;
+  # otherwise override any of these (opacity is 0-255; the rest are fractions of the short edge):
+  # shadow: { opacity: 120, blur: 0.013, offset: 0.006, radius: 0.006 }
+
+# ---- Topics (label + colour, group the activities below) ----
+# `visible: false` hides a topic's activities by default (toggle any of them on/off in the
+# UI, or with --hide / --only). Here the morning slot starts on Walk; tick Gym (and untick
+# Walk) to swap it in.
 topics:
   work:     { label: Work,             color: "#3D6FB4" }
   walk:     { label: Walk,             color: "#2E9E5B" }
@@ -30,8 +45,10 @@ topics:
   social:   { label: Friends & family, color: "#C9459E" }
   downtime: { label: Downtime,         color: "#E0A000" }
 
-# Weekly activities. `label` is optional (defaults to the topic label). To drop a one-off,
-# comment it out; to swap a whole topic in/out, toggle its visibility (above / in the UI).
+
+# ====================== YOUR ACTIVITIES =====================================
+# `label` is optional (defaults to the topic label). To drop a one-off, comment it out;
+# to swap a whole topic in/out, toggle its visibility (above / in the UI).
 activities:
   # Morning movement - Walk shows by default; tick Gym (and untick Walk) to swap it in.
   - { days: [Mon, Wed, Fri], start: "06:45", end: "07:30", topic: walk }
@@ -54,13 +71,3 @@ activities:
 
   # Wind down
   - { days: [Mon, Tue, Wed, Thu, Sun], start: "21:15", end: "22:00", topic: downtime, label: Reading }
-
-# Desktop wallpaper (KDE Plasma; --wallpaper). The page-shaped sheet is centred on a
-# solid canvas at each screen's native resolution.
-wallpaper:
-  background: "#2b2f36" # canvas colour behind the sheet
-  margin: 0.05          # fraction of the screen's short edge kept clear around the sheet
-  screens: all          # all | primary | comma list of output names (e.g. eDP-1,HDMI-A-1)
-  # A soft drop shadow makes the sheet read as a page on the desk. `false` disables it;
-  # otherwise override any of these (opacity is 0-255; the rest are fractions of the short edge):
-  # shadow: { opacity: 120, blur: 0.013, offset: 0.006, radius: 0.006 }
