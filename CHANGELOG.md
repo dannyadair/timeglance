@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.9.0 (2026-10-17)
+
+### Documentation
+
+- State test-adding policy for new functionality
+  ([`f9774cf`](https://github.com/dannyadair/timeglance/commit/f9774cfb12ba4c9f4d85d7554c542b3c589e5ae0))
+
+### Features
+
+- Weekly wallpaper canvas follows the theme
+  ([`2e59a23`](https://github.com/dannyadair/timeglance/commit/2e59a23a3e3aa4c0a17b538be5ceb6cc14fc7e50))
+
+
 ## v3.8.0 (2026-10-17)
 
 ### Features
