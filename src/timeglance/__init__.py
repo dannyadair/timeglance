@@ -1,3 +1,3 @@
 """timeglance: a printable weekly routine sheet and a year-at-a-glance planner."""
 
-__version__ = "3.9.0"
+__version__ = "3.9.1"

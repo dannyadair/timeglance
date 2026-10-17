@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.9.1 (2026-10-17)
+
+### Bug Fixes
+
+- Make the dark wallpaper canvas actually dark
+  ([`fe92ab3`](https://github.com/dannyadair/timeglance/commit/fe92ab3600056c04dddcc02c5fd2c431d64ced4a))
+
+
 ## v3.9.0 (2026-10-17)
 
 ### Documentation
