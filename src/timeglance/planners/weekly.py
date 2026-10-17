@@ -46,7 +46,7 @@ class WeeklyPlanner:
         theme, layout = self._variant(raw, {})
         return {
             "papers": self.papers,
-            "paper": "A4",
+            "paper": raw.get("paper", "A4"),
             "themes": wbuild.ALL_THEMES,
             "layouts": wbuild.ALL_LAYOUTS,
             "theme": theme,

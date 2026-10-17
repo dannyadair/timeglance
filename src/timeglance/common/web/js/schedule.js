@@ -159,7 +159,7 @@ export async function showSchedule() {
     sync();
     return sec;
   };
-  card.append(section("year", "Year"), section("weekly", "Weekly"));
+  card.append(section("weekly", "Weekly"), section("year", "Year"));
 
   const bar = el("div", { className: "grp", style: "margin-top:14px" });
   const save = el("button", { className: "primary" }, "Save");
@@ -185,7 +185,7 @@ export async function showSchedule() {
       ),
       action,
     };
-    for (const name of ["year", "weekly"]) {
+    for (const name of ["weekly", "year"]) {
       const block = { wallpaper: $(`#s_wp_${name}`).checked };
       const boxes = [
         ...card.querySelectorAll(`input.schd-scr[data-planner="${name}"]`),

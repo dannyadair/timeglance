@@ -17,6 +17,7 @@
            padding: 8px 16px; border-bottom: 1px solid var(--bd); background: var(--surface); }
   header .brand { font-weight: 700; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; cursor: pointer; }
   header .brand img { width: 22px; height: 22px; border-radius: 5px; display: block; }
+  header .brand .ver { font-weight: 400; font-size: 11px; letter-spacing: 0; color: var(--mut); }
   .seg { display: inline-flex; border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; }
   .seg button { border: none; border-radius: 0; background: var(--surface); color: var(--text); padding: 5px 12px; }
   .seg button.on { background: var(--accent); color: #fff; }
@@ -37,7 +38,10 @@
   main { display: flex; height: calc(100vh - 49px); }
   aside { width: 224px; flex: none; padding: 12px 14px; border-right: 1px solid var(--bd);
           background: var(--surface); overflow: auto; }
-  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin: 4px 0 8px; }
+  aside h2 { display: flex; align-items: baseline; justify-content: space-between;
+          font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin: 4px 0 8px; }
+  aside h2 .allnone { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  aside h2 .allnone a { color: var(--accent); cursor: pointer; padding-left: 8px; }
   .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
   .row label, .modal .scr label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; }
   .row .sw { width: 13px; height: 13px; border-radius: 3px; flex: none; }
@@ -120,7 +124,7 @@
 </head>
 <body>
   <header>
-    <span class="brand"><img src="/favicon.svg" alt="">timeglance</span>
+    <span class="brand"><img src="/favicon.svg" alt="">timeglance<span class="ver">__TG_VERSION__</span></span>
     <span class="seg" id="planner">
       <button data-planner="weekly">Weekly</button>
       <button data-planner="year">Year</button>

@@ -117,7 +117,23 @@ function wireRangeHelp() {
 export function buildSide() {
   const m = state.cfg[state.planner].meta;
   side.innerHTML = "";
-  side.append(el("h2", {}, state.planner === "year" ? "Layers" : "Topics"));
+  const title = state.planner === "year" ? "Layers" : "Topics";
+  const head = el(
+    "h2",
+    {},
+    `${title}<span class="allnone"><a data-all>all</a><a data-none>none</a></span>`,
+  );
+  side.append(head);
+  const setAll = (on) => {
+    side.querySelectorAll("input[data-layer]").forEach((c) => {
+      c.checked = on;
+    });
+    preview();
+  };
+  head.querySelector("[data-all]").addEventListener("click", () => setAll(true));
+  head
+    .querySelector("[data-none]")
+    .addEventListener("click", () => setAll(false));
   for (const l of m.layers) {
     const id = "ly_" + l.id;
     const row = el("div", { className: "row" });
