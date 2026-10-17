@@ -66,7 +66,7 @@ WEEKLY_THEMES = {
         "today_bg": "#3D6FB4",
         "today_text": "#ffffff",
         "today_tint": "rgba(61,111,180,0.16)",
-        "canvas": "#2b2f36",
+        "canvas": "#0d0e11",
     },
 }
 ALL_THEMES = list(WEEKLY_THEMES)

@@ -13,6 +13,7 @@
 [![Downloads](https://img.shields.io/pypi/dw/timeglance?color=blue)](https://pypistats.org/packages/timeglance)
 [![sigstore](https://img.shields.io/badge/sigstore-signed-blue)](https://github.com/dannyadair/timeglance/releases)
 [![OSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/dannyadair/timeglance?label=OSSF%20Scorecard)](https://scorecard.dev/viewer/?uri=github.com/dannyadair/timeglance)
+[![OSSF Best Practice](https://img.shields.io/cii/level/15616?label=OSSF%20Best%20Practice)](https://www.bestpractices.dev/projects/15616)
 
 Config-driven time planning at a glance - one web UI controls two planners:
 
