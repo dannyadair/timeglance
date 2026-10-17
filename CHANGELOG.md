@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.8.0 (2026-10-17)
+
+### Features
+
+- PySide6 system tray, schedule dead switch, friendly screen names
+  ([`77a38ce`](https://github.com/dannyadair/timeglance/commit/77a38ced9fee91a92f60c66598bb0d8a0c1abc0c))
+
+
 ## v3.7.1 (2026-10-17)
 
 ### Bug Fixes
