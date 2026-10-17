@@ -2,10 +2,14 @@
 
 import pytest
 
-pytest.importorskip("pystray")
-
-from timeglance import tray  # noqa: E402
-from timeglance.common import schedule, settings  # noqa: E402
+# pystray picks and imports a GUI backend at import time; in a headless CI container that fails
+# with a backend error (e.g. Xlib "Bad display name"), not ImportError - so importorskip isn't
+# enough. Guard the whole tray import and skip the module when no backend is available.
+try:
+    from timeglance import tray
+    from timeglance.common import schedule, settings
+except Exception as e:
+    pytest.skip(f"tray unavailable: {e}", allow_module_level=True)
 
 
 def test_toggle_planner_edits_schedule(tmp_path, monkeypatch):
