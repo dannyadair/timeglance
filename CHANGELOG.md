@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.9.2 (2026-10-17)
+
+### Bug Fixes
+
+- Fill the weekly page margin with the theme background
+  ([`bebda49`](https://github.com/dannyadair/timeglance/commit/bebda491010507188f7478fe5cd6ebb461e0d76f))
+
+### Documentation
+
+- Refresh for the schedule dead switch, theme-driven wallpaper canvas and friendly screen names
+  ([`b3de52f`](https://github.com/dannyadair/timeglance/commit/b3de52f4f853ac8bcd6511c802b55bc781778653))
+
+
 ## v3.9.1 (2026-10-17)
 
 ### Bug Fixes
