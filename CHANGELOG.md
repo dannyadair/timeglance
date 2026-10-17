@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v3.6.0 (2026-10-17)
+
+### Bug Fixes
+
+- Top-align the control-panel preview (was vertically centred)
+  ([`2885e55`](https://github.com/dannyadair/timeglance/commit/2885e551318f7fdef1566017538de721138b1435))
+
+### Features
+
+- Add a Sunday|Monday week divider to the aligned year grid
+  ([`72e384f`](https://github.com/dannyadair/timeglance/commit/72e384fa5ad1842b8ce534289da2189927528bd9))
+
+- Sharpen year weekdays and aligned day numbers, mark the current month
+  ([`e4516d3`](https://github.com/dannyadair/timeglance/commit/e4516d3f5f14e994c3a1dbb6e2a3c9b0da0de70a))
+
+
 ## v3.5.5 (2026-10-16)
 
 ### Bug Fixes
