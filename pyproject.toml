@@ -48,6 +48,7 @@ timeglance = "timeglance.cli:main"
 dev = [
     "pre-commit>=4.2.0",
     "pytest>=9.1.1",
+    "pytest-cov>=5",
     "python-semantic-release>=10",
     "pip-audit>=2.7",
     "bandit>=1.8",
@@ -75,6 +76,9 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["timeglance"]
 
 # Automated versioning via Conventional Commits: feat -> minor, fix -> patch, breaking -> major.
 # allow_zero_version is off, so the first release lands at 1.0.0 (no 0.x line). build_command runs

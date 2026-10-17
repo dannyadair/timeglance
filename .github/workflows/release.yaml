@@ -20,6 +20,7 @@ jobs:
   tests:
     if: ${{ !startsWith(github.event.head_commit.message, 'RELEASE:') }}
     uses: ./.github/workflows/tests.yaml
+    secrets: inherit # pass CODECOV_TOKEN through to the reusable workflow for the coverage upload
   release:
     name: Release
     needs: [pre-commit, tests] # a broken build never reaches the release step
@@ -45,7 +46,7 @@ jobs:
           github_token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
   # Publish to PyPI only when a release was actually cut (gated on the action's structured
-  # `released` output, never log-grepping) AND the .deb installed and smoke-tested cleanly on
+  # `released` output, never log-grepping) AND the .deb installed and passed its full test suite on
   # every target distro - PyPI uploads are irreversible, so they wait on the strongest end-to-end
   # check we have (the same code, imported and rendering on real 3.12/3.13/3.14). It runs in the
   # `pypi` environment, so the OIDC token - and thus publishing rights - is scoped to this job
@@ -61,7 +62,7 @@ jobs:
       url: https://pypi.org/p/timeglance
     permissions:
       id-token: write
-      contents: read # checkout needs read access while the repo is private
+      contents: read # checkout; keep this job's grant minimal alongside id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -114,10 +115,12 @@ jobs:
           path: timeglance_${{ env.VERSION }}_all.deb
 
   # Install the .deb in a fresh container of each supported distro (apt resolves the Depends from
-  # that distro's archive) and smoke-test it - the import that used to crash, the CLI, both renders
-  # and the poppler wallpaper rasterisation - so a broken package can never reach the Release. The
-  # matrix is the set of distros we commit to supporting; a newer release we haven't added yet may
-  # happen to work, but that isn't promised until it's in the matrix.
+  # that distro's archive) and exercise it against that distro's own library stack: the smoke paths
+  # (the import that used to crash, the CLI, both renders, the poppler wallpaper rasterisation), the
+  # render-correctness check, and the full unit suite run against the *installed* package - so a
+  # broken package can never reach the Release. The matrix is the set of distros we commit to
+  # supporting; a newer release we haven't added yet may happen to work, but that isn't promised
+  # until it's in the matrix.
   deb-test:
     name: Test .deb
     needs: [release, deb-build]
@@ -135,13 +138,14 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: deb
-      - name: Install and smoke-test in ${{ matrix.image }}
+      - name: Install and test in ${{ matrix.image }}
         run: |
           docker run --rm -v "$PWD:/w" -w /w -e DEBIAN_FRONTEND=noninteractive ${{ matrix.image }} bash -euc '
             apt-get update -qq
-            apt-get install -y -qq "./timeglance_'"$VERSION"'_all.deb"
+            apt-get install -y -qq "./timeglance_'"$VERSION"'_all.deb" python3-pytest
             bash debian/tests/smoke
             bash debian/tests/render-correctness
+            bash debian/tests/unit
           '
 
   # Attach the .deb to the GitHub Release only after every distro passed its install-test, together
