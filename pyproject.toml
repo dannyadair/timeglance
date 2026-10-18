@@ -36,7 +36,7 @@ dependencies = [
 tray = ["PySide6>=6.6"]
 
 [project.urls]
-Homepage = "https://github.com/dannyadair/timeglance"
+Homepage = "https://timeglance.app"
 Repository = "https://github.com/dannyadair/timeglance"
 Issues = "https://github.com/dannyadair/timeglance/issues"
 
