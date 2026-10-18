@@ -29,3 +29,6 @@ schedule.yaml
 
 # Backups written before a "reset to template" (config.yaml.<stamp>.bak etc.)
 *.yaml.*.bak
+
+# Local Cursor project config (rules, MCP, etc.) - personal workflow, not shipped
+/.cursor
