@@ -166,6 +166,37 @@ def test_parse_rejects_invalid_range_token():
         yrender.parse({"layers": [], "events": [], "range": {"start": "nonsense"}})
 
 
+LEGEND_RAW = {
+    "range": {"start": "2026-01", "end": "2026-12"},
+    "layers": [
+        {"id": "work", "label": "Work", "color": "#111", "visible": True},  # drawn
+        {"id": "gym", "label": "Gym", "color": "#222", "visible": False},  # hidden
+        {"id": "trips", "label": "Trips", "color": "#333", "visible": True},  # empty (visible, no event)
+    ],
+    "events": [{"layer": "work", "date": dt.date(2026, 3, 2), "label": "Kickoff"}],
+}
+
+
+def test_legend_defaults_to_drawn_layers_only():
+    """By default the legend lists only layers with events in range; hidden and empty are dropped."""
+    svg = yrender.render_svg(yrender.parse(LEGEND_RAW))
+    assert ">Work<" in svg
+    assert ">Gym<" not in svg
+    assert ">Trips<" not in svg
+
+
+def test_legend_addons_include_hidden_and_empty():
+    """show_legend_empty/show_legend_hidden surface the event-free and toggled-off layers."""
+    svg = yrender.render_svg(yrender.parse({**LEGEND_RAW, "show_legend_empty": True, "show_legend_hidden": True}))
+    assert ">Work<" in svg and ">Gym<" in svg and ">Trips<" in svg
+
+
+def test_show_legend_false_omits_the_whole_legend():
+    """show_legend=False drops every legend entry (the title still renders)."""
+    svg = yrender.render_svg(yrender.parse({**LEGEND_RAW, "show_legend": False, "show_legend_hidden": True}))
+    assert ">Work<" not in svg
+
+
 def test_parse_rejects_non_date_event_field():
     """A mistyped date (YAML keeps `2027-01-3` as a string) is a clear ValueError, not a TypeError."""
     raw = {

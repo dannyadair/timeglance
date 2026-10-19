@@ -132,7 +132,7 @@ def pack_day_lanes(cells):
         c["lane_size"] = round(reach / n * 100, 3)
 
 
-def positions(cfg, activities):
+def positions(cfg, activities, show_legend_empty=False, show_legend_hidden=False):
     """Build the per-day positioned cells, hour gridlines and totals legend for the sheet.
     Positions are axis-agnostic (`pos`/`size` as a % of the day span) so the template can lay
     them along either axis - down the day columns (vertical) or across the day rows (horizontal).
@@ -178,21 +178,52 @@ def positions(cfg, activities):
         )
         t += step
 
-    # Legend follows the `topics:` declaration order (manual control), not activity order.
-    legend = [
-        {"label": t["label"], "color": t["color"], "hours": fmt_hours(totals[tid])}
-        for tid, t in topics.items()
-        if tid in used
-    ]
+    # Legend follows the `topics:` declaration order (manual control), not activity order. It
+    # lists the topics drawn on the sheet; `show_legend_empty`/`show_legend_hidden` add the
+    # activity-free or toggled-off topics, greyed.
+    legend = []
+    for tid, t in topics.items():
+        drawn = tid in used
+        if not drawn and not (show_legend_hidden if not t.get("visible", True) else show_legend_empty):
+            continue
+        legend.append(
+            {
+                "label": t["label"],
+                "color": t["color"],
+                "hours": fmt_hours(totals[tid]) if drawn else "",
+                "muted": not drawn,
+            }
+        )
     return by_day, hour_lines, legend
 
 
-def render(cfg, hide, paper, today=None, theme="light", layout="vertical"):
+def render(
+    cfg,
+    hide,
+    paper,
+    today=None,
+    theme="light",
+    layout="vertical",
+    show_legend=None,
+    show_legend_empty=None,
+    show_legend_hidden=None,
+):
     """`today`: the weekday label (e.g. "Wed") to highlight as the current day; defaults to the
     render date's weekday so a daily-rebuilt sheet marks today. A label not in `days` highlights
     nothing (e.g. a Sat/Sun render of a Mon–Fri sheet). `theme`/`layout` select the colour palette
-    and orientation (vertical = days-as-columns, horizontal = days-as-rows)."""
-    by_day, hour_lines, legend = positions(cfg, visible_activities(cfg, hidden_topics(cfg, hide)))
+    and orientation (vertical = days-as-columns, horizontal = days-as-rows). `show_legend` draws the
+    colour key; `show_legend_empty`/`show_legend_hidden` extend it to activity-free or toggled-off
+    topics. Each defaults to the YAML value when left as None."""
+    if show_legend is None:
+        show_legend = cfg.get("show_legend", True)
+    if show_legend_empty is None:
+        show_legend_empty = cfg.get("show_legend_empty", False)
+    if show_legend_hidden is None:
+        show_legend_hidden = cfg.get("show_legend_hidden", False)
+    activities = visible_activities(cfg, hidden_topics(cfg, hide))
+    by_day, hour_lines, legend = positions(cfg, activities, show_legend_empty, show_legend_hidden)
+    if not show_legend:
+        legend = []
     track_h = PAGE_SHORT_MM[paper] - 2 * PAGE_MARGIN_MM - HEADER_RESERVE_MM
     # Day lanes get a definite mm cross-axis size (column width when vertical, row height when
     # horizontal) so every block's % dimension resolves against a definite box. A flex-stretched
@@ -222,9 +253,28 @@ def render(cfg, hide, paper, today=None, theme="light", layout="vertical"):
     )
 
 
-def render_pdf(cfg, hide, paper, theme="light", layout="vertical"):
+def render_pdf(
+    cfg,
+    hide,
+    paper,
+    theme="light",
+    layout="vertical",
+    show_legend=None,
+    show_legend_empty=None,
+    show_legend_hidden=None,
+):
     """Render the sheet to PDF bytes."""
-    return HTML(string=render(cfg, hide, paper, theme=theme, layout=layout), base_url=str(HERE)).write_pdf()
+    html = render(
+        cfg,
+        hide,
+        paper,
+        theme=theme,
+        layout=layout,
+        show_legend=show_legend,
+        show_legend_empty=show_legend_empty,
+        show_legend_hidden=show_legend_hidden,
+    )
+    return HTML(string=html, base_url=str(HERE)).write_pdf()
 
 
 def _fit(inner_w, inner_h, max_w, max_h):

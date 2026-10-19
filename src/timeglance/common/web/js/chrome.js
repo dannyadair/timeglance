@@ -143,6 +143,27 @@ export function buildSide() {
     row.querySelector("input").addEventListener("change", preview);
     side.append(row);
   }
+  const noun = state.planner === "year" ? "layers" : "topics";
+  const legendOpts = [
+    ["c_legend", "show legend", m.show_legend, false],
+    ["c_empty", `include empty ${noun}`, m.show_legend_empty, true],
+    ["c_hidden", `include hidden ${noun}`, m.show_legend_hidden, true],
+  ];
+  for (const [id, label, on, sub] of legendOpts) {
+    const row = el("div", {
+      className: sub ? "row sub" : "row",
+      style: sub ? "" : "margin-top:10px",
+    });
+    row.dataset.toggle = id;
+    row.innerHTML = `<input type="checkbox" id="${id}" ${on ? "checked" : ""}><label>${label}</label>`;
+    row.querySelector("input").addEventListener("change", preview);
+    side.append(row);
+  }
+  const legendCb = $("#c_legend");
+  const subCbs = [$("#c_empty"), $("#c_hidden")];
+  const syncLegend = () => subCbs.forEach((c) => (c.disabled = !legendCb.checked));
+  legendCb.addEventListener("change", syncLegend);
+  syncLegend();
   if (state.planner !== "year") return;
   const byId = Object.fromEntries(m.layers.map((l) => [l.id, l.color]));
   side.append(el("h2", { style: "margin-top:16px" }, "Sources"));

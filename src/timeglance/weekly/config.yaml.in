@@ -27,6 +27,11 @@ day_start: "06:00"
 day_end: "22:00"
 hour_marks: 1
 
+# ---- Legend ----
+show_legend: true          # draw the colour key
+show_legend_empty: false   # also list topics with no activities, greyed
+show_legend_hidden: false  # also list toggled-off (visible: false) topics, greyed
+
 # ---- Wallpaper (KDE Plasma; --wallpaper) ----
 # The page-shaped sheet is centred on a solid canvas at each screen's current resolution.
 wallpaper:

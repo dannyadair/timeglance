@@ -9,6 +9,9 @@ export function params() {
     ...side.querySelectorAll("input[data-layer]:not(:checked)"),
   ].map((c) => c.value);
   p.set("hide", hide.join(","));
+  p.set("show_legend", $("#c_legend").checked);
+  p.set("show_legend_empty", $("#c_empty").checked);
+  p.set("show_legend_hidden", $("#c_hidden").checked);
   if (state.planner === "year") {
     p.set("theme", $("#c_theme").value);
     p.set("layout", $("#c_layout").value);
