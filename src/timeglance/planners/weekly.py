@@ -38,6 +38,13 @@ class WeeklyPlanner:
             p.get("layout") or raw.get("layout") or "vertical",
         )
 
+    def _legend(self, raw, p):
+        """Legend flags (show/empty/hidden) with request params overriding the YAML defaults."""
+        return {
+            key: (p[key] == "true" if key in p else raw.get(key, default))
+            for key, default in (("show_legend", True), ("show_legend_empty", False), ("show_legend_hidden", False))
+        }
+
     def meta(self):
         """UI metadata: paper sizes, themes, layouts, topic layers and wallpaper info."""
         raw = self._raw()
@@ -55,6 +62,7 @@ class WeeklyPlanner:
                 {"id": k, "label": t["label"], "color": t["color"], "visible": t.get("visible", True)}
                 for k, t in raw.get("topics", {}).items()
             ],
+            **self._legend(raw, {}),
             "wallpaper": wallpaper.ui_meta(backend, wp),
         }
 
@@ -62,14 +70,18 @@ class WeeklyPlanner:
         """Return the sheet as an HTML preview for the request params."""
         raw = self._raw()
         theme, layout = self._variant(raw, p)
-        html = wbuild.render(raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout)
+        html = wbuild.render(
+            raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout, **self._legend(raw, p)
+        )
         return "text/html; charset=utf-8", html.encode()
 
     def export(self, p):
         """Render the sheet to a PDF for download."""
         raw = self._raw()
         theme, layout = self._variant(raw, p)
-        pdf = wbuild.render_pdf(raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout)
+        pdf = wbuild.render_pdf(
+            raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout, **self._legend(raw, p)
+        )
         return "application/pdf", self.out_name, pdf
 
     def size_label(self, p):
@@ -86,7 +98,9 @@ class WeeklyPlanner:
         screens = wallpaper.resolve_screens(backend, p.get("screens") or wp.get("screens", "all"))
         fill = p.get("fill") or wp.get("fill", "preserveAspectCrop")
         theme, layout = self._variant(raw, p)
-        pdf = wbuild.render_pdf(raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout)
+        pdf = wbuild.render_pdf(
+            raw, self._hide(p), p.get("paper", "A4"), theme=theme, layout=layout, **self._legend(raw, p)
+        )
         render_png = wbuild.make_wallpaper_renderer(
             pdf, wbuild.canvas_color(wp, theme), wp.get("margin", 0.05), wbuild.resolve_shadow(wp)
         )

@@ -41,7 +41,7 @@ def test_layout_legend_totals_hours_across_days():
         "activities": [{"topic": "a", "days": ["Mon", "Tue", "Wed"], "start": "09:00", "end": "11:00"}],
     }
     _, _, legend = wbuild.positions(cfg, wbuild.visible_activities(cfg, set()))
-    assert legend == [{"label": "A", "color": "#111", "hours": "6h"}]  # 2h × 3 days
+    assert legend == [{"label": "A", "color": "#111", "hours": "6h", "muted": False}]  # 2h × 3 days
 
 
 def test_legend_follows_topics_order_not_activity_order():
@@ -62,6 +62,53 @@ def test_legend_follows_topics_order_not_activity_order():
     }
     _, _, legend = wbuild.positions(cfg, wbuild.visible_activities(cfg, set()))
     assert [item["label"] for item in legend] == ["X", "Y"]  # declaration order, unused z omitted
+
+
+LEGEND_CFG = {
+    "title": "T",
+    "days": ["Mon"],
+    "day_start": "08:00",
+    "day_end": "18:00",
+    "topics": {
+        "a": {"label": "A", "color": "#111", "visible": True},  # drawn (visible, has activity)
+        "b": {"label": "B", "color": "#222", "visible": False},  # hidden (toggled off)
+        "c": {"label": "C", "color": "#333", "visible": True},  # empty (visible, no activity)
+    },
+    "activities": [
+        {"topic": "a", "days": ["Mon"], "start": "09:00", "end": "10:00"},
+        {"topic": "b", "days": ["Mon"], "start": "10:00", "end": "11:00"},
+    ],
+}
+
+
+def _legend(**kw):
+    """Legend entries for LEGEND_CFG with the given show_* flags."""
+    acts = wbuild.visible_activities(LEGEND_CFG, wbuild.hidden_topics(LEGEND_CFG, None))
+    return wbuild.positions(LEGEND_CFG, acts, **kw)[2]
+
+
+def test_legend_defaults_to_drawn_topics_only():
+    """Without the add-ons the legend lists only the topics actually on the sheet."""
+    assert [(i["label"], i["muted"]) for i in _legend()] == [("A", False)]
+
+
+def test_legend_show_empty_adds_eventfree_topics_greyed():
+    """show_legend_empty appends visible-but-unused topics, greyed and without hours."""
+    assert [(i["label"], i["muted"], i["hours"]) for i in _legend(show_legend_empty=True)] == [
+        ("A", False, "1h"),
+        ("C", True, ""),
+    ]
+
+
+def test_legend_show_hidden_adds_toggled_off_topics_greyed():
+    """show_legend_hidden appends topics turned off via visible:false, greyed."""
+    assert [(i["label"], i["muted"]) for i in _legend(show_legend_hidden=True)] == [("A", False), ("B", True)]
+
+
+def test_render_show_legend_false_drops_all_legend_entries():
+    """show_legend=False renders the sheet with no legend items."""
+    html = wbuild.render(LEGEND_CFG, None, "A4", show_legend=False)
+    assert 'class="item' not in html
 
 
 def test_pack_day_lanes_non_overlapping_keep_full_width():

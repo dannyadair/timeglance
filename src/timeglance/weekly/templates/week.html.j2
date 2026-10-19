@@ -25,6 +25,7 @@
 
   .legend { font-size: 10px; line-height: 1.6; }
   .legend .item { display: inline-block; margin: 0 16px 0 0; white-space: nowrap; }
+  .legend .item.muted { opacity: 0.4; }
   .legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
   .legend .hrs { color: var(--muted); font-weight: 400; margin-left: 4px; }
 
@@ -101,7 +102,7 @@
         <h1>{{ title }}</h1>
         <div class="legend">
           {% for a in legend %}
-            <span class="item"><span class="swatch" style="background: {{ a.color }}"></span>{{ a.label }}<span class="hrs">{{ a.hours }}</span></span>
+            <span class="item{% if a.muted %} muted{% endif %}"><span class="swatch" style="background: {{ a.color }}"></span>{{ a.label }}<span class="hrs">{{ a.hours }}</span></span>
           {% endfor %}
         </div>
       </div>

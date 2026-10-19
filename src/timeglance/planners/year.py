@@ -39,6 +39,9 @@ class YearPlanner:
                 raw[key] = p[key]
         if "week_align" in p:
             raw["week_align"] = p["week_align"] == "true"
+        for key in ("show_legend", "show_legend_empty", "show_legend_hidden"):
+            if key in p:
+                raw[key] = p[key] == "true"
         if p.get("start") or p.get("end"):
             r = raw.get("range") or {}
             raw["range"] = {
@@ -78,6 +81,9 @@ class YearPlanner:
             "theme": raw.get("theme") or "light",
             "layout": raw.get("layout") or "vertical",
             "week_align": raw.get("week_align", True),
+            "show_legend": raw.get("show_legend", True),
+            "show_legend_empty": raw.get("show_legend_empty", False),
+            "show_legend_hidden": raw.get("show_legend_hidden", False),
             "size": raw.get("size", ""),
             "sources": summary,
             "wallpaper": wallpaper.ui_meta(backend, wp),

@@ -86,6 +86,9 @@ class Config:
     height: int = 1080
     show_today: bool = True
     dim_past: bool = True
+    show_legend: bool = True
+    show_legend_empty: bool = False
+    show_legend_hidden: bool = False
     start_ym: tuple = (2026, 1)
     end_ym: tuple = (2026, 12)
     layers: list[Layer] = field(default_factory=list)
@@ -224,6 +227,9 @@ def parse(raw) -> Config:
         theme=raw.get("theme", "light"),
         show_today=raw.get("show_today", True),
         dim_past=raw.get("dim_past", True),
+        show_legend=raw.get("show_legend", True),
+        show_legend_empty=raw.get("show_legend_empty", False),
+        show_legend_hidden=raw.get("show_legend_hidden", False),
         start_ym=start_ym,
         end_ym=end_ym,
         layers=layers,
@@ -418,11 +424,18 @@ def _svg_open(W, H):
 
 
 def _draw_header(out, cfg, t, pad, visible):
-    """Title + colour legend across the top; hidden layers render at low opacity."""
+    """Title + colour legend across the top. The legend lists the layers drawn on the sheet;
+    `show_legend_empty`/`show_legend_hidden` add the event-free or toggled-off layers (greyed).
+    `show_legend` omits the legend entirely."""
     out.append(_text(pad, pad + 40, cfg.title, 40, t["text"], weight="700"))
+    if not cfg.show_legend:
+        return
+    drawn = {ev.layer for ev in cfg.events if ev.layer in visible}
     lx = pad + 24 + len(cfg.title) * 23
     for lyr in cfg.layers:
-        op = 1.0 if lyr.id in visible else 0.28
+        if lyr.id not in drawn and not (cfg.show_legend_hidden if lyr.id not in visible else cfg.show_legend_empty):
+            continue
+        op = 1.0 if lyr.id in drawn else 0.28
         out.append(_rect(lx, pad + 22, 13, 13, lyr.color, rx=3, opacity=op))
         out.append(_text(lx + 18, pad + 33, lyr.label, 13, t["text"], opacity=op))
         lx += 18 + len(lyr.label) * 7.4 + 22

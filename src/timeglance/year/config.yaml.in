@@ -37,6 +37,11 @@ week_start: Mon            # Mon | Sun
 show_today: true           # draw a box around today
 dim_past: true             # fade the days before today
 
+# ---- Legend ----
+show_legend: true          # draw the colour key
+show_legend_empty: false   # also list layers with no events in range, greyed
+show_legend_hidden: false  # also list toggled-off (visible: false) layers, greyed
+
 # Named sizes (optional). `size` (or --size) may reference one by name, or be a raw WxH.
 sizes:
   laptop: 1920x1080
