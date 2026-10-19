@@ -2,6 +2,41 @@
 
 <!-- version list -->
 
+## v3.9.3 (2026-10-19)
+
+### Bug Fixes
+
+- **year**: Show relative range tokens in the control panel
+  ([`fb779cb`](https://github.com/dannyadair/timeglance/commit/fb779cbb997ac5260a4abd557499ffeb61b9358f))
+
+### Build System
+
+- **deps**: Bump actions/download-artifact from 4.3.0 to 8.0.2
+  ([`66d1124`](https://github.com/dannyadair/timeglance/commit/66d11241c63aa504d1d85fce1b3a47e54c0d4523))
+
+- **deps**: Bump actions/upload-artifact from 4.6.2 to 7.0.2
+  ([`cc38b66`](https://github.com/dannyadair/timeglance/commit/cc38b660442fa2c55abe254c56c107c0584bcccb))
+
+- **deps**: Bump ossf/scorecard-action from 2.4.4 to 2.5.0
+  ([`a01cfe9`](https://github.com/dannyadair/timeglance/commit/a01cfe9c88ed6218b04f6045ec84255f869fd8ac))
+
+- **deps-dev**: Bump pre-commit from 4.6.2 to 4.7.0
+  ([`faa706f`](https://github.com/dannyadair/timeglance/commit/faa706fc3fca4c278036a1c2ddb30c1661b2ec20))
+
+### Chores
+
+- Gitignore local .cursor project config
+  ([`47f0e3c`](https://github.com/dannyadair/timeglance/commit/47f0e3c725cf6c28e6b52ac9827879f14140b5eb))
+
+- Point the project Homepage at timeglance.app
+  ([`36b4ab9`](https://github.com/dannyadair/timeglance/commit/36b4ab95e8492b2d7c06cf6cd7ac25efe1823ba4))
+
+### Documentation
+
+- Add an illustration of the everyday productivity setup to motivation
+  ([`f4b6d5b`](https://github.com/dannyadair/timeglance/commit/f4b6d5b42ec8e5ab312f338647890165da6dbae3))
+
+
 ## v3.9.2 (2026-10-17)
 
 ### Bug Fixes
