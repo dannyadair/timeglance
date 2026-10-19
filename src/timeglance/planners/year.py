@@ -59,7 +59,9 @@ class YearPlanner:
         summary = ybuild.assemble(raw)
         backend = wallpaper.detect()
         wp = raw.get("wallpaper") or {}
+        r = raw.get("range") or {}
         (sy, sm), (ey, em) = yrender.resolve_range(raw, dt.date.today())
+        use_raw = not r.get("span")
         return {
             "layers": [
                 {"id": lyr["id"], "label": lyr["label"], "color": lyr["color"], "visible": lyr.get("visible", True)}
@@ -68,7 +70,10 @@ class YearPlanner:
             "themes": list(yrender.THEMES),
             "layouts": ybuild.ALL_LAYOUTS,
             "sizes": list(raw.get("sizes") or {}),
-            "range": {"start": f"{sy}-{sm:02d}", "end": f"{ey}-{em:02d}"},
+            "range": {
+                "start": r["start"] if use_raw and r.get("start") else f"{sy}-{sm:02d}",
+                "end": r["end"] if use_raw and r.get("end") else f"{ey}-{em:02d}",
+            },
             "week_start": raw.get("week_start", "Mon"),
             "theme": raw.get("theme") or "light",
             "layout": raw.get("layout") or "vertical",
