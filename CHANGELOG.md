@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.10.0 (2026-10-19)
+
+### Features
+
+- **legend**: Configurable legend with empty/hidden add-ons
+  ([`c70a411`](https://github.com/dannyadair/timeglance/commit/c70a41101329722ee5dea4cea9cce346373b2d4d))
+
+
 ## v3.9.3 (2026-10-19)
 
 ### Bug Fixes
