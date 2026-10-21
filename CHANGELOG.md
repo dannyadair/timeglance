@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.11.0 (2026-10-21)
+
+### Build System
+
+- **deps**: Bump pillow and certifi to patch audit CVEs
+  ([`d124ae8`](https://github.com/dannyadair/timeglance/commit/d124ae823016ae305a9d5abdc1516b90528ab3ad))
+
+### Features
+
+- **serve**: Standalone /weekly and /year preview URLs
+  ([`b6b1b46`](https://github.com/dannyadair/timeglance/commit/b6b1b4696ef51da0d282a98609555434c19bbe23))
+
+
 ## v3.10.0 (2026-10-19)
 
 ### Features
