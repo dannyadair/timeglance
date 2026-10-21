@@ -23,6 +23,16 @@ export function showConfig() {
     c.from_template ? `${c.path} - from template (not yet saved)` : c.path,
   );
   const save = el("button", { className: "primary" }, "Save");
+  // Lucide `eye`: open the saved config's render in its own tab (/weekly or /year)
+  const EYE = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const viewTab = el("a", {
+    className: "icon-link",
+    href: `/${state.planner}`,
+    target: "_blank",
+    rel: "noopener",
+    title: "Preview in new tab",
+  });
+  viewTab.innerHTML = EYE;
   const flash = el("span", { style: "font-size:12px;color:#2e7d32" });
   const reset = el(
     "button",
@@ -77,7 +87,7 @@ export function showConfig() {
   };
   const wrap = el("div", { className: "cfg" });
   wrap.append(el("div", { className: "bar" }, ""), ta, err);
-  $(".bar", wrap).append(save, flash, note, reset);
+  $(".bar", wrap).append(save, flash, note, viewTab, reset);
   body.append(wrap);
 }
 

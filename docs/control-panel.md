@@ -7,7 +7,9 @@ Open <http://localhost:8753>. Switch **Weekly / Year**, and within each, switch 
   opens a dialog to pick target screens (including remembered-but-offline ones, with **Forget**) and a fit mode,
   then applies to the live desktop. Both act on the current controls.
 - **Config** - the planner's full YAML in an editor. **Save** validates and writes it; **Reset to template** restores
-  the annotated template. This is the source of truth - anything not in the quick controls lives here.
+  the annotated template. This is the source of truth - anything not in the quick controls lives here. The eye icon
+  opens the saved config's render in its own tab (`/weekly`, `/year`) - the output with no quick-control overrides, so
+  you can edit here and refresh it alongside.
 
 Two shared, app-wide views sit alongside them:
 
