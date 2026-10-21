@@ -30,6 +30,17 @@ WEB = Path(__file__).parent / "web"
 NO_CACHE = {"Cache-Control": "no-store"}
 
 
+def _svg_page(svg):
+    """Wrap a raw SVG render (the year preview) in a minimal standalone HTML page."""
+    return (
+        "<!doctype html><html><head><meta charset='utf-8'><title>timeglance</title>"
+        "<style>html,body{margin:0;height:100%}"
+        "body{display:flex;align-items:center;justify-content:center;background:#f4f5f7}"
+        "svg{max-width:100%;max-height:100%;height:auto}</style></head>"
+        f"<body>{svg.decode()}</body></html>"
+    )
+
+
 class Handler(BaseHTTPRequestHandler):
     """HTTP handler serving the SPA assets and the ``/api/*`` endpoints."""
 
@@ -91,6 +102,13 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/preview":
                 ctype, body = self._planner(p).preview(p)
                 self._send(200, ctype, body)
+            elif u.path[1:] in PLANNERS:
+                # /weekly, /year: the render with saved-config defaults (no UI overrides), for a
+                # standalone tab. Weekly is already a full HTML page; the year SVG gets a wrapper.
+                ctype, body = PLANNERS[u.path[1:]].preview({})
+                if ctype.startswith("image/svg"):
+                    ctype, body = "text/html; charset=utf-8", _svg_page(body)
+                self._send(200, ctype, body, NO_CACHE)
             elif u.path == "/api/export":
                 planner = self._planner(p)
                 ctype, fname, body = planner.export(p)
