@@ -84,6 +84,8 @@ class Scheduler:
             pc = self.schedule.planner_block(name)
             pc["render_yaml"] = schedule.dump_render(pc["render"])
             config[name] = pc
+        screens = wallpaper.known(wallpaper.detect())
+        schedule.apply_reconnected(PLANNERS, LOG)
         return {
             "running": self.running,
             "enabled": self.schedule.enabled,
@@ -92,7 +94,7 @@ class Scheduler:
             "planners": self.schedule.cfg.get("planners", []),
             "config": config,
             "outputs": {name: output_path(p) for name, p in PLANNERS.items()},
-            "screens": wallpaper.known(wallpaper.detect()),
+            "screens": screens,
             "last_run": self.last_run,
             "next_run": self.next_run,
         }

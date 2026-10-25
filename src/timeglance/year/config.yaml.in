@@ -52,6 +52,8 @@ size: laptop
 # ---- Wallpaper (KDE Plasma only, auto-detected) ----
 # `--wallpaper` or the UI's "Set as wallpaper" button render each chosen screen at its
 # current resolution and set it as that screen's background; other screens are left untouched.
+# screens/fill here are the Set-as-wallpaper dialog (and CLI) defaults only. The nightly
+# job has its own target list in schedule.yaml.
 wallpaper:
   screens: all              # all | primary | [eDP-1, HDMI-A-1]   (or --screen)
   fill: preserveAspectCrop  # preserveAspectCrop | preserveAspectFit | stretch | tile | pad

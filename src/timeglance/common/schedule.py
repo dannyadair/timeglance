@@ -117,3 +117,35 @@ class Schedule:
                     log.log(name, line)
             except (Exception, SystemExit):
                 log.log(name, f"ERROR\n{traceback.format_exc().strip()}")
+
+
+def apply_reconnected(planners, log, backend=None):
+    """If a scheduled target just came back (same monitor, possibly a new connector), set
+    the already-rendered wallpaper file on it. ``known()`` must have been called first."""
+    appeared = wallpaper.take_reconnected()
+    if not appeared:
+        return
+    backend = backend or wallpaper.detect()
+    if not backend:
+        return
+    keys = {s.key or s.name for s in appeared}
+    sched = Schedule.load()
+    for name in sched.cfg.get("planners", []):
+        planner = planners[name]
+        pc = sched.planner_block(name)
+        if not pc["wallpaper"] or not pc["screens"]:
+            continue
+        assignments = []
+        for s in wallpaper.resolve_screens(backend, pc["screens"]):
+            if not s.connected or (s.key or s.name) not in keys:
+                continue
+            png = wallpaper.existing_png(planner.out, f"{name}-wallpaper", s)
+            if png:
+                assignments.append((s, png))
+        if not assignments:
+            continue
+        fill = (planner._raw().get("wallpaper") or {}).get("fill", "preserveAspectCrop")
+        report = wallpaper.apply_files(backend, assignments, fill)
+        by_key = {f"{s.x},{s.y},{s.lw}x{s.lh}": s.name for s, _ in assignments}
+        for n in (by_key[k] for k in report.get("set", []) if k in by_key):
+            log.log(name, f"set wallpaper on {n} (reconnect)")

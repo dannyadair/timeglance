@@ -24,7 +24,7 @@ function wpSelected(sel, s) {
     : String(sel)
         .split(",")
         .map((x) => x.trim());
-  return list.includes(s.name);
+  return [s.name, ...(s.aliases || [])].some((n) => list.includes(n));
 }
 
 export function openWallpaperDialog(wp) {

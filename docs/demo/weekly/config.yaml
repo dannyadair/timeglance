@@ -23,6 +23,8 @@ hour_marks: 1
 
 # ---- Wallpaper (KDE Plasma; --wallpaper) ----
 # The page-shaped sheet is centred on a solid canvas at each screen's current resolution.
+# screens here is the Set-as-wallpaper dialog (and CLI) default only. The nightly job
+# has its own target list in schedule.yaml.
 wallpaper:
   background: auto      # canvas colour behind the sheet (auto = theme-driven)
   margin: 0.05          # fraction of the screen's short edge kept clear around the sheet
