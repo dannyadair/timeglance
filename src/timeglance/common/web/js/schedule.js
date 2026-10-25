@@ -96,11 +96,14 @@ export async function showSchedule() {
       });
       for (const sc of rows) {
         const seen = sc.seen !== false;
+        const picked = [sc.name, ...(sc.aliases || [])].some((n) =>
+          chosen.includes(n),
+        );
         const on = !seen
           ? true
           : sc.connected
-            ? chosen.length === 0 || chosen.includes(sc.name)
-            : chosen.includes(sc.name);
+            ? chosen.length === 0 || picked
+            : picked;
         const model = sc.model || sc.name;
         const detail = !seen
           ? `${sc.name} · in config, never seen`
@@ -181,9 +184,6 @@ export async function showSchedule() {
   );
   card.append(bar);
 
-  const connectedNames = s.screens
-    .filter((sc) => sc.connected)
-    .map((sc) => sc.name);
   const collect = (action) => {
     const cfg = {
       enabled: $("#s_enabled").checked,
@@ -200,11 +200,9 @@ export async function showSchedule() {
       ];
       if (boxes.length) {
         const chosen = boxes.filter((c) => c.checked).map((c) => c.value);
-        // All connected ticked (and nothing else) == "all" ([]), so a new screen is still covered.
-        const allConnected =
-          chosen.length === connectedNames.length &&
-          connectedNames.every((n) => chosen.includes(n));
-        block.screens = allConnected ? [] : chosen;
+        // Keep the explicit list. Collapsing "every connected screen" to [] (all) is what
+        // silently targeted a newly plugged-in monitor the user never chose.
+        block.screens = chosen;
       }
       block.render = $(`#s_render_${name}`).value;
       cfg[name] = block;

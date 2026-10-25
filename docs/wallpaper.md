@@ -10,23 +10,27 @@ rasterised from its PDF (with poppler's `pdftocairo`, from `poppler-utils`) onto
 side in the planner's `out/`.
 
 Screens read by a friendly name - the monitor's model from its EDID (or "Built-in display" for a laptop panel),
-falling back to the manufacturer + connector, then the bare connector name.
+falling back to the manufacturer + connector, then the bare connector name. Identity is the EDID (or, for
+older state, model + resolution): a dock that re-enumerates the same panel as `DP-8` one day and `DP-9` the
+next is one screen, not two. The extra connector name is kept as an alias so a schedule that still says
+`DP-8` applies to the live output.
 
 Resolution is never configured - it comes from the screen: its current mode when connected, or the last-seen
 size for a screen that's remembered but disconnected. timeglance remembers every screen it has seen connected
 (in `state/screens.json`, pruned after 30 days), so you can target one that's currently unplugged: its file is
-still rendered and written at the remembered resolution, and Plasma picks it up when the screen reconnects. A
-screen named in config that's never been seen has no resolution, so it can't be rendered - it's shown as FYI
-("in config, never seen") and skipped rather than erroring.
+still rendered and written at the remembered resolution. Opening the Schedule view (or the next scheduled
+run, if the screen is already back) applies that file to the live output, including when it came back on a
+new connector. A screen named in config that's never been seen has no resolution, so it can't be rendered -
+it's shown as FYI ("in config, never seen") and skipped rather than erroring.
 
 Output goes to each planner's `out/` as a stable `{planner}-wallpaper-{screen}.png`, overwritten in place (one
 file per screen; screens sharing a resolution reuse a single render). The stable name is deliberate: a screen
 that was disconnected at render time still picks up the fresh image when it reconnects, because Plasma remembers
 its path and reloads from disk. Plasma's `org.kde.image` otherwise only reloads when the image config string
 changes, so each apply appends a throwaway `#<stamp>` fragment to the `file://` path - that changes the string
-(forcing a reload) while Qt strips the fragment and loads the same file. Configure defaults under `wallpaper:`
-in each YAML (`screens`, `fill`; `background` (`auto` follows the theme, or a colour)/`margin`/`shadow` for weekly;
-`theme`/`layout` for both).
+(forcing a reload) while Qt strips the fragment and loads the same file. Configure the Set-as-wallpaper dialog (and CLI) defaults under `wallpaper:`
+in each planner YAML (`screens`, `fill`; `background` (`auto` follows the theme, or a colour)/`margin`/`shadow` for weekly;
+`theme`/`layout` for both). The nightly job has its own target list in `schedule.yaml`.
 
 Setting the wallpaper needs a live Plasma session, so it isn't available inside the
 [Docker test drive](../README.md#try-it-instantly-docker).

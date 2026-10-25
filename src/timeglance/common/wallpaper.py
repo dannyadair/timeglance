@@ -20,7 +20,7 @@ import re
 import shutil
 import subprocess
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from timeglance import paths
@@ -49,6 +49,8 @@ class Screen:
     model: str = ""  # friendly label: "Built-in display" / EDID monitor name / vendor + connector
     connected: bool = True
     seen: bool = True
+    key: str = ""  # EDID identity (manufacturer+product+serial); empty if no EDID
+    aliases: tuple = ()  # other connector names this monitor has appeared as
 
 
 _PNP_IDS = Path("/usr/share/hwdata/pnp.ids")
@@ -88,6 +90,11 @@ def _vendor(data):
     return pnp
 
 
+def _edid_key(data):
+    """Stable monitor identity from EDID manufacturer + product + serial (bytes 8-15)."""
+    return data[8:16].hex() if len(data) >= 16 else ""
+
+
 def _friendly_name(name):
     """A human label for an output: 'Built-in display' for a laptop panel, else the EDID monitor
     name, else manufacturer + connector (e.g. 'Dell Inc. DP-8'), else the bare connector name."""
@@ -114,9 +121,10 @@ class PlasmaBackend:
             mode = next(m for m in o["modes"] if m["id"] == o["currentModeId"])
             pw, ph = mode["size"]["width"], mode["size"]["height"]
             scale = o["scale"] or 1
+            name = o["name"]
             screens.append(
                 Screen(
-                    name=o["name"],
+                    name=name,
                     x=o["pos"]["x"],
                     y=o["pos"]["y"],
                     lw=round(pw / scale),
@@ -124,7 +132,8 @@ class PlasmaBackend:
                     pw=pw,
                     ph=ph,
                     primary=o["priority"] == 1,
-                    model=_friendly_name(o["name"]),
+                    model=_friendly_name(name),
+                    key=_edid_key(_edid(name)),
                 )
             )
         return screens
@@ -206,13 +215,64 @@ def _load_registry():
     return json.loads(p.read_text()) if p.exists() else {}
 
 
+def _identity(info, name=""):
+    """Registry grouping key: EDID when stored, else model+resolution so a dock that
+    re-enumerates the same monitor (DP-8 vs DP-9) still collapses to one row."""
+    if info.get("key"):
+        return info["key"]
+    model, pw, ph = info.get("model") or "", info.get("pw"), info.get("ph")
+    if model and pw and ph:
+        return f"{model}:{pw}x{ph}"
+    return name
+
+
+def _collapse(reg):
+    """Merge registry rows that are the same physical monitor under different connector names."""
+    groups = {}
+    for name, info in reg.items():
+        groups.setdefault(_identity(info, name), []).append(name)
+    for names in groups.values():
+        if len(names) < 2:
+            continue
+        names.sort(key=lambda n: reg[n]["last_seen"], reverse=True)
+        keep = names[0]
+        aliases = list(reg[keep].get("aliases") or [])
+        for n in names[1:]:
+            aliases.append(n)
+            aliases.extend(reg[n].get("aliases") or [])
+            if not reg[keep].get("key") and reg[n].get("key"):
+                reg[keep]["key"] = reg[n]["key"]
+            del reg[n]
+        reg[keep]["aliases"] = [a for a in dict.fromkeys(aliases) if a != keep]
+    return reg
+
+
 def remember(screens):
     """Record each connected screen's model, pixel size and today's date, so a later run or
-    the UI can still target it once it's unplugged. No-op write when nothing changed."""
-    reg = _load_registry()
+    the UI can still target it once it's unplugged. No-op write when nothing changed.
+    A monitor that comes back on a new connector keeps one row; the old name becomes an alias."""
+    reg = _collapse(_load_registry())
     today = dt.date.today().isoformat()
+    by_id = {_identity(info, name): name for name, info in reg.items()}
     for s in screens:
-        reg[s.name] = {"model": s.model, "pw": s.pw, "ph": s.ph, "last_seen": today}
+        ident = s.key or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name)
+        aliases = []
+        old = by_id.get(ident)
+        if old and old != s.name:
+            prev = reg.pop(old)
+            aliases.append(old)
+            aliases.extend(prev.get("aliases") or [])
+        prev = reg.get(s.name) or {}
+        aliases = [a for a in dict.fromkeys([*aliases, *(prev.get("aliases") or [])]) if a != s.name]
+        reg[s.name] = {
+            "model": s.model,
+            "pw": s.pw,
+            "ph": s.ph,
+            "last_seen": today,
+            "key": s.key or prev.get("key", ""),
+            "aliases": aliases,
+        }
+    reg = _collapse(reg)
     text = json.dumps(reg, indent=2)
     p = _registry_path()
     if not p.exists() or p.read_text() != text:
@@ -221,21 +281,56 @@ def remember(screens):
 
 
 def forget(name):
-    """Drop a screen from the registry (e.g. a retired monitor)."""
+    """Drop a screen from the registry (e.g. a retired monitor), or drop a connector alias."""
     reg = _load_registry()
-    if reg.pop(name, None) is not None:
-        _registry_path().write_text(json.dumps(reg, indent=2))
+    if name in reg:
+        reg.pop(name)
+    else:
+        for info in reg.values():
+            aliases = info.get("aliases") or []
+            if name in aliases:
+                info["aliases"] = [a for a in aliases if a != name]
+                break
+        else:
+            return
+    _registry_path().write_text(json.dumps(reg, indent=2))
+
+
+_RECONNECTED = []
+
+
+def take_reconnected():
+    """Screens ``known()`` last saw come back (new connector or first sighting today)."""
+    out = list(_RECONNECTED)
+    _RECONNECTED.clear()
+    return out
 
 
 def known(backend, prune_days=30):
     """Screens the UI should offer: every connected output plus remembered ones seen within
-    ``prune_days`` (each tagged ``connected``). Refreshes the registry and prunes staler ones."""
-    live = {s.name: s for s in (backend.list_screens() if backend else [])}
-    remember(live.values())
+    ``prune_days`` (each tagged ``connected``). Refreshes the registry and prunes staler ones.
+    The same monitor under two connector names is one row; the extra name is an alias."""
+    live_list = backend.list_screens() if backend else []
+    live = {s.name: s for s in live_list}
     reg = _load_registry()
+    today = dt.date.today().isoformat()
+    rec = []
+    for s in live_list:
+        ident = s.key or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name)
+        for rname, info in reg.items():
+            if _identity(info, rname) != ident:
+                continue
+            if rname != s.name or info.get("last_seen", today) < today:
+                rec.append(s)
+                break
+    _RECONNECTED.clear()
+    _RECONNECTED.extend(rec)
+    remember(live_list)
+    reg = _collapse(_load_registry())
     cutoff = (dt.date.today() - dt.timedelta(days=prune_days)).isoformat()
     out, stale = [], []
     for name, info in reg.items():
+        aliases = tuple(info.get("aliases") or [])
         if name in live:
             s = live[name]
             out.append(
@@ -247,6 +342,7 @@ def known(backend, prune_days=30):
                     "primary": s.primary,
                     "connected": True,
                     "last_seen": info["last_seen"],
+                    "aliases": list(aliases),
                 }
             )
         elif info["last_seen"] >= cutoff:
@@ -259,6 +355,7 @@ def known(backend, prune_days=30):
                     "primary": False,
                     "connected": False,
                     "last_seen": info["last_seen"],
+                    "aliases": list(aliases),
                 }
             )
         else:
@@ -267,18 +364,41 @@ def known(backend, prune_days=30):
         for name in stale:
             reg.pop(name)
         _registry_path().write_text(json.dumps(reg, indent=2))
+    elif reg != _load_registry():
+        _registry_path().write_text(json.dumps(reg, indent=2))
     return out
 
 
-def ui_meta(backend, wp):
+def ui_meta(backend, wp, selected=None):
     """Wallpaper metadata (availability, backend, known screens, current selection) for the UI."""
     return {
         "available": backend is not None,
         "backend": backend.name if backend else None,
         "screens": known(backend),
-        "selected": wp.get("screens", "all"),
+        "selected": selected if selected is not None else wp.get("screens", "all"),
         "fill": wp.get("fill", "preserveAspectCrop"),
     }
+
+
+def _reg_entry(reg, name):
+    """Registry row for ``name``, or the row that lists it as an alias."""
+    if name in reg:
+        return name, reg[name]
+    for rname, info in reg.items():
+        if name in (info.get("aliases") or []):
+            return rname, info
+    return name, None
+
+
+def _with_aliases(screen, reg):
+    """Copy a live screen, attaching every connector name the registry has for it."""
+    aliases = []
+    ident = screen.key or _identity({"model": screen.model, "pw": screen.pw, "ph": screen.ph, "key": screen.key})
+    for rname, info in reg.items():
+        if _identity(info, rname) == ident or rname == screen.name:
+            aliases.append(rname)
+            aliases.extend(info.get("aliases") or [])
+    return replace(screen, aliases=tuple(a for a in dict.fromkeys(aliases) if a != screen.name))
 
 
 def resolve_screens(backend, spec):
@@ -286,7 +406,10 @@ def resolve_screens(backend, spec):
     outputs only. An explicit name may be a remembered-but-disconnected screen (resolved from the
     registry so its file is still rendered and applied once it reconnects) or one we've never seen
     - a hand-edited config id, or state that was cleared - returned flagged ``seen=False`` with no
-    resolution, so callers can list it as FYI and skip rendering it."""
+    resolution, so callers can list it as FYI and skip rendering it.
+
+    A name that is only an old connector for a monitor that's live under a new one (same EDID, or
+    unique model+resolution) resolves to the live output so a scheduled target still applies."""
     screens = backend.list_screens()
     if not spec or spec == "all":
         return screens
@@ -294,14 +417,41 @@ def resolve_screens(backend, spec):
         return [s for s in screens if s.primary] or screens[:1]
     want = spec if isinstance(spec, list) else [s.strip() for s in str(spec).split(",")]
     by_name = {s.name: s for s in screens}
-    reg = _load_registry()
-    resolved = []
+    reg = _collapse(_load_registry())
+    resolved, seen_live = [], set()
     for w in want:
-        if w in by_name:
-            resolved.append(by_name[w])
-        elif w in reg:
-            info = reg[w]
-            resolved.append(Screen(w, 0, 0, 0, 0, info["pw"], info["ph"], model=info["model"], connected=False))
+        rname, info = _reg_entry(reg, w)
+        live = by_name.get(w) or by_name.get(rname)
+        if live is None and info:
+            ident = _identity(info, rname)
+            cands = [
+                s
+                for s in screens
+                if (s.key and s.key == info.get("key"))
+                or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name) == ident
+            ]
+            live = cands[0] if cands else None
+        if live:
+            if live.name in seen_live:
+                continue
+            seen_live.add(live.name)
+            resolved.append(_with_aliases(live, reg))
+        elif info:
+            resolved.append(
+                Screen(
+                    rname,
+                    0,
+                    0,
+                    0,
+                    0,
+                    info["pw"],
+                    info["ph"],
+                    model=info["model"],
+                    connected=False,
+                    key=info.get("key") or "",
+                    aliases=tuple(info.get("aliases") or []),
+                )
+            )
         else:
             resolved.append(Screen(w, 0, 0, 0, 0, 0, 0, connected=False, seen=False))
     return resolved
@@ -342,7 +492,7 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
             rendered[res] = png
         if scr.connected:
             assignments.append((scr, png))
-    report = backend.apply(assignments, fill, bust=stamp) if assignments else {"desktops": [], "set": []}
+    report = apply_files(backend, assignments, fill, bust=stamp) if assignments else {"desktops": [], "set": []}
     by_key = {f"{s.x},{s.y},{s.lw}x{s.lh}": s.name for s, _ in assignments}
     info = {
         "requested": [s.name for s in screens],
@@ -354,6 +504,27 @@ def apply(backend, screens, out, render_png, fill="preserveAspectCrop", prefix="
         "desktops": report.get("desktops", []),
     }
     return assignments, info
+
+
+def apply_files(backend, assignments, fill="preserveAspectCrop", bust=""):
+    """Set already-written PNGs on the given screens (cache-bust so Plasma reloads)."""
+    bust = bust or str(int(time.time() * 1000))
+    return backend.apply(assignments, fill, bust=bust)
+
+
+def existing_png(out, prefix, screen):
+    """The wallpaper file for ``screen``, copying from an alias name if the live name is new."""
+    out = Path(out)
+    png = out / f"{prefix}-{screen.name}.png"
+    if png.exists():
+        return png
+    for a in screen.aliases:
+        alt = out / f"{prefix}-{a}.png"
+        if alt.exists():
+            out.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(alt, png)
+            return png
+    return None
 
 
 def describe_apply(info):

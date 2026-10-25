@@ -22,13 +22,14 @@ class FakeBackend:
         return {"desktops": [], "set": [f"{s.x},{s.y},{s.lw}x{s.lh}" for s, _ in assignments]}
 
 
-def _scr(name, pw=1920, ph=1080, primary=False, model=""):
-    return Screen(name, 0, 0, pw, ph, pw, ph, primary=primary, model=model)
+def _scr(name, pw=1920, ph=1080, primary=False, model="", key=""):
+    return Screen(name, 0, 0, pw, ph, pw, ph, primary=primary, model=model, key=key)
 
 
 @pytest.fixture(autouse=True)
 def home(tmp_path, monkeypatch):
     monkeypatch.setenv("TIMEGLANCE_HOME", str(tmp_path))
+    wallpaper.take_reconnected()
     return tmp_path
 
 
@@ -47,6 +48,42 @@ def test_forget_removes_screen():
     wallpaper.known(FakeBackend([_scr("DP-8", 3840, 1600)]))
     wallpaper.forget("DP-8")
     assert wallpaper.known(FakeBackend([])) == []
+
+
+def test_known_merges_same_monitor_on_new_connector():
+    """A dock that re-enumerates the same panel (DP-8 → DP-9) is one screen, not two."""
+    uw = dict(pw=3840, ph=1600, model="DELL U3821DW", key="aabbccddeeff0011")
+    wallpaper.known(FakeBackend([_scr("eDP-1", primary=True), _scr("DP-8", **uw)]))
+    seen = {s["name"]: s for s in wallpaper.known(FakeBackend([_scr("eDP-1", primary=True), _scr("DP-9", **uw)]))}
+    assert "DP-8" not in seen
+    assert seen["DP-9"]["connected"] is True
+    assert "DP-8" in seen["DP-9"]["aliases"]
+    assert "eDP-1" in seen
+
+
+def test_known_collapses_unkeyed_same_model():
+    """Older registry rows have no EDID key; same model+size still merges."""
+    wallpaper.known(FakeBackend([_scr("DP-8", 3840, 1600, model="DELL U3821DW")]))
+    wallpaper.known(FakeBackend([_scr("eDP-1", primary=True)]))
+    # second connector written while the first is only in the registry
+    reg = wallpaper._load_registry()
+    reg["DP-9"] = {"model": "DELL U3821DW", "pw": 3840, "ph": 1600, "last_seen": dt.date.today().isoformat()}
+    (wallpaper._registry_path()).write_text(json.dumps(reg))
+    seen = wallpaper.known(FakeBackend([_scr("eDP-1", primary=True)]))
+    names = [s["name"] for s in seen]
+    assert names.count("DP-8") + names.count("DP-9") == 1
+    row = next(s for s in seen if s["model"] == "DELL U3821DW")
+    assert set(row["aliases"]) | {row["name"]} == {"DP-8", "DP-9"}
+
+
+def test_resolve_old_connector_uses_live_output():
+    """Schedule still names DP-8; the panel is live as DP-9 — apply the live one."""
+    uw = dict(pw=3840, ph=1600, model="DELL U3821DW", key="aabbccddeeff0011")
+    wallpaper.known(FakeBackend([_scr("DP-8", **uw)]))
+    got = wallpaper.resolve_screens(FakeBackend([_scr("eDP-1"), _scr("DP-9", **uw)]), ["DP-8"])
+    assert [s.name for s in got] == ["DP-9"]
+    assert got[0].connected is True
+    assert "DP-8" in got[0].aliases
 
 
 def test_prune_drops_stale(home):
@@ -102,6 +139,48 @@ def test_script_skips_disconnected_orphan_desktops():
     widescreen woke up showing the laptop's weekly wallpaper)."""
     script = wallpaper.PlasmaBackend()._script([(_scr("eDP-1", primary=True), "/tmp/x.png")], "preserveAspectCrop")
     assert script.index("d.screen<0") < script.index("screenGeometry(d.screen)")
+
+
+def test_apply_reconnected_uses_alias_file(tmp_path):
+    """Morning wrote year-wallpaper-DP-8.png; the panel is now DP-9 — apply that file."""
+    from timeglance.common import schedule as schedmod
+
+    uw = dict(pw=3840, ph=1600, model="DELL U3821DW", key="aabbccddeeff0011")
+    wallpaper.known(FakeBackend([_scr("DP-8", **uw)]))
+    out = tmp_path / "year" / "out"
+    out.mkdir(parents=True)
+    (out / "year-wallpaper-DP-8.png").write_bytes(b"PNG")
+    s = schedmod.Schedule.load()
+    s.cfg["planners"] = ["year"]
+    s.cfg["year"] = {"wallpaper": True, "screens": ["DP-8"], "render": {}}
+    s.save()
+
+    class Planner:
+        def _raw(self):
+            return {"wallpaper": {"fill": "preserveAspectCrop"}}
+
+    planner = Planner()
+    planner.out = out
+
+    class Rec(FakeBackend):
+        applied = None
+
+        def apply(self, assignments, fill="preserveAspectCrop", bust=""):
+            self.applied = [s.name for s, _ in assignments]
+            return super().apply(assignments, fill, bust)
+
+    be = Rec([_scr("DP-9", **uw)])
+    wallpaper.known(be)
+    logs = []
+
+    class Log:
+        def log(self, name, msg):
+            logs.append((name, msg))
+
+    schedmod.apply_reconnected({"year": planner}, Log(), backend=be)
+    assert be.applied == ["DP-9"]
+    assert (out / "year-wallpaper-DP-9.png").read_bytes() == b"PNG"
+    assert logs == [("year", "set wallpaper on DP-9 (reconnect)")]
 
 
 def test_apply_skips_unseen(tmp_path):
