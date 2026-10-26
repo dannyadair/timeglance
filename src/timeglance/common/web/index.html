@@ -36,8 +36,18 @@
   #themeBtn svg { display: block; }
   #status { font-size: 12px; color: var(--mut); margin-left: auto; }
   main { display: flex; height: calc(100vh - 49px); }
-  aside { width: 224px; flex: none; padding: 12px 14px; border-right: 1px solid var(--bd);
+  aside { width: 300px; flex: none; padding: 12px 14px; border-right: 1px solid var(--bd);
           background: var(--surface); overflow: auto; }
+  aside .cal { margin-bottom: 14px; }
+  aside .cal .grp { flex-wrap: wrap; margin: 6px 0; }
+  aside .cal .grp > label { flex: 1 0 100%; }
+  aside .cal select { flex: 1; min-width: 0; }
+  aside .cal input.range { width: calc(50% - 10px); flex: 1; }
+  .side-fold { flex: none; align-self: stretch; width: 18px; padding: 0; border: none;
+          border-right: 1px solid var(--bd); border-radius: 0; background: var(--surface);
+          color: var(--mut); font-size: 16px; line-height: 1; }
+  .side-fold:hover { color: var(--text); background: var(--surface-2); }
+  main.side-off aside { display: none; }
   aside h2 { display: flex; align-items: baseline; justify-content: space-between;
           font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin: 4px 0 8px; }
   aside h2 .allnone { text-transform: none; letter-spacing: 0; font-weight: 400; }
@@ -53,7 +63,7 @@
   [data-toggle] * { pointer-events: none; }
   .src .kind { font-size: 10px; color: var(--mut); border: 1px solid var(--bd); border-radius: 4px;
                padding: 0 4px; text-transform: uppercase; }
-  .src .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src .lbl { flex: 1; overflow: hidden; overflow-wrap: anywhere; }
   .src .cnt { color: var(--mut); font-variant-numeric: tabular-nums; }
   .view { flex: 1; overflow: auto; padding: 16px; }
   .preview-pane { position: relative; display: flex; align-items: flex-start; justify-content: center; height: 100%; }
@@ -149,6 +159,7 @@
   </header>
   <main>
     <aside id="side"></aside>
+    <button type="button" id="sideFold" class="side-fold" aria-label="Hide sidebar" title="Hide sidebar">‹</button>
     <div class="view" id="viewbody"></div>
   </main>
 <script type="module" src="/js/main.js"></script>

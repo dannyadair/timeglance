@@ -28,18 +28,6 @@ export function buildControls() {
         `<select id="c_layout">${opt(m.layouts, m.layout)}</select>`,
       ),
       grp(
-        "Weeks",
-        `<span data-toggle="c_align"><input type="checkbox" id="c_align" ${m.week_align ? "checked" : ""}><label>aligned</label></span>`,
-      ),
-      grp(
-        "Week",
-        `<select id="c_week"><option ${m.week_start === "Mon" ? "selected" : ""}>Mon</option><option ${m.week_start === "Sun" ? "selected" : ""}>Sun</option></select>`,
-      ),
-      grp(
-        "Range",
-        `<input class="range" id="c_start" value="${m.range.start}"> – <input class="range" id="c_end" value="${m.range.end}">`,
-      ),
-      grp(
         "Size",
         `<select id="c_size">${opt(["", ...m.sizes], m.size)}</select>`,
       ),
@@ -59,7 +47,6 @@ export function buildControls() {
     .forEach((c) =>
       c.addEventListener(c.type === "checkbox" ? "change" : "input", preview),
     );
-  if (state.planner === "year") wireRangeHelp();
 }
 
 let rangeHelpOff;
@@ -84,13 +71,23 @@ function wireRangeHelp() {
        <dt>year-end</dt><dd>December of the current year</dd>
      </dl>`,
   );
-  start.parentElement.append(pop);
+  document.body.append(pop);
+  const place = () => {
+    const box = start.closest(".grp").getBoundingClientRect();
+    pop.style.position = "fixed";
+    pop.style.top = `${box.bottom + 6}px`;
+    pop.style.left = `${box.left}px`;
+    pop.style.right = "auto";
+  };
   const zone = [start, end, pop];
   const inZone = (t) => zone.some((z) => z === t || z.contains(t));
   let dismissed = false;
   const onFocus = (e) => {
     if (e.target === start || e.target === end) {
-      if (!dismissed) pop.classList.remove("hidden");
+      if (!dismissed) {
+        place();
+        pop.classList.remove("hidden");
+      }
     } else if (!inZone(e.target)) {
       dismissed = false;
       pop.classList.add("hidden");
@@ -111,12 +108,41 @@ function wireRangeHelp() {
   rangeHelpOff = () => {
     document.removeEventListener("focusin", onFocus);
     document.removeEventListener("pointerdown", onDown);
+    pop.remove();
   };
 }
 
 export function buildSide() {
   const m = state.cfg[state.planner].meta;
   side.innerHTML = "";
+  if (state.planner === "year") {
+    const cal = el("div", { className: "cal" });
+    cal.append(
+      el("h2", {}, "Calendar"),
+      grp(
+        "Range",
+        `<input class="range" id="c_start" value="${m.range.start}"> – <input class="range" id="c_end" value="${m.range.end}">`,
+      ),
+      grp(
+        "Week starts",
+        `<select id="c_week"><option value="Mon" ${m.week_start === "Mon" ? "selected" : ""}>Monday</option><option value="Sun" ${m.week_start === "Sun" ? "selected" : ""}>Sunday</option></select>`,
+      ),
+      (() => {
+        const row = el(
+          "div",
+          { className: "row" },
+          `<input type="checkbox" id="c_align" ${m.week_align ? "checked" : ""}><label>weeks aligned across months</label>`,
+        );
+        row.dataset.toggle = "c_align";
+        return row;
+      })(),
+    );
+    cal.querySelectorAll("select, input").forEach((c) => {
+      c.addEventListener(c.type === "checkbox" ? "change" : "input", preview);
+    });
+    side.append(cal);
+    wireRangeHelp();
+  }
   const title = state.planner === "year" ? "Layers" : "Topics";
   const head = el(
     "h2",
