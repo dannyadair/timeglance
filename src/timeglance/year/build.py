@@ -66,7 +66,7 @@ def assemble(raw):
     summary = []
     n_yaml = len(raw["events"])
     if n_yaml:
-        summary.append({"kind": "yaml", "label": "This file (events:)", "layer": None, "count": n_yaml})
+        summary.append({"kind": "yaml", "label": "Local configuration", "layer": None, "count": n_yaml})
     hol = add_holidays(raw)
     if hol:
         summary.append(hol)

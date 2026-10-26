@@ -24,6 +24,7 @@ function refreshView() {
   // per-planner chrome is hidden and whichever button opened the overlay becomes Back.
   const overlay = state.view === "schedule" || state.view === "log";
   side.classList.toggle("hidden", !preview_);
+  $("#sideFold").classList.toggle("hidden", !preview_);
   controls.classList.toggle("hidden", !preview_);
   actions.classList.toggle("hidden", !preview_);
   $("#planner").classList.toggle("hidden", overlay);
@@ -91,6 +92,20 @@ const overlayToggle = (view) => () => {
 $("#schedBtn").onclick = overlayToggle("schedule");
 $("#logBtn").onclick = overlayToggle("log");
 $(".brand").onclick = () => selectView("preview");
+
+const fold = $("#sideFold");
+const applyFold = (off) => {
+  $("main").classList.toggle("side-off", off);
+  fold.textContent = off ? "›" : "‹";
+  fold.title = off ? "Show sidebar" : "Hide sidebar";
+  fold.setAttribute("aria-label", fold.title);
+};
+applyFold(localStorage.getItem("tg-side") === "off");
+fold.onclick = () => {
+  const off = !$("main").classList.contains("side-off");
+  localStorage.setItem("tg-side", off ? "off" : "on");
+  applyFold(off);
+};
 
 // Day/night switch for the panel chrome itself (independent of the planners' own theme).
 // Light by default; the choice persists in localStorage.
