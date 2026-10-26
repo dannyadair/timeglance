@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v3.12.0 (2026-10-26)
+
+### Features
+
+- **panel**: Move year calendar controls into the sidebar
+  ([`8ff5345`](https://github.com/dannyadair/timeglance/commit/8ff5345356c5054a1b855ee780333cecb64fba44))
+
+
 ## v3.11.1 (2026-10-26)
 
 ### Bug Fixes
