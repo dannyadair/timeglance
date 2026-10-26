@@ -2,6 +2,37 @@
 
 <!-- version list -->
 
+## v3.11.1 (2026-10-26)
+
+### Bug Fixes
+
+- **wallpaper**: Identify screens by monitor, not connector
+  ([`61a2678`](https://github.com/dannyadair/timeglance/commit/61a267830c4f7c2942f8741854444615e6248028))
+
+- **wallpaper**: Merge screens by EDID serial only
+  ([`687755b`](https://github.com/dannyadair/timeglance/commit/687755b3c11b2cc89364185da7b36136e42c2390))
+
+### Build System
+
+- **deps**: Bump actions/setup-python from 7.0.0 to 7.1.0
+  ([`70548ce`](https://github.com/dannyadair/timeglance/commit/70548ce29a18c92c5bdaa98adc35f3fcc95742fc))
+
+- **deps**: Bump astral-sh/setup-uv from 10.3.0 to 10.3.1
+  ([`1cd8b6e`](https://github.com/dannyadair/timeglance/commit/1cd8b6e85cf5ff9f974e3596c222e2ae4ebcec6a))
+
+- **deps**: Bump brotli filelock gitpython virtualenv
+  ([`6e4e788`](https://github.com/dannyadair/timeglance/commit/6e4e788076cbb0cd2eaf8f49b485863b989885af))
+
+- **deps**: Bump github/codeql-action/upload-sarif
+  ([`6f65dbe`](https://github.com/dannyadair/timeglance/commit/6f65dbec5183a667c5b38cc4237ed68ed1c45d5c))
+
+- **deps**: Bump holidays from 0.106 to 0.107
+  ([`dae2733`](https://github.com/dannyadair/timeglance/commit/dae2733df7966ae3a8dc34e0eaf4f5b9cd26a8a6))
+
+- **deps**: Bump pypa/gh-action-pypi-publish from 1.14.2 to 1.14.3
+  ([`6666c12`](https://github.com/dannyadair/timeglance/commit/6666c1251d5350353d7127a517294d88bb38c6ce))
+
+
 ## v3.11.0 (2026-10-21)
 
 ### Build System
