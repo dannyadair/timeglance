@@ -215,22 +215,12 @@ def _load_registry():
     return json.loads(p.read_text()) if p.exists() else {}
 
 
-def _identity(info, name=""):
-    """Registry grouping key: EDID when stored, else model+resolution so a dock that
-    re-enumerates the same monitor (DP-8 vs DP-9) still collapses to one row."""
-    if info.get("key"):
-        return info["key"]
-    model, pw, ph = info.get("model") or "", info.get("pw"), info.get("ph")
-    if model and pw and ph:
-        return f"{model}:{pw}x{ph}"
-    return name
-
-
 def _collapse(reg):
-    """Merge registry rows that are the same physical monitor under different connector names."""
+    """Merge registry rows that share an EDID key (same panel, new connector name)."""
     groups = {}
     for name, info in reg.items():
-        groups.setdefault(_identity(info, name), []).append(name)
+        key = info.get("key")
+        groups.setdefault(key or name, []).append(name)
     for names in groups.values():
         if len(names) < 2:
             continue
@@ -253,11 +243,10 @@ def remember(screens):
     A monitor that comes back on a new connector keeps one row; the old name becomes an alias."""
     reg = _collapse(_load_registry())
     today = dt.date.today().isoformat()
-    by_id = {_identity(info, name): name for name, info in reg.items()}
+    by_id = {info["key"]: name for name, info in reg.items() if info.get("key")}
     for s in screens:
-        ident = s.key or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name)
         aliases = []
-        old = by_id.get(ident)
+        old = by_id.get(s.key) if s.key else None
         if old and old != s.name:
             prev = reg.pop(old)
             aliases.append(old)
@@ -316,9 +305,10 @@ def known(backend, prune_days=30):
     today = dt.date.today().isoformat()
     rec = []
     for s in live_list:
-        ident = s.key or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name)
+        if not s.key:
+            continue
         for rname, info in reg.items():
-            if _identity(info, rname) != ident:
+            if info.get("key") != s.key:
                 continue
             if rname != s.name or info.get("last_seen", today) < today:
                 rec.append(s)
@@ -393,9 +383,8 @@ def _reg_entry(reg, name):
 def _with_aliases(screen, reg):
     """Copy a live screen, attaching every connector name the registry has for it."""
     aliases = []
-    ident = screen.key or _identity({"model": screen.model, "pw": screen.pw, "ph": screen.ph, "key": screen.key})
     for rname, info in reg.items():
-        if _identity(info, rname) == ident or rname == screen.name:
+        if rname == screen.name or (screen.key and info.get("key") == screen.key):
             aliases.append(rname)
             aliases.extend(info.get("aliases") or [])
     return replace(screen, aliases=tuple(a for a in dict.fromkeys(aliases) if a != screen.name))
@@ -408,8 +397,8 @@ def resolve_screens(backend, spec):
     - a hand-edited config id, or state that was cleared - returned flagged ``seen=False`` with no
     resolution, so callers can list it as FYI and skip rendering it.
 
-    A name that is only an old connector for a monitor that's live under a new one (same EDID, or
-    unique model+resolution) resolves to the live output so a scheduled target still applies."""
+    A name that is only an old connector for a monitor that's live under a new one (same EDID)
+    resolves to the live output so a scheduled target still applies."""
     screens = backend.list_screens()
     if not spec or spec == "all":
         return screens
@@ -422,14 +411,8 @@ def resolve_screens(backend, spec):
     for w in want:
         rname, info = _reg_entry(reg, w)
         live = by_name.get(w) or by_name.get(rname)
-        if live is None and info:
-            ident = _identity(info, rname)
-            cands = [
-                s
-                for s in screens
-                if (s.key and s.key == info.get("key"))
-                or _identity({"model": s.model, "pw": s.pw, "ph": s.ph, "key": s.key}, s.name) == ident
-            ]
+        if live is None and info and info.get("key"):
+            cands = [s for s in screens if s.key and s.key == info["key"]]
             live = cands[0] if cands else None
         if live:
             if live.name in seen_live:

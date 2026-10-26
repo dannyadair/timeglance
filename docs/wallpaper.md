@@ -10,10 +10,10 @@ rasterised from its PDF (with poppler's `pdftocairo`, from `poppler-utils`) onto
 side in the planner's `out/`.
 
 Screens read by a friendly name - the monitor's model from its EDID (or "Built-in display" for a laptop panel),
-falling back to the manufacturer + connector, then the bare connector name. Identity is the EDID (or, for
-older state, model + resolution): a dock that re-enumerates the same panel as `DP-8` one day and `DP-9` the
-next is one screen, not two. The extra connector name is kept as an alias so a schedule that still says
-`DP-8` applies to the live output.
+falling back to the manufacturer + connector, then the bare connector name. Identity is the EDID serial: a
+dock that re-enumerates the same panel under a new connector is one screen; two panels of the same model stay
+two. The extra connector name is kept as an alias so a schedule that still names the old one applies to the
+live output.
 
 Resolution is never configured - it comes from the screen: its current mode when connected, or the last-seen
 size for a screen that's remembered but disconnected. timeglance remembers every screen it has seen connected

@@ -61,19 +61,13 @@ def test_known_merges_same_monitor_on_new_connector():
     assert "eDP-1" in seen
 
 
-def test_known_collapses_unkeyed_same_model():
-    """Older registry rows have no EDID key; same model+size still merges."""
-    wallpaper.known(FakeBackend([_scr("DP-8", 3840, 1600, model="DELL U3821DW")]))
-    wallpaper.known(FakeBackend([_scr("eDP-1", primary=True)]))
-    # second connector written while the first is only in the registry
-    reg = wallpaper._load_registry()
-    reg["DP-9"] = {"model": "DELL U3821DW", "pw": 3840, "ph": 1600, "last_seen": dt.date.today().isoformat()}
-    (wallpaper._registry_path()).write_text(json.dumps(reg))
-    seen = wallpaper.known(FakeBackend([_scr("eDP-1", primary=True)]))
-    names = [s["name"] for s in seen]
-    assert names.count("DP-8") + names.count("DP-9") == 1
-    row = next(s for s in seen if s["model"] == "DELL U3821DW")
-    assert set(row["aliases"]) | {row["name"]} == {"DP-8", "DP-9"}
+def test_known_keeps_two_same_model_panels():
+    """Two identical monitors (left / right) are two screens, not one."""
+    a = dict(pw=3840, ph=1600, model="DELL U3821DW", key="serial-left")
+    b = dict(pw=3840, ph=1600, model="DELL U3821DW", key="serial-right")
+    seen = {s["name"]: s for s in wallpaper.known(FakeBackend([_scr("DP-8", **a), _scr("DP-9", **b)]))}
+    assert set(seen) == {"DP-8", "DP-9"}
+    assert seen["DP-8"]["aliases"] == [] and seen["DP-9"]["aliases"] == []
 
 
 def test_resolve_old_connector_uses_live_output():
